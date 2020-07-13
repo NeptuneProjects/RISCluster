@@ -2,6 +2,7 @@
 from contextlib import redirect_stdout
 from datetime import datetime
 import json
+import os
 import random
 import sys
 sys.path.insert(0, '../../RISCluster/')
@@ -151,9 +152,9 @@ def get_trace():
     return None
 
 def init_GPU(GPU_fraction=0.5):
+    '''Designate GPUs and limit memory.'''
     os.environ["CUDA_DEVICE_ORDER"]= "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]="0"
-    # Limit GPU memory use:
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=GPUfrac, allow_growth=True)
     sess=tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
     tf.compat.v1.keras.backend.set_session(sess)
