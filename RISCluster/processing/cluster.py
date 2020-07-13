@@ -289,13 +289,8 @@ def optim_and_cluster(X_train, model, batch_size, tol, maxiter,
     index = 0             # initialize index to start
     tic = datetime.now()
     loss_list = np.zeros([maxiter,3])                       # Keep track of loss function during training process
-    print('============================================')
-    print(f'Size of X_train = {X_train.shape}')
     index_array = np.arange(X_train.shape[0])
-    print(f'Size of index_array = {index_array.shape}')
     for ite in range(int(maxiter)):
-        print('---------------------------------------')
-        print(f'ite = {ite}')
         if ite % update_interval == 0:
             q, reconst  = model.predict(X_train, verbose=1) # Calculate soft assignment distribtuion & CAE reconstructions
             p = target_distribution(q)                      # Update the auxiliary target distribution p
@@ -314,15 +309,8 @@ def optim_and_cluster(X_train, model, batch_size, tol, maxiter,
                 break
 
         idx = index_array[index * batch_size: min((index+1) * batch_size, X_train.shape[0])]
-
-        print(f'idx = {idx}')
-        print(f'Size of X_train[idx] = {X_train[idx].shape}')
-        print(f'Size of p[idx] = {p[idx].shape}')
         loss = model.train_on_batch(x=X_train[idx], y=[p[idx], X_train[idx,:,:,:]])
-        # print(f'Size of loss = {loss.shape}')
         index = index + 1 if (index + 1) * batch_size < X_train.shape[0] else 0
-        print(f'(Updated) index = {index}')
-        print('---------------------------------------')
     toc = datetime.now()
     print(f'Deep Embedded Clustering Computation Time: {toc-tic}')
     msgsubj = 'DEC Training Complete'
