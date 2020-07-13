@@ -14,6 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import tensorflow.compat.v1 as tfcv1
 import tensorflow.keras.backend as tfkb
 
 from RISCluster.utils.utils import notify
@@ -151,13 +152,14 @@ def get_trace():
     pass
     return None
 
-def init_GPU(GPUfrac=0.5):
+def init_GPU(GPU_frac=0.5):
     '''Designate GPUs and limit memory.'''
     os.environ["CUDA_DEVICE_ORDER"]= "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]="0"
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=GPUfrac, allow_growth=True)
-    sess=tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-    tf.compat.v1.keras.backend.set_session(sess)
+    GPU_options = tfcv1.GPUOptions(per_process_gpu_memory_fraction=GPU_frac,
+                                   allow_growth=True)
+    sess = tfcv1.Session(config=tfcv1.ConfigProto(gpu_options=GPU_options))
+    tfcv1.keras.backend.set_session(sess)
 
 def load_test(fname_dataset, M, index_test):
     with h5py.File(fname_dataset, 'r') as f:
