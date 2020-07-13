@@ -21,7 +21,7 @@ importlib.reload(cluster)
 
 tic_total = datetime.now()
 # AEC Parameters:
-M = int(180000)
+M = int(175000)
 LR = 0.0001     # Learning rate
 n_epochs = 600  # Number of epochs
 batch_sz = 512  # Batch size
