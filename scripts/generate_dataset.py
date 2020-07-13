@@ -19,7 +19,7 @@ import h5py
 import numpy as np
 
 from RISCluster.processing import processing as process
-from RISCluster.utils.notify import notify
+from RISCluster.utils.utils import notify
 
 # ========================== Initialize Parameters ============================
 # v v v v Modify these parameters when switching to Velella! v v v v

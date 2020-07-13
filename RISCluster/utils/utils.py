@@ -39,7 +39,7 @@ def notify(msgsubj, msgcontent):
         client.messages.create(body=msgcontent,
                                from_=orig_whatsapp_number,
                                to=rx_whatsapp_number)
-        print('Job completion notification sent by WhatsApp')
+        print('Job completion notification sent by WhatsApp.')
     except:
         print('Unable to send WhatsApp notification upon job completion.')
         pass

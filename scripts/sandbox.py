@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 
 from RISCluster.processing import processing as process
-from RISCluster.utils.notify import notify
+from RISCluster.utils.utils import notify
 
 msg = 'hello'
 subj = 'test'

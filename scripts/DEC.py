@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
 from RISCluster.processing import cluster
-from RISCluster.utils.notify import notify
+from RISCluster.utils.utils import notify
 
 import importlib
 importlib.reload(cluster)
@@ -36,16 +36,7 @@ todays_date = datetime.now().strftime('%Y%m%d')
 seed = 2009
 # random.seed(seed)
 # np.random.seed(seed)
-
-# ************ This section requires further development on Velella ***********
-# os.environ["CUDA_DEVICE_ORDER"]= "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"]="0"
-#limit GPU memory use:
-# GPUfrac=1.00
-# gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=GPUfrac)#,
-# allow_growth=True)
-# sess=tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-# K.set_session(sess)
+cluster.init_GPU(GPU_fraction=1.0)
 
 # ==== 2. Load and Pre-process Data ===========================================
 # Define number of samples to be read into memory:
