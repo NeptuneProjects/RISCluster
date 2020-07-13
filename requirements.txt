@@ -1,23 +1,94 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2513
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\margl1440\margr1440\vieww10800\viewh8400\viewkind0
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
-
-\f0\fs24 \cf0 conda create -n RIS_Cluster -c anaconda python=3.7 h5py jupyterlab matplotlib numpy obspy pandas python-dotenv scikit-learn scipy tensorflow twilio\
-\
-Package List:\
-python=3.8\
-h5py\
-jupyterlab\
-matplotlib\
-numpy\
-obspy\
-pandas\
-python-dotenv\
-scikit-learn\
-scipy\
-tensorflow\
-twilio\
-}
+absl-py==0.9.0
+appnope==0.1.0
+astor==0.8.0
+attrs==19.3.0
+backcall==0.2.0
+bleach==3.1.5
+brotlipy==0.7.0
+certifi==2020.6.20
+cffi==1.14.0
+chardet==3.0.4
+click==7.1.2
+cryptography==2.9.2
+cycler==0.10.0
+decorator==4.4.2
+defusedxml==0.6.0
+entrypoints==0.3
+future==0.18.2
+gast==0.3.3
+grpcio==1.12.1
+h5py @ file:///opt/concourse/worker/volumes/live/98bee3fd-2687-4017-5421-d742d1f18c35/volume/h5py_1593454156895/work
+idna @ file:///tmp/build/80754af9/idna_1593446292537/work
+importlib-metadata @ file:///opt/concourse/worker/volumes/live/84197498-cbc0-4436-7ce0-03c4490b7a28/volume/importlib-metadata_1593446431408/work
+ipykernel==5.3.0
+ipython @ file:///opt/concourse/worker/volumes/live/7ea70a71-5624-4799-50b3-3b90e07922f3/volume/ipython_1593447385860/work
+ipython-genutils==0.2.0
+jedi @ file:///opt/concourse/worker/volumes/live/114a62c0-dd60-4a40-6382-85abb31b5f6e/volume/jedi_1592841953086/work
+Jinja2==2.11.2
+joblib==0.15.1
+json5==0.9.5
+jsonschema==3.2.0
+jupyter-client==6.1.3
+jupyter-core==4.6.3
+jupyterlab==2.1.5
+jupyterlab-server==1.1.5
+Keras-Applications==1.0.8
+Keras-Preprocessing==1.1.0
+kiwisolver==1.2.0
+lxml==4.5.1
+Markdown==3.1.1
+MarkupSafe==1.1.1
+matplotlib @ file:///opt/concourse/worker/volumes/live/34dd81d3-0a70-4e5e-5ad6-be36ca7e59f7/volume/matplotlib-base_1592846084794/work
+mistune==0.8.4
+mkl-fft==1.1.0
+mkl-random==1.1.1
+mkl-service==2.3.0
+nbconvert==5.6.1
+nbformat==5.0.7
+notebook==6.0.3
+numpy==1.18.5
+obspy @ file:///usr/local/miniconda/conda-bld/obspy_1593447863912/work
+packaging==20.4
+pandas @ file:///opt/concourse/worker/volumes/live/38d1301c-8fa9-4d2f-662e-34dddf33b183/volume/pandas_1592841668171/work
+pandocfilters==1.4.2
+parso==0.7.0
+pexpect==4.8.0
+pickleshare==0.7.5
+prometheus-client==0.8.0
+prompt-toolkit==3.0.5
+protobuf==3.12.3
+ptyprocess==0.6.0
+pycparser==2.20
+pydotplus==2.0.2
+Pygments==2.6.1
+PyJWT==1.7.1
+pyOpenSSL==19.1.0
+pyparsing==2.4.7
+pyrsistent==0.16.0
+PySocks==1.7.1
+python-dateutil==2.8.1
+python-dotenv @ file:///home/conda/feedstock_root/build_artifacts/python-dotenv_1593788306353/work
+pytz==2020.1
+pyzmq==19.0.1
+requests @ file:///tmp/build/80754af9/requests_1592841827918/work
+scikit-learn @ file:///opt/concourse/worker/volumes/live/eab838ab-55a5-40d0-5cbd-f1854d35aa9d/volume/scikit-learn_1592503039331/work
+scipy @ file:///opt/concourse/worker/volumes/live/14622691-c324-4e90-5a99-87aced91207b/volume/scipy_1592930535761/work
+Send2Trash==1.5.0
+six==1.15.0
+SQLAlchemy @ file:///opt/concourse/worker/volumes/live/701c360b-024a-4c1d-72ce-e82e6bfb4620/volume/sqlalchemy_1593446320654/work
+tensorboard==1.14.0
+tensorflow==1.14.0
+tensorflow-estimator==1.14.0
+termcolor==1.1.0
+terminado==0.8.3
+testpath==0.4.4
+threadpoolctl @ file:///tmp/tmp9twdgx9k/threadpoolctl-2.1.0-py3-none-any.whl
+tornado==6.0.4
+traitlets==4.3.3
+twilio @ file:///home/conda/feedstock_root/build_artifacts/twilio_1594239859066/work
+urllib3==1.25.9
+wcwidth @ file:///tmp/build/80754af9/wcwidth_1593447189090/work
+webencodings==0.5.1
+Werkzeug==1.0.1
+wrapt==1.12.1
+zipp==3.1.0
