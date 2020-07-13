@@ -21,10 +21,10 @@ importlib.reload(cluster)
 
 tic_total = datetime.now()
 # AEC Parameters:
-M = int(36000)
+M = int(180000)
 LR = 0.0001     # Learning rate
 n_epochs = 600  # Number of epochs
-batch_sz = 256  # Batch size
+batch_sz = 512  # Batch size
 
 # ==== 1. Set Up Environment ==================================================
 fname_dataset = '../../../Data/DetectionData.h5'
