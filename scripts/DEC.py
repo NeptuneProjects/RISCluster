@@ -236,13 +236,14 @@ fig.savefig(fname)
 n_clusters = 11
 clustering_layer = cluster.ClusteringLayer(n_clusters,
                                            name='clustering')(encoder.output)
-model = tf.keras.models.Model(inputs=autoencoder.input,
+ClusterModel = tf.keras.models.Model(inputs=autoencoder.input,
                               outputs=[clustering_layer, autoencoder.output])
-model.compile(loss=['kld',loss], loss_weights=[0.1, .9], optimizer=optim)
-model.summary()
-fname = savepath_model + '03_ConvAECwClustering_' + \
-        datetime.now().strftime("%Y%m%dT%H%M%S")
-cluster.save_model_info(model, fname)
+ClusterModel.compile(loss=['kld',loss], loss_weights=[0.1, .9],
+                     optimizer=optim)
+# ClusterModel.summary()
+# fname = savepath_model + '03_ConvAECwClustering_' + \
+        # datetime.now().strftime("%Y%m%dT%H%M%S")
+# cluster.save_model_info(ClusterModel, fname)
 
 ### 6.2 Generate embedded latent space training samples:
 enc_train = encoder.predict(X_train, verbose=1)
@@ -257,7 +258,7 @@ labels_last = np.copy(labels)
 
 # Initialize the DEC clustering layer weights using cluster centers found
 # initally by KMeans:
-model.get_layer(name='clustering').set_weights([kmeans.cluster_centers_])
+ClusterModel.get_layer(name='clustering').set_weights([kmeans.cluster_centers_])
 
 # ==== 7. Train the DEC Model =================================================
 # Set parameters for the DEC fine tuning:
@@ -266,16 +267,16 @@ tol = 0.001           # tolerance threshold to stop training
 maxiter = 47250       # number of updates to run before halting. (~12 epochs)
 update_interval = 315 # Soft assignment distribution and target distributions
                       # updated evey 315 batches. (~12 updates/epoch)
-model, reconst = cluster.optim_and_cluster(X_train, model, batch_size, tol,
+ClusterModel, reconst = cluster.optim_and_cluster(X_train, ClusterModel, batch_size, tol,
                                            maxiter, update_interval, labels,
                                            labels_last)
 #Save model and model weights seperately
 fname = savepath_model + '04_DEC_ModelWeightsFinal_' + \
         datetime.now().strftime("%Y%m%dT%H%M%S")
-model.save_weights(fname)
+ClusterModel.save_weights(fname)
 fname = savepath_model + '05_DEC_Model_' + \
         datetime.now().strftime("%Y%m%dT%H%M%S")
-model.save(savepath_model + 'DEC_model_{}.hdf5'.format(todays_date))
+ClusterModel.save(savepath_model + 'DEC_model_{}.hdf5'.format(todays_date))
 
 insp_idx = sorted(np.random.randint(0,len(X_train),4))
 figtitle = 'Training Data Reconstruction from DEC Latent Space'
@@ -297,7 +298,7 @@ X_test, m, n, o, p, sample_index = cluster.load_test(fname_dataset, M,
                                                      index_test)
 # Feed Unseen Test Data to Trained DEC Model
 # Predict asignment probability of test data & generate reconstructions:
-q, reconst = model.predict(X_test, verbose = 1)
+q, reconst = ClusterModel.predict(X_test, verbose = 1)
 # Determine labels based on assignment probabilities:
 labels = q.argmax(1)
 # Generate embedded latent space test data samples:

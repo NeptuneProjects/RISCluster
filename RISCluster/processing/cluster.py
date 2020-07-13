@@ -16,7 +16,6 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow.compat.v1 as tfcv1
 import tensorflow.keras.backend as tfkb
-from tensorflow.keras.utils import plot_model
 
 from RISCluster.utils.utils import notify
 
@@ -364,7 +363,7 @@ def save_model_info(model, fname):
     with open(fname + '.txt', 'w') as f:
         with redirect_stdout(f):
             model.summary()
-    plot_model(model, to_file=fname + '.png', show_shapes=True)
+    tf.keras.utils.plot_model(model, to_file=fname + '.png', show_shapes=True)
 
 def save_trained_lspace(fname, train_enc, val_enc, val_reconst):
     with h5py.File(fname, 'w') as nf:
