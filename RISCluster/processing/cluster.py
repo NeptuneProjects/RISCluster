@@ -151,7 +151,7 @@ def get_trace():
     pass
     return None
 
-def init_GPU(GPU_fraction=0.5):
+def init_GPU(GPUfrac=0.5):
     '''Designate GPUs and limit memory.'''
     os.environ["CUDA_DEVICE_ORDER"]= "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]="0"

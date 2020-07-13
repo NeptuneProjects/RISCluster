@@ -36,7 +36,7 @@ todays_date = datetime.now().strftime('%Y%m%d')
 seed = 2009
 # random.seed(seed)
 # np.random.seed(seed)
-cluster.init_GPU(GPU_fraction=1.0)
+cluster.init_GPU(GPUfrac=1.0)
 
 # ==== 2. Load and Pre-process Data ===========================================
 # Define number of samples to be read into memory:
