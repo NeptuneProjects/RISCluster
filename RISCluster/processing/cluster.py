@@ -408,7 +408,7 @@ def view_all_clusters(data, n, o, labels, n_clusters, sample_index, n_examples=6
     n_rows = n_clusters
     for k in range(0, n_clusters):
         label_idx = np.where(labels==k)[0]
-        if len(label_idx) is 0:
+        if len(label_idx) == 0:
             n_rows -= 1
 
     fig = plt.figure(figsize=(2*n_examples,2*n_rows), dpi=300)
@@ -416,7 +416,7 @@ def view_all_clusters(data, n, o, labels, n_clusters, sample_index, n_examples=6
     cnt_row = 0
     for i in range(0, n_clusters):
         label_idx = np.where(labels==i)[0]
-        if len(label_idx) is 0:
+        if len(label_idx) == 0:
             pass
         elif len(label_idx) < n_examples:
             for j in range(0, len(label_idx)):
