@@ -239,7 +239,7 @@ clustering_layer = cluster.ClusteringLayer(n_clusters,
 model = tf.keras.models.Model(inputs=autoencoder.input,
                               outputs=[clustering_layer, autoencoder.output])
 model.compile(loss=['kld',loss], loss_weights=[0.1, .9], optimizer=optim)
-
+model.summary()
 fname = savepath_model + '03_ConvAECwClustering_' + \
         datetime.now().strftime("%Y%m%dT%H%M%S")
 cluster.save_model_info(model, fname)
