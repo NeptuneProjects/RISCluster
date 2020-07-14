@@ -1,5 +1,5 @@
 .env
 .DS_STORE
 xOld/
-__pycache__/
+__pycache__/*
 .ipynb_checkpoints/
