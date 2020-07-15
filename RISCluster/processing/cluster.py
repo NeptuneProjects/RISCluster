@@ -49,13 +49,17 @@ class ConvAEC(nn.Module):
         )
 
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1,
+                               output_padding=1),
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 16, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ConvTranspose2d(32, 16, kernel_size=5, stride=2, padding=2,
+                               output_padding=1),
             nn.ReLU(True),
-            nn.ConvTranspose2d(16, 8, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ConvTranspose2d(16, 8, kernel_size=5, stride=2, padding=2,
+                               output_padding=1),
             nn.ReLU(True),
-            nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=2,
+                               output_padding=1),
         )
 
     def forward(self, x):
@@ -281,7 +285,7 @@ def load_data(fname_dataset, M, index):
         DataSpec = '/30sec/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
-        print('----------------------------------------------------------------')
+        print('--------------------------------------------------------------')
         print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
         print(f'Loading {M} samples...')
         tic = datetime.now()
@@ -297,7 +301,8 @@ def load_data(fname_dataset, M, index):
             try:
                 dset_arr = dset[index[i], 1:-1, 1:129]
                 dset_arr /= dset_arr.max()
-                X[count,:,:,:] = torch.from_numpy(np.expand_dims(dset_arr, axis=0))
+                X[count,:,:,:] = torch.from_numpy(np.expand_dims(dset_arr,
+                                                                 axis=0))
                 idx_sample[count,] = int(index[i])
                 count += 1
             except:
@@ -309,14 +314,13 @@ def load_data(fname_dataset, M, index):
         toc = datetime.now()
         print(f'\nTime elapsed = {toc}')
 
-    # Update dimensions of X:
     m, p, n, o = list(X.size())
     print(f'Shape of output is {(m, p, n, o)}')
 #     msgsubj = 'Training/Validation Data Loaded'
 #     msgcontent = f'''{M} training/validation spectrograms loaded successfully.
 # Time Elapsed = {(toc-tic)}'''
 #     notify(msgsubj, msgcontent)
-    print('----------------------------------------------------------------')
+    print('--------------------------------------------------------------')
     return X, m, p, n, o, idx_sample
 
 # def optim_and_cluster(X_train, model, batch_size, tol, maxiter,
