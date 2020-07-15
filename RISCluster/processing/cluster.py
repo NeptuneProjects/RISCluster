@@ -211,7 +211,24 @@ def get_metadata(query_index, sample_index, fname_dataset):
 #                                    allow_growth=True)
 #     sess = tfcv1.Session(config=tfcv1.ConfigProto(gpu_options=GPU_options))
 #     tfcv1.keras.backend.set_session(sess)
-#
+
+def init_output_env():
+    todays_date = datetime.now().strftime('%Y%m%dT%H%M%S')
+    savepath_trial = '../../../Outputs/Trials/' + todays_date + '/'
+    folders = ['Figures/', 'Metrics/', 'Models/', 'SavedData/']
+
+    savepath_fig = os.path.join(savepath_trial, folders[0])
+    savepath_stats = savepath_trial + folders[1]
+    savepath_model = savepath_trial + folders[2]
+    savepath_data = savepath_trial + folders[3]
+
+    if not os.path.exists(savepath_trial):
+        os.makedirs(savepath_trial)
+        for folder in folders:
+            os.mkdir(os.path.join(savepath_trial, folder))
+
+    return savepath_fig, savepath_stats, savepath_model, savepath_data
+
 # def load_test(fname_dataset, M, index_test):
 #     with h5py.File(fname_dataset, 'r') as f:
 #         #samples, frequency bins, time bins, amplitude
@@ -643,7 +660,6 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         # print(tvec)
 
         ax = fig.add_subplot(gs[i])
-        print(X[insp_idx[i],:,:,:].shape)
         plt.imshow(torch.reshape(X[insp_idx[i],:,:,:], (n,o)), aspect='auto')
         plt.gca().invert_yaxis()
         plt.xlabel('Time Bin')

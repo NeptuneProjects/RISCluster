@@ -276,7 +276,7 @@ fname = savepath_model + '04_DEC_ModelWeightsFinal_' + \
 ClusterModel.save_weights(fname)
 fname = savepath_model + '05_DEC_Model_' + \
         datetime.now().strftime("%Y%m%dT%H%M%S")
-ClusterModel.save(savepath_model + 'DEC_model_{}.hdf5'.format(todays_date))
+ClusterModel.save(fname)
 
 insp_idx = sorted(np.random.randint(0,len(X_train),4))
 figtitle = 'Training Data Reconstruction from DEC Latent Space'
