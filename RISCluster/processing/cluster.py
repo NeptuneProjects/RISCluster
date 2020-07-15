@@ -185,20 +185,20 @@ class ConvAEC(nn.Module):
 # def build_fvec(cutoff, fs):
 #     pass
 #     return None
-#
-# def get_metadata(query_index, sample_index, fname_dataset):
-#     '''Returns station metadata given sample index.'''
-#     with h5py.File(fname_dataset, 'r') as f:
-#         DataSpec = '/30sec/Catalogue'
-#         dset = f[DataSpec]
-#         metadata = dict()
-#         counter = 0
-#         for i in query_index:
-#             query = sample_index[i]
-#             metadata[counter] = json.loads(dset[query])
-#             counter += 1
-#     return metadata
-#
+
+def get_metadata(query_index, sample_index, fname_dataset):
+    '''Returns station metadata given sample index.'''
+    with h5py.File(fname_dataset, 'r') as f:
+        DataSpec = '/30sec/Catalogue'
+        dset = f[DataSpec]
+        metadata = dict()
+        counter = 0
+        for i in query_index:
+            query = sample_index[i]
+            metadata[counter] = json.loads(dset[query])
+            counter += 1
+    return metadata
+
 # def get_trace():
 #     pass
 #     return None
@@ -625,49 +625,50 @@ def set_loading_index(M, fname_dataset, reserve=0.02):
 #         plt.show()
 #     return fig
 #
-# def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
-#                   nrows=2, ncols=2, figsize=(12,9), show=True):
-#     '''Plots selected spectrograms from input data.'''
-#     if not len(insp_idx) == nrows * ncols:
-#         raise ValueError('Subplot/sample number mismatch: check dimensions.')
-#     metadata = get_metadata(insp_idx, sample_index, fname_dataset)
-#     fig = plt.figure(figsize=figsize, dpi=300)
-#     gs = GridSpec(nrows=nrows, ncols=ncols)
-#     counter = 0
-#     for i in range(len(insp_idx)):
-#
-#         # starttime = metadata[counter]['StartTime']
-#         # npts = int(metadata[counter]['Npts'])
-#         # freq = str(1000 * metadata[counter]['SamplingInterval']) + 'ms'
-#         # tvec = pd.date_range(starttime, periods=npts, freq=freq)
-#         # print(tvec)
-#
-#         ax = fig.add_subplot(gs[i])
-#         plt.imshow(np.reshape(X[insp_idx[i],:,:,:], (n,o)), aspect='auto')
-#         plt.gca().invert_yaxis()
-#         plt.xlabel('Time Bin')
-#         plt.ylabel('Frequency Bin')
-#         station = metadata[counter]['Station']
-#         try:
-#             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
-#                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
-#                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-#         except:
-#             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
-#                                         '%Y-%m-%dT%H:%M:%S').strftime(
-#                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-#         plt.title(f'Station {station}\nTrigger: {time_on}\n'
-#                   f'Index: {sample_index[insp_idx[i]]}')
-#         # plt.title(f'Station {}'.format(metadata[counter]['Station']))
-#         divider = make_axes_locatable(ax)
-#         cax = divider.append_axes("right", size="5%", pad=0.05)
-#         plt.colorbar(cax=cax)
-#         counter += 1
-#     fig.suptitle(figtitle, size=18, weight='bold')
-#     fig.tight_layout()
-#     fig.subplots_adjust(top=0.85)
-#     if show is False:
-#         plt.close()
-#     else:
-#         plt.show()
-#     return fig
+def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
+                  nrows=2, ncols=2, figsize=(12,9), show=True):
+    '''Plots selected spectrograms from input data.'''
+    if not len(insp_idx) == nrows * ncols:
+        raise ValueError('Subplot/sample number mismatch: check dimensions.')
+    metadata = get_metadata(insp_idx, sample_index, fname_dataset)
+    fig = plt.figure(figsize=figsize, dpi=300)
+    gs = GridSpec(nrows=nrows, ncols=ncols)
+    counter = 0
+    for i in range(len(insp_idx)):
+
+        # starttime = metadata[counter]['StartTime']
+        # npts = int(metadata[counter]['Npts'])
+        # freq = str(1000 * metadata[counter]['SamplingInterval']) + 'ms'
+        # tvec = pd.date_range(starttime, periods=npts, freq=freq)
+        # print(tvec)
+
+        ax = fig.add_subplot(gs[i])
+        print(X[insp_idx[i],:,:,:].shape)
+        plt.imshow(torch.reshape(X[insp_idx[i],:,:,:], (n,o)), aspect='auto')
+        plt.gca().invert_yaxis()
+        plt.xlabel('Time Bin')
+        plt.ylabel('Frequency Bin')
+        station = metadata[counter]['Station']
+        try:
+            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        except:
+            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        plt.title(f'Station {station}\nTrigger: {time_on}\n'
+                  f'Index: {sample_index[insp_idx[i]]}')
+        # plt.title(f'Station {}'.format(metadata[counter]['Station']))
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(cax=cax)
+        counter += 1
+    fig.suptitle(figtitle, size=18, weight='bold')
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.85)
+    if show is False:
+        plt.close()
+    else:
+        plt.show()
+    return fig
