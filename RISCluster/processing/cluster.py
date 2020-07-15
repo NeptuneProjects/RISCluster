@@ -13,11 +13,58 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
+import torch
+import torch.nn as nn
 # import tensorflow as tf
 # import tensorflow.compat.v1 as tfcv1
 # import tensorflow.keras.backend as tfkb
 
 from RISCluster.utils.utils import notify
+
+class ConvAEC(nn.Module):
+    def __init__(self, **kwargs):
+        super(ConvAEC, self).__init__()
+
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=5, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.Conv2d(8, 16, kernel_size=5, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(True)
+        )
+        # Input = (M, 64, 4, 8)
+        # Output = (, 2048)
+        self.enc2latent = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(2048, 32),
+            nn.ReLU(True)
+        )
+
+        self.latent2dec = nn.Sequential(
+            nn.Linear(32, 2048),
+            nn.ReLU(True)
+        )
+
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, 16, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(16, 8, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=2, output_padding=1),
+        )
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.enc2latent(x)
+        x = self.latent2dec(x)
+        x = x.view(-1, 64, 4, 8)
+        x = self.decoder(x)
+        return x
 
 # class ClusteringLayer(tf.keras.layers.Layer):
 #     """
@@ -201,88 +248,77 @@ from RISCluster.utils.utils import notify
 #     notify(msgsubj, msgcontent)
 #     return X, m, n, o, p, sample_index
 #
-# def load_train_val(fname_dataset, M):
-#     '''
-#     *M* random spectrograms are read in and pre-processed iteratively as
-#     follows:
-#     1. Open the file and specified h5 dataset.
-#     2. Read the *m*th spectrogram from file.  Each spectrogram is of shape
-#     (*n*, *o*).
-#     3. Omit unnecessary data when assigning data into memory to cut down on
-#     memory usage and to make subsequent convolutions and transpositions
-#     straightforward with regard to data dimensions.  Specifically, index *n*[0]
-#     contains low frequency data that is of no interest for our high-frequency
-#     analaysis; *n*[65] is a vector of time values; and *o*[0] is a vector of
-#     frequency values.  Additional *o* indices may be omitted to reduce the
-#     length of spectrogram being analyzed.
-#     4. Add a fourth axis for the amplitude dimension.  This is requried for
-#     subsequent steps.
-#     At the conclusion of reading in and pre-processing, data has been omitted
-#     in such a way that the final shape of the array is
-#     (*m*, *n*, *o*, *p*) = (*M*, 64, 128, 1).
-#     Note: There are two other methods to accomplish the read.  The first is to
-#     use fancy indexing by referring to the array of random indices in a single
-#     line (i.e., arr = dset[rand_indices,:,:,:]).  A similar method is to use
-#     the "read_direct" function.  However, these two methods take at least an
-#     order of magnitude longer to read in the data than to iterate over each
-#     index.  The long duration is a result of how the .h5 file is written to
-#     disk.  In our case, the spectrogram data has been written in chunks that
-#     are optimized for reading into this workflow.
-#     '''
-#     with h5py.File(fname_dataset, 'r') as f:
-#         #samples, frequency bins, time bins, amplitude
-#         DataSpec = '/30sec/Spectrogram'
-#         dset = f[DataSpec]
-#         m, n, o = dset.shape
-#         print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
-#         print(f'Loading {M} training/validation samples...')
-#         tic = datetime.now()
-#
-#         index_train_val, index_test = set_load_index(m, M, reserve=0.02)
-#
-#         np.seterr(divide='raise')
+def load_data(fname_dataset, M, index):
+    '''
+    *M* random spectrograms are read in and pre-processed iteratively as
+    follows:
+    1. Open the file and specified h5 dataset.
+    2. Read the *m*th spectrogram from file.  Each spectrogram is of shape
+    (*n*, *o*).
+    3. Omit unnecessary data when assigning data into memory to cut down on
+    memory usage and to make subsequent convolutions and transpositions
+    straightforward with regard to data dimensions.  Specifically, index *n*[0]
+    contains low frequency data that is of no interest for our high-frequency
+    analaysis; *n*[65] is a vector of time values; and *o*[0] is a vector of
+    frequency values.  Additional *o* indices may be omitted to reduce the
+    length of spectrogram being analyzed.
+    4. Add a fourth axis for the amplitude dimension.  This is requried for
+    subsequent steps.
+    At the conclusion of reading in and pre-processing, data has been omitted
+    in such a way that the final shape of the array is
+    (*m*, *n*, *o*, *p*) = (*M*, 64, 128, 1).
+    Note: There are two other methods to accomplish the read.  The first is to
+    use fancy indexing by referring to the array of random indices in a single
+    line (i.e., arr = dset[rand_indices,:,:,:]).  A similar method is to use
+    the "read_direct" function.  However, these two methods take at least an
+    order of magnitude longer to read in the data than to iterate over each
+    index.  The long duration is a result of how the .h5 file is written to
+    disk.  In our case, the spectrogram data has been written in chunks that
+    are optimized for reading into this workflow.
+    '''
+    with h5py.File(fname_dataset, 'r') as f:
+        #samples, frequency bins, time bins, amplitude
+        DataSpec = '/30sec/Spectrogram'
+        dset = f[DataSpec]
+        m, n, o = dset.shape
+        print('----------------------------------------------------------------')
+        print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
+        print(f'Loading {M} samples...')
+        tic = datetime.now()
+
+        np.seterr(divide='raise')
 #         X = np.empty([M, n-2, o-173, 1])
-#         sample_index = np.empty([M,], dtype=np.int)
-#         dset_arr = np.empty([1, n, o])
-#         count = 0
-#         for i in range(M):
-#             try:
-#                 dset_arr = dset[index_train_val[i], 1:-1, 1:129]
-#                 dset_arr /= dset_arr.max()
-#                 X[count,:,:,:] = dset_arr[..., np.newaxis]
-#                 sample_index[count,] = int(index_train_val[i])
-#                 count += 1
-#             except:
-#                 print('Numpy "Divide-by-zero Warning" raised, '
-#                       'skipping spectrogram.')
-#                 pass
-#
-#             print('%.2f' % (float(100*i/(M-1))) + '% complete.', end='\r')
-#         toc = datetime.now()
-#         print(f'\nTime elapsed = {toc}')
-#
-#     # Update dimensions of X:
-#     m, n, o, p = X.shape
-#     print(f'Shape of X is {(m, n, o, p)}')
+        X = torch.empty([M, 1, n-2, o-173])
+        idx_sample = np.empty([M,], dtype=np.int)
+        dset_arr = np.empty([n, o])
+#         dset_arr = torch.empty([1, n, o])
+        count = 0
+        for i in range(M):
+            try:
+                dset_arr = dset[index[i], 1:-1, 1:129]
+                dset_arr /= dset_arr.max()
+                X[count,:,:,:] = torch.from_numpy(np.expand_dims(dset_arr, axis=0))
+                idx_sample[count,] = int(index[i])
+                count += 1
+            except:
+                print('Numpy "Divide-by-zero Warning" raised, '
+                      'skipping spectrogram.')
+                pass
+
+            print('%.2f' % (float(100*i/(M-1))) + '% complete.', end='\r')
+        toc = datetime.now()
+        print(f'\nTime elapsed = {toc}')
+
+    # Update dimensions of X:
+    m, p, n, o = list(X.size())
+    print(f'Shape of output is {(m, p, n, o)}')
 #     msgsubj = 'Training/Validation Data Loaded'
 #     msgcontent = f'''{M} training/validation spectrograms loaded successfully.
 # Time Elapsed = {(toc-tic)}'''
 #     notify(msgsubj, msgcontent)
-#     return X, m, n, o, p, sample_index, index_train_val, index_test
-#
-# # Traceback (most recent call last):
-# #   File "DEC.py", line 276, in <module>
-# #     update_interval, labels, labels_last)
-# #   File "../../RISCluster/RISCluster/processing/cluster.py", line 288, in optim_and_cluster
-# #     loss = model.train_on_batch(x=X_train[idx], y=[p[idx], X_train[idx,:,:,:]])
-# #   File "/Users/williamjenkins/miniconda3/envs/RIS_Cluster/lib/python3.7/site-packages/tensorflow/python/keras/engine/training.py", line 1175, in train_on_batch
-# #     outputs = self.train_function(ins)  # pylint: disable=not-callable
-# #   File "/Users/williamjenkins/miniconda3/envs/RIS_Cluster/lib/python3.7/site-packages/tensorflow/python/keras/backend.py", line 3292, in __call__
-# #     run_metadata=self.run_metadata)
-# #   File "/Users/williamjenkins/miniconda3/envs/RIS_Cluster/lib/python3.7/site-packages/tensorflow/python/client/session.py", line 1458, in __call__
-# #     run_metadata_ptr)
-# # tensorflow.python.framework.errors_impl.InvalidArgumentError: input and filter must have the same depth: 1 vs 8
-#
+    print('----------------------------------------------------------------')
+    return X, m, p, n, o, idx_sample
+
 # def optim_and_cluster(X_train, model, batch_size, tol, maxiter,
 #                       update_interval, labels, labels_last):
 #     loss = 0              # initialize loss
@@ -362,12 +398,19 @@ from RISCluster.utils.utils import notify
 #         nf.create_dataset('Val_Reconst', data=val_reconst,
 #                           dtype=val_reconst.dtype)
 #
-# def set_load_index(m, M, reserve=0.02):
-#     index = np.random.choice(m, size=int(M * (2 + reserve)), replace=False)
-#     index_split = int(len(index)/2)
-#     index_train_val = sorted(index[0:index_split])
-#     index_test = sorted(index[index_split:])
-#     return index_train_val, index_test
+def set_loading_index(M, fname_dataset, reserve=0.02):
+    with h5py.File(fname_dataset, 'r') as f:
+        DataSpec = '/30sec/Spectrogram'
+        m, _, _ = f[DataSpec].shape
+    index = np.random.choice(m, size=int(M * (2 + reserve)), replace=False)
+    split = int(len(index)/2)
+    index_test = index[split:]
+    index_train_val = index[0:split]
+    split_pct = 0.8
+    split = int(split_pct * len(index_train_val))
+    index_train = index_train_val[0:split]
+    index_val = index_train_val[split:]
+    return index_train, index_val, index_test
 #
 # def target_distribution(q):
 #     """
