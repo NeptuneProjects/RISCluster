@@ -212,9 +212,8 @@ def get_metadata(query_index, sample_index, fname_dataset):
 def init_output_env():
     todays_date = datetime.now().strftime('%Y%m%dT%H%M%S')
     savepath_trial = '../../../Outputs/Trials/' + todays_date + '/'
-    folders = ['Figures/', 'Figures/Snapshots/', 'Metrics/', 'Models/', \
-               'SavedData/']
-    savepath_fig = os.path.join(savepath_trial, folders[0])
+    folders = ['Figures/', 'Metrics/', 'Models/', 'SavedData/']
+    savepath_fig = savepath_trial + folders[0]
     savepath_stats = savepath_trial + folders[1]
     savepath_model = savepath_trial + folders[2]
     savepath_data = savepath_trial + folders[3]
