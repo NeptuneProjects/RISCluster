@@ -582,7 +582,7 @@ def set_loading_index(M, fname_dataset, reserve=0.02):
 #     return fig
 #
 
-def view_specgram_training(fixed_images, reconstructed_images, figtitle,
+def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
                            figsize=(12,9), show=True):
     X_T = fixed_images.detach().cpu().numpy()
     X_V = reconstructed_images.detach().cpu().numpy()
@@ -614,64 +614,64 @@ def view_specgram_training(fixed_images, reconstructed_images, figtitle,
         plt.show()
     return fig
 
-def view_orig_rcnstr_specgram(X_val, val_reconst, insp_idx, n, o,
-                              fname_dataset, sample_index, figtitle, nrows=2,
-                              ncols=4, figsize=(12,9), show=True):
-    '''Plots selected spectrograms and their latent space reconstructions.'''
-    if not len(insp_idx) == (nrows * ncols / 2):
-        raise ValueError('Subplot/sample number mismatch: check dimensions.')
-    metadata = get_metadata(insp_idx, sample_index, fname_dataset)
-    fig = plt.figure(figsize=figsize, dpi=300)
-    gs = GridSpec(nrows=nrows, ncols=ncols)
-    counter = 0
-    for i in range(len(insp_idx)):
-        ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X_val[insp_idx[i],:,:,:], (n,o)), aspect='auto')
-        plt.gca().invert_yaxis()
-        plt.ylabel('Frequency Bins')
-        plt.xlabel('Time Bins')
-        station = metadata[counter]['Station']
-        try:
-            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
-                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        except:
-            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
-                                        '%Y-%m-%dT%H:%M:%S').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        plt.title(f'Station {station}\nTrigger: {time_on}\n'
-                  f'Index: {sample_index[insp_idx[i]]}')
-        if counter == 0:
-            plt.figtext(0, 0.57, 'Original Spectrograms', rotation='vertical',
-                        fontweight='bold')
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(cax=cax)
-
-        ax = fig.add_subplot(gs[1,counter])
-        plt.imshow(np.reshape(val_reconst[insp_idx[i],:,:,:], (n,o)),
-                              aspect='auto')
-        plt.gca().invert_yaxis()
-        plt.ylabel('Frequency Bins')
-        plt.xlabel('Time Bins')
-        if counter == 0:
-            plt.figtext(0, 0.15, 'Reconstructed Spectrograms',
-                        rotation='vertical', fontweight='bold')
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(cax=cax)
-        counter += 1
-
-    fig.suptitle('Spectrograms Reconstructed from Latent Space', size=18,
-                 weight='bold')
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.85, left=0.05)
-    if show is False:
-        plt.close()
-    else:
-        plt.show()
-    return fig
+# def view_orig_rcnstr_specgram(X_val, val_reconst, insp_idx, n, o,
+#                               fname_dataset, sample_index, figtitle, nrows=2,
+#                               ncols=4, figsize=(12,9), show=True):
+#     '''Plots selected spectrograms and their latent space reconstructions.'''
+#     if not len(insp_idx) == (nrows * ncols / 2):
+#         raise ValueError('Subplot/sample number mismatch: check dimensions.')
+#     metadata = get_metadata(insp_idx, sample_index, fname_dataset)
+#     fig = plt.figure(figsize=figsize, dpi=300)
+#     gs = GridSpec(nrows=nrows, ncols=ncols)
+#     counter = 0
+#     for i in range(len(insp_idx)):
+#         ax = fig.add_subplot(gs[0,counter])
+#         plt.imshow(np.reshape(X_val[insp_idx[i],:,:,:], (n,o)), aspect='auto')
+#         plt.gca().invert_yaxis()
+#         plt.ylabel('Frequency Bins')
+#         plt.xlabel('Time Bins')
+#         station = metadata[counter]['Station']
+#         try:
+#             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+#                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
+#                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+#         except:
+#             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+#                                         '%Y-%m-%dT%H:%M:%S').strftime(
+#                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+#         plt.title(f'Station {station}\nTrigger: {time_on}\n'
+#                   f'Index: {sample_index[insp_idx[i]]}')
+#         if counter == 0:
+#             plt.figtext(0, 0.57, 'Original Spectrograms', rotation='vertical',
+#                         fontweight='bold')
+#         divider = make_axes_locatable(ax)
+#         cax = divider.append_axes("right", size="5%", pad=0.05)
+#         plt.colorbar(cax=cax)
 #
+#         ax = fig.add_subplot(gs[1,counter])
+#         plt.imshow(np.reshape(val_reconst[insp_idx[i],:,:,:], (n,o)),
+#                               aspect='auto')
+#         plt.gca().invert_yaxis()
+#         plt.ylabel('Frequency Bins')
+#         plt.xlabel('Time Bins')
+#         if counter == 0:
+#             plt.figtext(0, 0.15, 'Reconstructed Spectrograms',
+#                         rotation='vertical', fontweight='bold')
+#         divider = make_axes_locatable(ax)
+#         cax = divider.append_axes("right", size="5%", pad=0.05)
+#         plt.colorbar(cax=cax)
+#         counter += 1
+#
+#     fig.suptitle('Spectrograms Reconstructed from Latent Space', size=18,
+#                  weight='bold')
+#     fig.tight_layout()
+#     fig.subplots_adjust(top=0.85, left=0.05)
+#     if show is False:
+#         plt.close()
+#     else:
+#         plt.show()
+#     return fig
+
 def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
                   nrows=2, ncols=2, figsize=(12,9), show=True):
     '''Plots selected spectrograms from input data.'''
