@@ -18,6 +18,54 @@ import torch.nn as nn
 
 from RISCluster.utils.utils import notify
 
+class Encoder(nn.Module):
+    def __init__(self):
+        super(Encoder, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=5, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.Conv2d(8, 16, kernel_size=5, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Flatten(),
+            nn.Linear(2048, 32),
+            nn.ReLU(True)
+        )
+
+    def forward(self, x):
+        x = self.encoder(x)
+        return x
+
+class AEC(nn.Module):
+    def __init__(self, encoder):
+        super(AEC, self).__init__()
+        self.encoder = encoder
+
+        self.latent2dec = nn.Sequential(
+            nn.Linear(32, 2048),
+            nn.ReLU(True)
+        )
+
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, 16, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(16, 8, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=2, output_padding=1),
+        )
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.latent2dec(x)
+        x = x.view(-1, 64, 4, 8)
+        x = self.decoder(x)
+        return x
+
 class ConvAEC(nn.Module):
     def __init__(self, **kwargs):
         super(ConvAEC, self).__init__()
@@ -39,7 +87,7 @@ class ConvAEC(nn.Module):
             nn.Linear(2048, 32),
             nn.ReLU(True)
         )
-
+        # =========================================
         self.latent2dec = nn.Sequential(
             nn.Linear(32, 2048),
             nn.ReLU(True)
