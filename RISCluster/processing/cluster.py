@@ -326,13 +326,13 @@ def load_data(fname_dataset, M, index, notify=True):
 
             print('%.2f' % (float(100*i/(M-1))) + '% complete.', end='\r')
         toc = datetime.now()
-        print(f'\nTime elapsed = {toc}')
+        print(f'\nTime elapsed = {toc-tic}')
 
     m, p, n, o = list(X.size())
     print(f'Shape of output is {(m, p, n, o)}')
     if notify:
-        msgsubj = 'Training/Validation Data Loaded'
-        msgcontent = f'''{M} training/validation spectrograms loaded successfully.
+        msgsubj = 'Data Loaded'
+        msgcontent = f'''{M} spectrograms loaded successfully at {toc}.
 Time Elapsed = {(toc-tic)}'''
         notify(msgsubj, msgcontent)
     print('--------------------------------------------------------------')
