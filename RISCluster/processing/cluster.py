@@ -223,7 +223,7 @@ def init_output_env():
         os.makedirs(savepath_trial)
         for folder in folders:
             os.mkdir(os.path.join(savepath_trial, folder))
-
+    print(f'New trial folder created at {savepath_trial}.')
     return savepath_fig, savepath_stats, savepath_model, savepath_data
 
 # def load_test(fname_dataset, M, index_test):
@@ -266,7 +266,7 @@ def init_output_env():
 #     notify(msgsubj, msgcontent)
 #     return X, m, n, o, p, sample_index
 #
-def load_data(fname_dataset, M, index):
+def load_data(fname_dataset, M, index, notify=True):
     '''
     *M* random spectrograms are read in and pre-processed iteratively as
     follows:
@@ -330,10 +330,11 @@ def load_data(fname_dataset, M, index):
 
     m, p, n, o = list(X.size())
     print(f'Shape of output is {(m, p, n, o)}')
-#     msgsubj = 'Training/Validation Data Loaded'
-#     msgcontent = f'''{M} training/validation spectrograms loaded successfully.
-# Time Elapsed = {(toc-tic)}'''
-#     notify(msgsubj, msgcontent)
+    if notify:
+        msgsubj = 'Training/Validation Data Loaded'
+        msgcontent = f'''{M} training/validation spectrograms loaded successfully.
+Time Elapsed = {(toc-tic)}'''
+        notify(msgsubj, msgcontent)
     print('--------------------------------------------------------------')
     return X, m, p, n, o, idx_sample
 
