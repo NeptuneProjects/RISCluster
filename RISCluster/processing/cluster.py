@@ -15,9 +15,6 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-# import tensorflow as tf
-# import tensorflow.compat.v1 as tfcv1
-# import tensorflow.keras.backend as tfkb
 
 from RISCluster.utils.utils import notify
 
