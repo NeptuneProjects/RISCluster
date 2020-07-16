@@ -597,7 +597,7 @@ def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
             plt.figtext(0, 0.57, 'Original Spectrograms', rotation='vertical',
                         fontweight='bold')
 
-        ax = fig.add_subplot(gs[0,counter])
+        ax = fig.add_subplot(gs[1,counter])
         plt.imshow(np.reshape(X_V[i,:,:,:], (n,o)), aspect='auto')
         plt.gca().invert_yaxis()
         if counter == 0:
