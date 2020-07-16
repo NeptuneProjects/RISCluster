@@ -607,7 +607,7 @@ def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
 
     fig.suptitle(figtitle, size=18, weight='bold')
     fig.tight_layout()
-    fig.subplots_adjust(top=0.85)
+    fig.subplots_adjust(top=0.92)
     if show is False:
         plt.close()
     else:
