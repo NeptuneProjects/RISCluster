@@ -518,7 +518,8 @@ def set_loading_index(M, fname_dataset, reserve=0.02):
 #         plt.show()
 #     return fig
 #
-def view_learningcurve(training_history, validation_history, show=True):
+def view_learningcurve(training_history, validation_history, N_EPOCHS,
+                       show=True):
     fig = plt.figure(figsize=(18,6), dpi=300)
     gs = GridSpec(nrows=1, ncols=2)
     ax = fig.add_subplot(gs[0])
