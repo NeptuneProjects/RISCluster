@@ -266,7 +266,7 @@ def init_output_env():
 #     notify(msgsubj, msgcontent)
 #     return X, m, n, o, p, sample_index
 #
-def load_data(fname_dataset, M, index, notify=True):
+def load_data(fname_dataset, M, index, send_message=True):
     '''
     *M* random spectrograms are read in and pre-processed iteratively as
     follows:
@@ -330,7 +330,7 @@ def load_data(fname_dataset, M, index, notify=True):
 
     m, p, n, o = list(X.size())
     print(f'Shape of output is {(m, p, n, o)}')
-    if notify:
+    if send_message:
         msgsubj = 'Data Loaded'
         msgcontent = f'''{M} spectrograms loaded successfully at {toc}.
 Time Elapsed = {(toc-tic)}'''
