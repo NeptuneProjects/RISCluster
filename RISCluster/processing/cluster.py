@@ -593,15 +593,19 @@ def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
         ax = fig.add_subplot(gs[0,counter])
         plt.imshow(np.reshape(X_T[i,:,:,:], (n,o)), aspect='auto')
         plt.gca().invert_yaxis()
+        plt.xlabel('Time Bin')
+        plt.ylabel('Frequency Bin')
         if counter == 0:
-            plt.figtext(0, 0.57, 'Original Spectrograms', rotation='vertical',
+            plt.figtext(-0.01, 0.62, 'Original Spectrograms', rotation='vertical',
                         fontweight='bold')
 
         ax = fig.add_subplot(gs[1,counter])
         plt.imshow(np.reshape(X_V[i,:,:,:], (n,o)), aspect='auto')
         plt.gca().invert_yaxis()
+        plt.xlabel('Time Bin')
+        plt.ylabel('Frequency Bin')
         if counter == 0:
-            plt.figtext(0, 0.15, 'Reconstructed Spectrograms',
+            plt.figtext(-0.01, 0.15, 'Reconstructed Spectrograms',
                         rotation='vertical', fontweight='bold')
         counter += 1
 
