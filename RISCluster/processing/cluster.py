@@ -583,7 +583,7 @@ def set_loading_index(M, fname_dataset, reserve=0.02):
 #
 
 def view_specgram_training(fixed_images, reconstructed_images, figtitle,
-                           figsze=(12,9), show=True):
+                           figsize=(12,9), show=True):
     X_T = fixed_images.detach().cpu().numpy()
     X_V = reconstructed_images.detach().cpu().numpy()
     fig = plt.figure(figsize=figsize, dpi=300)
