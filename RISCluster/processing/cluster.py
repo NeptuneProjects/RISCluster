@@ -517,31 +517,30 @@ def set_loading_index(M, fname_dataset, reserve=0.02):
 #         plt.show()
 #     return fig
 #
-# def view_learningcurve(fname_logger, show=True):
-#     hist = np.genfromtxt(fname_logger, delimiter=',', skip_header=1,
-#                          names=['epoch', 'train_mse_loss', 'train_mae_loss',
-#                          'val_mse_loss', 'val_mae_loss'])
-#     fig = plt.figure(figsize=(20,6), dpi=300)
-#     gs = GridSpec(nrows=1, ncols=2)
-#     ax = fig.add_subplot(gs[0])
-#     plt.plot(hist['epoch'], hist['train_mae_loss'], label='Training Loss')
-#     plt.plot(hist['epoch'], hist['val_mae_loss'], label='Validation Loss')
-#     plt.xlabel('Epochs')
-#     plt.title('Mean Absolute Error')
-#     plt.legend()
-#
-#     ax = fig.add_subplot(gs[1])
-#     plt.plot(hist['epoch'], hist['train_mse_loss'], label='Training Loss')
-#     plt.plot(hist['epoch'], hist['val_mse_loss'], label='Validation Loss')
-#     plt.xlabel('Epochs')
-#     plt.title('Mean Squared Error')
-#     plt.legend()
-#     fig.tight_layout()
-#     if show is False:
-#         plt.close()
-#     else:
-#         plt.show()
-#     return fig
+def view_learningcurve(training_history, validation_history, show=True):
+    fig = plt.figure(figsize=(18,6), dpi=300)
+    gs = GridSpec(nrows=1, ncols=2)
+    ax = fig.add_subplot(gs[0])
+    plt.plot(range(N_EPOCHS), training_history['mse'], label='Training')
+    plt.plot(range(N_EPOCHS), validation_history['mse'], label='Validation')
+    plt.xlabel('Epochs', size=14)
+    plt.ylabel('MSE', size=14)
+    plt.title('Loss: Mean Squared Error', weight='bold', size=18)
+    plt.legend()
+
+    ax = fig.add_subplot(gs[1])
+    plt.plot(range(N_EPOCHS), training_history['mae'], label='Training')
+    plt.plot(range(N_EPOCHS), validation_history['mae'], label='Validation')
+    plt.xlabel('Epochs', size=14)
+    plt.ylabel('MAE', size=14)
+    plt.title('Loss: Mean Absolute Error', weight='bold', size=18)
+    plt.legend()
+    fig.tight_layout()
+    if show is False:
+        plt.close()
+    else:
+        plt.show()
+    return fig
 #
 # def view_LspaceRcnstr(X_val, val_enc, val_reconst, idx, n, o, fname_dataset,
 #                       sample_index, figsize=(12,9), show=True):
