@@ -57,9 +57,9 @@ class Decoder(nn.Module):
         )
 
     def forward(self, x):
-        x = latent2dec(x)
+        x = self.latent2dec(x)
         x = x.view(-1, 64, 4, 8)
-        x = decoder(x)
+        x = self.decoder(x)
         return x
 
 class AEC(nn.Module):
