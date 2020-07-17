@@ -39,16 +39,13 @@ class Encoder(nn.Module):
         x = self.encoder(x)
         return x
 
-class AEC(nn.Module):
-    def __init__(self, encoder):
-        super(AEC, self).__init__()
-        self.encoder = encoder
-
+class Decoder(nn.Module):
+    def __init__(self):
+        super(Decoder, self).__init__()
         self.latent2dec = nn.Sequential(
             nn.Linear(32, 2048),
             nn.ReLU(True)
         )
-
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.ReLU(True),
@@ -60,60 +57,84 @@ class AEC(nn.Module):
         )
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.latent2dec(x)
+        x = latent2dec(x)
         x = x.view(-1, 64, 4, 8)
-        x = self.decoder(x)
+        x = decoder(x)
         return x
 
-class ConvAEC(nn.Module):
-    def __init__(self, **kwargs):
-        super(ConvAEC, self).__init__()
-
-        self.encoder = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=5, stride=2, padding=0),
-            nn.ReLU(True),
-            nn.Conv2d(8, 16, kernel_size=5, stride=2, padding=0),
-            nn.ReLU(True),
-            nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(True)
-        )
-        # Input = (M, 64, 4, 8)
-        # Output = (, 2048)
-        self.enc2latent = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(2048, 32),
-            nn.ReLU(True)
-        )
-        # =========================================
-        self.latent2dec = nn.Sequential(
-            nn.Linear(32, 2048),
-            nn.ReLU(True)
-        )
-
-        self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1,
-                               output_padding=1),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(32, 16, kernel_size=5, stride=2, padding=2,
-                               output_padding=1),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(16, 8, kernel_size=5, stride=2, padding=2,
-                               output_padding=1),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=2,
-                               output_padding=1),
-        )
+class AEC(nn.Module):
+    def __init__(self, encoder, decoder):
+        super(AEC, self).__init__()
+        self.encoder = encoder
+        self.decoder = decoder
 
     def forward(self, x):
         x = self.encoder(x)
-        x = self.enc2latent(x)
-        x = self.latent2dec(x)
-        x = x.view(-1, 64, 4, 8)
         x = self.decoder(x)
         return x
+
+class DEC(nn.Module):
+    def __init__(self, encoder, decoder, clustering_layer):
+        super(DEC, self).__init__()
+        self.encoder = encoder
+        self.clustering_layer = clustering_layer
+        self.decoder = decoder
+
+    def forward(self, x):
+        x = self.encoder(x)
+        label = self.clustering_layer(x)
+        x = self.decoder(x)
+        return x, label
+
+
+# class ConvAEC(nn.Module):
+#     def __init__(self, **kwargs):
+#         super(ConvAEC, self).__init__()
+#
+#         self.encoder = nn.Sequential(
+#             nn.Conv2d(1, 8, kernel_size=5, stride=2, padding=0),
+#             nn.ReLU(True),
+#             nn.Conv2d(8, 16, kernel_size=5, stride=2, padding=0),
+#             nn.ReLU(True),
+#             nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),
+#             nn.ReLU(True),
+#             nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+#             nn.ReLU(True)
+#         )
+#         # Input = (M, 64, 4, 8)
+#         # Output = (, 2048)
+#         self.enc2latent = nn.Sequential(
+#             nn.Flatten(),
+#             nn.Linear(2048, 32),
+#             nn.ReLU(True)
+#         )
+#         # =========================================
+#         self.latent2dec = nn.Sequential(
+#             nn.Linear(32, 2048),
+#             nn.ReLU(True)
+#         )
+#
+#         self.decoder = nn.Sequential(
+#             nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1,
+#                                output_padding=1),
+#             nn.ReLU(True),
+#             nn.ConvTranspose2d(32, 16, kernel_size=5, stride=2, padding=2,
+#                                output_padding=1),
+#             nn.ReLU(True),
+#             nn.ConvTranspose2d(16, 8, kernel_size=5, stride=2, padding=2,
+#                                output_padding=1),
+#             nn.ReLU(True),
+#             nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=2,
+#                                output_padding=1),
+#         )
+#
+#     def forward(self, x):
+#         x = self.encoder(x)
+#         x = self.enc2latent(x)
+#         x = self.latent2dec(x)
+#         x = x.view(-1, 64, 4, 8)
+#         x = self.decoder(x)
+#         return x
 
 # class ClusteringLayer(tf.keras.layers.Layer):
 #     """
