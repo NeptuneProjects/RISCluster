@@ -23,8 +23,8 @@ Load data using custom loader from spectrograms; place these data into dataloade
 ### 2.  Pre-train Convolutional Autoencoder
 #### 2.1  Instantiate the autoencoder:
 encoder = cluster.Encoder
-decoder = cluster.Decoder
-autoencoder = cluster.AEC(encoder, decoder)
+<br>decoder = cluster.Decoder
+<br>autoencoder = cluster.AEC(encoder, decoder)
 
 #### 2.2  Train the autoencoder:
 600 epochs or until losses stabilize.
