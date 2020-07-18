@@ -77,17 +77,17 @@ class ClusterAssignment(nn.Module):
     def __init__(
         self,
         cluster_number,
-        embedding_dimension,
+        feature_dim,
         alpha = 1.0,
         cluster_centers = None
     ):
         super(ClusterAssignment, self).__init__()
-        self.embedding_dimension = embedding_dimension
+        self.feature_dim = feature_dim
         self.cluster_number = cluster_number
         self.alpha = alpha
         if cluster_centers is None:
             initial_cluster_centers = torch.zeros(
-                self.cluster_number, self.embedding_dimension, dtype=torch.float
+                self.cluster_number, self.feature_dim, dtype=torch.float
             )
             nn.init.xavier_uniform_(initial_cluster_centers)
         else:
@@ -105,7 +105,7 @@ class DEC(nn.Module):
     def __init__(
         self,
         cluster_number: int,
-        hidden_dimension: int,
+        feature_dim: int,
         encoder,
         alpha
     ):
@@ -114,7 +114,7 @@ class DEC(nn.Module):
         self.cluster_number = cluster_number
         self.alpha = alpha
         self.assignment = ClusterAssignment(
-            cluster_number, self.hidden_dimension, alpha
+            cluster_number, self.feature_dim, alpha
         )
 
     def forward(self, batch):

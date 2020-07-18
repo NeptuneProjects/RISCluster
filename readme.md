@@ -20,7 +20,7 @@ La Jolla, California, USA
 ### 1.  Load Data
 Load data using custom loader from spectrograms; place these data into dataloader instances for use by PyTorch.
 
-### 2.  Pre-train Convolutional Autoencoder
+### 2.  Pre-training: Train the Convolutional Autoencoder
 #### 2.1  Instantiate the autoencoder:
 encoder = cluster.Encoder
 <br>decoder = cluster.Decoder
@@ -33,3 +33,5 @@ encoder = cluster.Encoder
 Save the model's learned parameters to file for future use.  In particular, the encoder's weights will be used to initialize the DNN portion of the DEC model.
 
 ### 3. Train Deep Embedded Clustering Model
+#### 3.1 Instantiate the DEC model:
+dec = DEC()
