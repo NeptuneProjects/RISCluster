@@ -16,20 +16,20 @@ Scripps Institution of Oceanography
 University of California San Diego
 La Jolla, California, USA
 
-###  Project Outline:
-## 1.  Load Data
+##  Project Outline:
+### 1.  Load Data
 Load data using custom loader from spectrograms; place these data into dataloader instances for use by PyTorch.
 
-## 2.  Pre-train Convolutional Autoencoder
-# 2.1  Instantiate the autoencoder:
+### 2.  Pre-train Convolutional Autoencoder
+#### 2.1  Instantiate the autoencoder:
 encoder = cluster.Encoder
 decoder = cluster.Decoder
 autoencoder = cluster.AEC(encoder, decoder)
 
-# 2.2  Train the autoencoder:
+#### 2.2  Train the autoencoder:
 600 epochs or until losses stabilize.
 
-# 2.3  Save AEC weights:
+#### 2.3  Save AEC weights:
 Save the model's learned parameters to file for future use.  In particular, the encoder's weights will be used to initialize the DNN portion of the DEC model.
 
-# 3. Train Deep Embedded Clustering Model
+### 3. Train Deep Embedded Clustering Model
