@@ -3,11 +3,14 @@ from contextlib import redirect_stdout
 from datetime import datetime
 import json
 import os
+from pathlib import Path
 import random
 import sys
 sys.path.insert(0, '../../RISCluster/')
 
 import h5py
+from ignite.engine import Engine, Events
+from ignite.metrics import Loss, MeanAbsoluteError, MeanSquaredError, Loss
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -15,6 +18,8 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
 
 from RISCluster.utils.utils import notify
 
@@ -94,8 +99,8 @@ class ClusterAssignment(nn.Module):
             initial_cluster_centers = cluster_centers
         self.cluster_centers = nn.Parameter(initial_cluster_centers)
 
-    def forward(self, batch: torch.Tensor):
-        norm_squared = torch.sum((batch.unsqueeze(1) - self.cluster_centers) ** 2, 2)
+    def forward(self, x: torch.Tensor):
+        norm_squared = torch.sum((x.unsqueeze(1) - self.cluster_centers) ** 2, 2)
         numerator = 1.0 / (1.0 + (norm_squared / self.alpha))
         power = float(self.alpha + 1) / 2
         numerator = numerator ** power
@@ -118,8 +123,127 @@ class DEC(nn.Module):
             cluster_number, self.feature_dim, alpha
         )
 
-    def forward(self, batch):
-        return self.assignment(self.encoder(batch))
+    def forward(self, x):
+        return self.assignment(self.encoder(x))
+
+def target_distribution(q):
+    weight = (q ** 2) / torch.sum(q, 0)
+    return (weight.t() / torch.sum(weight, 1)).t()
+
+
+def train():
+    '''Wrapper function for training the DEC.'''
+    pass
+
+def predict():
+    '''Wrapper function for running the DEC.'''
+    pass
+
+
+
+
+
+def pretraining_step(engine, batch):
+    autoencoder.train()
+    optimizer.zero_grad()
+    x = batch.to(device)
+    x_pred = autoencoder(x)
+    loss = criterion_mse(x_pred, x)
+    loss.backward()
+    mae = criterion_mae(x_pred, x)
+    optimizer.step()
+    return loss.item(), mae.item()
+
+def validation_step(engine, batch):
+    autoencoder.eval()
+    with torch.no_grad():
+        x = batch.to(device)
+        x_pred = autoencoder(x)
+        return x_pred, x
+
+def print_pretraining_log(engine, dataloader, mode, history_dict):
+    evaluator.run(dataloader)
+    metrics = evaluator.state.metrics
+    if mode == 'Training':
+        print('Epoch[{}/{}] | Training Results: MSE = {:.2f}, MAE = {:.2f} | '
+              .format(trainer.state.epoch, N_EPOCHS, metrics['mse'], metrics['mae']), end='', flush='True')
+    elif mode == 'Validation':
+        print('Validation Results: MSE = {:.2f}, MAE = {:.2f}'
+              .format(metrics['mse'], metrics['mae']))
+    else:
+        raise ValueError('Incorrect evaluation mode input: Choose "Training" or "Validation"')
+
+    for key in evaluator.state.metrics.keys():
+        history_dict[key].append(evaluator.state.metrics[key])
+
+
+
+def compare_images(engine, save_img=False):
+    epoch = engine.state.epoch
+    reconstructed_images = engine(fixed_images)
+    figtitle = f'AEC Training Epoch {epoch}'
+    fig = cluster.view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle, figsize=(12,9), show=True)
+    if save_img:
+        savepath_snap = savepath_fig + 'Snapshots/'
+        if not os.path.exists(savepath_snap):
+            os.makedirs(savepath_snap)
+        figname = savepath_snap + 'Rcnstr_Conv2D_epoch_' + str(epoch) + '.png'
+        fig.savefig(figname)
+
+def pretrain(
+        train_loader,
+        val_loader,
+        epochs: int,
+        batch_size: int,
+        LR=0.0001,
+        show_images=True,
+        send_message=False
+    ):
+    '''Wrapper function for training the autoencoder.'''
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if torch.cuda.is_available():
+        print('CUDA device available, using GPU.')
+    else:
+        print('CUDA device not available, using CPU.')
+
+    encoder = Encoder().to(device)
+    decoder = Decoder().to(device)
+    autoencoder = AEC(encoder, decoder).to(device)
+    optimizer = optim.Adam(autoencoder.parameters(), lr=LR)
+    criterion_mse = nn.MSELoss()
+    criterion_mae = nn.L1Loss()
+
+    trainer = Engine(pretraining_step)
+    print(trainer)
+    evaluator = Engine(validation_step)
+
+    pretraining_history = {'mse': [], 'mae': []}
+    validation_history = {'mse': [], 'mae': []}
+
+    MeanSquaredError(device=device).attach(evaluator, 'mse')
+    MeanAbsoluteError(device=device).attach(evaluator, 'mae')
+
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, print_pretraining_log, train_loader, 'Training', pretraining_history)
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, print_pretraining_log, val_loader, 'Validation', validation_history)
+    trainer.add_event_handler(Events.STARTED, compare_images, save_img=True)
+
+    if show_images:
+        disp_idx = sorted(np.random.randint(0,len(X_train),4))
+        disp = train_loader
+        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=5), compare_images, save_img=True)
+
+    tic=datetime.now()
+    trainer.run(train_loader, max_epochs=epochs)
+    toc = datetime.now()
+    print(f'Elapsed Time: {toc - tic}')
+    if send_message:
+        msgsubj = 'ConvAEC Training Complete'
+        msgcontent = f'''ConvAEC training completed at {toc}.
+        Time Elapsed = {(toc-tic)}.'''
+        notify(msgsubj, msgcontent)
+
+
+
 
 
 # class ConvAEC(nn.Module):
@@ -315,19 +439,26 @@ def get_metadata(query_index, sample_index, fname_dataset):
 
 def init_output_env():
     todays_date = datetime.now().strftime('%Y%m%dT%H%M%S')
-    savepath_trial = '../../../Outputs/Trials/' + todays_date + '/'
-    folders = ['Figures/', 'Metrics/', 'Models/', 'SavedData/']
-    savepath_fig = savepath_trial + folders[0]
-    savepath_stats = savepath_trial + folders[1]
-    savepath_model = savepath_trial + folders[2]
-    savepath_data = savepath_trial + folders[3]
+    savepath = '../../../Outputs/'
+    savepath_trial = savepath + 'Trials/' + todays_date + '/'
+    savepath_fig = savepath_trial + 'Figures/'
+    savepath_metric = savepath_trial + 'Metrics/'
+    savepath_data = savepath_trial + 'Data/'
+    savepath_model = savepath + 'Models/'
 
-    if not os.path.exists(savepath_trial):
-        os.makedirs(savepath_trial)
-        for folder in folders:
-            os.mkdir(os.path.join(savepath_trial, folder))
+    folders = [
+        savepath_trial,
+        savepath_fig,
+        savepath_metric,
+        savepath_data
+    ]
+
+    for folder in folders:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
     print(f'New trial folder created at {savepath_trial}.')
-    return savepath_fig, savepath_stats, savepath_model, savepath_data
+    return savepath_data, savepath_fig, savepath_metric, savepath_model
 
 # def load_test(fname_dataset, M, index_test):
 #     with h5py.File(fname_dataset, 'r') as f:
@@ -407,7 +538,7 @@ def load_data(fname_dataset, M, index, send_message=True):
         print(f'Loading {M} samples...')
         tic = datetime.now()
 
-        np.seterr(divide='raise')
+        np.seterr(all='raise')
 #         X = np.empty([M, n-2, o-173, 1])
         X = torch.empty([M, 1, n-2, o-173])
         idx_sample = np.empty([M,], dtype=np.int)
@@ -425,6 +556,8 @@ def load_data(fname_dataset, M, index, send_message=True):
             except:
                 print('Numpy "Divide-by-zero Warning" raised, '
                       'skipping spectrogram.')
+                print('Sample Index = {}'.format(index[i]))
+                print(dset[index[i], 1:-1, 1:129])
                 pass
 
             print('%.2f' % (float(100*i/(M-1))) + '% complete.', end='\r')
@@ -524,7 +657,7 @@ def set_loading_index(M, fname_dataset, reserve=0.02):
     with h5py.File(fname_dataset, 'r') as f:
         DataSpec = '/30sec/Spectrogram'
         m, _, _ = f[DataSpec].shape
-    index = np.random.choice(m, size=int(M * (2 + reserve)), replace=False)
+    index = np.random.choice(np.arange(1,m), size=int(M * (2 + reserve)), replace=False)
     split = int(len(index)/2)
     index_test = index[split:]
     index_train_val = index[0:split]
