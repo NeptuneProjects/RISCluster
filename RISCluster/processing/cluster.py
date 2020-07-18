@@ -73,18 +73,52 @@ class AEC(nn.Module):
         x = self.decoder(x)
         return x
 
+class ClusterAssignment(nn.Module):
+    def __init__(
+        self,
+        cluster_number,
+        embedding_dimension,
+        alpha = 1.0,
+        cluster_centers = None
+    ):
+        super(ClusterAssignment, self).__init__()
+        self.embedding_dimension = embedding_dimension
+        self.cluster_number = cluster_number
+        self.alpha = alpha
+        if cluster_centers is None:
+            initial_cluster_centers = torch.zeros(
+                self.cluster_number, self.embedding_dimension, dtype=torch.float
+            )
+            nn.init.xavier_uniform_(initial_cluster_centers)
+        else:
+            initial_cluster_centers = cluster_centers
+        self.cluster_centers = nn.Parameter(initial_cluster_centers)
+
+    def forward(self, batch: torch.Tensor):
+        norm_squared = torch.sum((batch.unsqueeze(1) - self.cluster_centers) ** 2, 2)
+        numerator = 1.0 / (1.0 + (norm_squared / self.alpha))
+        power = float(self.alpha + 1) / 2
+        numerator = numerator ** power
+        return numerator / torch.sum(numerator, dim=1, keepdim=True)
+
 class DEC(nn.Module):
-    def __init__(self, encoder, decoder, clustering_layer):
+    def __init__(
+        self,
+        cluster_number: int,
+        hidden_dimension: int,
+        encoder,
+        alpha
+    ):
         super(DEC, self).__init__()
         self.encoder = encoder
-        self.clustering_layer = clustering_layer
-        self.decoder = decoder
+        self.cluster_number = cluster_number
+        self.alpha = alpha
+        self.assignment = ClusterAssignment(
+            cluster_number, self.hidden_dimension, alpha
+        )
 
-    def forward(self, x):
-        x = self.encoder(x)
-        label = self.clustering_layer(x)
-        x = self.decoder(x)
-        return x, label
+    def forward(self, batch):
+        return self.assignment(self.encoder(batch))
 
 
 # class ConvAEC(nn.Module):
