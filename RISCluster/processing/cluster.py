@@ -112,6 +112,7 @@ class DEC(nn.Module):
         super(DEC, self).__init__()
         self.encoder = encoder
         self.cluster_number = cluster_number
+        self.feature_dim = feature_dim
         self.alpha = alpha
         self.assignment = ClusterAssignment(
             cluster_number, self.feature_dim, alpha
