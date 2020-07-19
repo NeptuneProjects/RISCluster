@@ -139,57 +139,6 @@ def predict():
     '''Wrapper function for running the DEC.'''
     pass
 
-
-
-
-
-def pretraining_step(engine, batch):
-    autoencoder.train()
-    optimizer.zero_grad()
-    x = batch.to(device)
-    x_pred = autoencoder(x)
-    loss = criterion_mse(x_pred, x)
-    loss.backward()
-    mae = criterion_mae(x_pred, x)
-    optimizer.step()
-    return loss.item(), mae.item()
-
-def validation_step(engine, batch):
-    autoencoder.eval()
-    with torch.no_grad():
-        x = batch.to(device)
-        x_pred = autoencoder(x)
-        return x_pred, x
-
-def print_pretraining_log(engine, dataloader, mode, history_dict):
-    evaluator.run(dataloader)
-    metrics = evaluator.state.metrics
-    if mode == 'Training':
-        print('Epoch[{}/{}] | Training Results: MSE = {:.2f}, MAE = {:.2f} | '
-              .format(trainer.state.epoch, N_EPOCHS, metrics['mse'], metrics['mae']), end='', flush='True')
-    elif mode == 'Validation':
-        print('Validation Results: MSE = {:.2f}, MAE = {:.2f}'
-              .format(metrics['mse'], metrics['mae']))
-    else:
-        raise ValueError('Incorrect evaluation mode input: Choose "Training" or "Validation"')
-
-    for key in evaluator.state.metrics.keys():
-        history_dict[key].append(evaluator.state.metrics[key])
-
-
-
-def compare_images(engine, save_img=False):
-    epoch = engine.state.epoch
-    reconstructed_images = engine(fixed_images)
-    figtitle = f'AEC Training Epoch {epoch}'
-    fig = cluster.view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle, figsize=(12,9), show=True)
-    if save_img:
-        savepath_snap = savepath_fig + 'Snapshots/'
-        if not os.path.exists(savepath_snap):
-            os.makedirs(savepath_snap)
-        figname = savepath_snap + 'Rcnstr_Conv2D_epoch_' + str(epoch) + '.png'
-        fig.savefig(figname)
-
 def pretrain(
         train_loader,
         val_loader,
@@ -197,13 +146,35 @@ def pretrain(
         batch_size: int,
         LR=0.0001,
         show_images=True,
-        send_message=False
+        save_images=True,
+        send_message=True,
+        savepath_fig='.'
     ):
     '''Wrapper function for training the autoencoder.'''
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(savepath_fig)
+    def pretraining_step(engine, batch):
+        autoencoder.train()
+        optimizer.zero_grad()
+        x = batch.to(device)
+        x_pred = autoencoder(x)
+        loss = criterion_mse(x_pred, x)
+        loss.backward()
+        mae = criterion_mae(x_pred, x)
+        optimizer.step()
+        return loss.item(), mae.item()
+
+    def validation_step(engine, batch):
+        autoencoder.eval()
+        with torch.no_grad():
+            x = batch.to(device)
+            x_pred = autoencoder(x)
+            return x_pred, x
+
     if torch.cuda.is_available():
+        device = torch.device('cuda')
         print('CUDA device available, using GPU.')
     else:
+        device = torch.device('cpu')
         print('CUDA device not available, using CPU.')
 
     encoder = Encoder().to(device)
@@ -214,7 +185,6 @@ def pretrain(
     criterion_mae = nn.L1Loss()
 
     trainer = Engine(pretraining_step)
-    print(trainer)
     evaluator = Engine(validation_step)
 
     pretraining_history = {'mse': [], 'mae': []}
@@ -223,28 +193,80 @@ def pretrain(
     MeanSquaredError(device=device).attach(evaluator, 'mse')
     MeanAbsoluteError(device=device).attach(evaluator, 'mae')
 
-    trainer.add_event_handler(Events.EPOCH_COMPLETED, print_pretraining_log, train_loader, 'Training', pretraining_history)
-    trainer.add_event_handler(Events.EPOCH_COMPLETED, print_pretraining_log, val_loader, 'Validation', validation_history)
-    trainer.add_event_handler(Events.STARTED, compare_images, save_img=True)
+    def print_pretraining_log(engine, dataloader, mode, history_dict):
+        evaluator.run(dataloader)
+        metrics = evaluator.state.metrics
+        if mode == 'Training':
+            print('Epoch[{}/{}] | Training Results: MSE = {:.2f}, MAE = {:.2f} | '
+                  .format(
+                  trainer.state.epoch, epochs, metrics['mse'], metrics['mae']), end='', flush='True')
+        elif mode == 'Validation':
+            print('Validation Results: MSE = {:.2f}, MAE = {:.2f}'
+                  .format(metrics['mse'], metrics['mae']))
+        else:
+            raise ValueError('Incorrect evaluation mode input: Choose "Training" or "Validation"')
+
+        for key in evaluator.state.metrics.keys():
+            history_dict[key].append(evaluator.state.metrics[key])
+
+    trainer.add_event_handler(
+        Events.EPOCH_COMPLETED,
+        print_pretraining_log,
+        train_loader,
+        'Training',
+        pretraining_history
+    )
+    trainer.add_event_handler(
+        Events.EPOCH_COMPLETED,
+        print_pretraining_log,
+        val_loader,
+        'Validation',
+        validation_history
+    )
 
     if show_images:
-        disp_idx = sorted(np.random.randint(0,len(X_train),4))
-        disp = train_loader
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=5), compare_images, save_img=True)
+        def compare_images(engine, disp, save_img=True, savepath_fig=savepath_fig):
+            epoch = engine.state.epoch
+            reconstructed_images = autoencoder(disp)
+            figtitle = f'AEC Training Epoch {epoch}'
+            n, o = list(disp.size()[2:])
+            fig = view_specgram_training(disp, reconstructed_images, n, o, figtitle, figsize=(12,9), show=True)
+            if save_img:
+                savepath_snap = savepath_fig + 'Snapshots/'
+                if not os.path.exists(savepath_snap):
+                    os.makedirs(savepath_snap)
+                figname = savepath_snap + 'AEC_Training_Epoch_' + str(epoch) + '.png'
+                fig.savefig(figname)
+
+        disp = next(iter(train_loader))
+        disp_dim = list(disp.size())[0]
+        disp_idx = sorted(np.random.randint(0, disp_dim, 4))
+        disp = disp[disp_idx]
+        trainer.add_event_handler(
+            Events.STARTED,
+            compare_images,
+            disp.to(device),
+            save_img=save_images,
+            savepath_fig='.'
+        )
+        trainer.add_event_handler(
+            Events.EPOCH_COMPLETED(every=5),
+            compare_images,
+            disp.to(device),
+            save_img=save_images,
+            savepath_fig='.'
+        )
 
     tic=datetime.now()
     trainer.run(train_loader, max_epochs=epochs)
     toc = datetime.now()
     print(f'Elapsed Time: {toc - tic}')
+
     if send_message:
         msgsubj = 'ConvAEC Training Complete'
         msgcontent = f'''ConvAEC training completed at {toc}.
         Time Elapsed = {(toc-tic)}.'''
         notify(msgsubj, msgcontent)
-
-
-
-
 
 # class ConvAEC(nn.Module):
 #     def __init__(self, **kwargs):
