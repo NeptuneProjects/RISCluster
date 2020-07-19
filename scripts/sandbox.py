@@ -104,26 +104,4 @@ autoencoder, pretraining_history, validation_history = cluster.pretrain(
 )
 
 
-
-# cluster.view_learningcurve(training_history, validation_history, N_EPOCHS, show=True)
-
-
-
-
-importlib.reload(cluster)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # End of script.

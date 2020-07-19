@@ -1,5 +1,6 @@
 
 from contextlib import redirect_stdout
+import csv
 from datetime import datetime
 import json
 import os
@@ -232,7 +233,7 @@ def pretrain(
         n, o = list(disp.size()[2:])
         fig = view_specgram_training(disp, reconstructed_images, n, o, figtitle, figsize=(12,9), show=show)
 
-        savepath_snap = savepath + 'Snapshots/'
+        savepath_snap = savepath + 'Snapshots{}/'.format(run_serial)
         figname = savepath_snap + 'AEC_Training_Epoch_' + str(epoch) + '.png'
         fig.savefig(figname)
 
@@ -262,7 +263,6 @@ def pretrain(
     print('Commencing AEC run {} at {}'.format(run_serial, tic))
     trainer.run(train_loader, max_epochs=epochs)
     toc = datetime.now()
-    print(f'Elapsed Time: {toc - tic}')
 
     if send_message:
         msgsubj = 'ConvAEC Training Complete'
@@ -270,8 +270,19 @@ def pretrain(
         Time Elapsed = {(toc-tic)}.'''
         notify(msgsubj, msgcontent)
 
-    # fig = view_learningcurve(pretraining_history, validation_history, N_EPOCHS, show=show)
-    # fname = savepath_fig + '02_AEC_LossCurve_' +
+    fname = savepath + 'AEC_Params_' + run_serial + '.pt'
+    torch.save(autoencoder.state_dict(),fname)
+    print('AEC parameters saved.')
+
+    fig = view_learningcurve(pretraining_history, validation_history, epochs, show=show)
+    fname = savepath + 'AEC_LossCurve_' + run_serial
+    fig.savefig(fname)
+    print('Loss curves saved.')
+
+    save_history(pretraining_history, validation_history, savepath, run_serial)
+
+
+    print(f'Elapsed Time: {toc - tic}')
     print('--------------------------------------------------------------')
     return autoencoder, pretraining_history, validation_history
 
@@ -470,7 +481,7 @@ def init_aec_output_env():
     run_serial = datetime.now().strftime('%Y%m%dT%H%M%S')
     savepath = '../../../Outputs/Models/AEC/'
     savepath_run = savepath + 'Run' + run_serial + '/'
-    savepath_snap = savepath_run + 'Snapshots/'
+    savepath_snap = savepath_run + 'Snapshots{}/'.format(run_serial)
 
     folders = [
         savepath_run,
@@ -481,8 +492,8 @@ def init_aec_output_env():
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-    print('New AEC run file structure created at '
-          .format(savepath_run))
+    print('New AEC run file structure created at:\n'
+          '{}'.format(savepath_run))
     return savepath_run, savepath_snap, run_serial
 
 # def load_test(fname_dataset, M, index_test):
@@ -678,6 +689,30 @@ Time Elapsed = {(toc-tic)}'''
 #         nf.create_dataset('Val_Reconst', data=val_reconst,
 #                           dtype=val_reconst.dtype)
 #
+
+def save_history(training_history, validation_history, savepath, run_serial):
+    fname = savepath + 'AEC_History{}.csv'.format(run_serial)
+    d1 = training_history.copy()
+    d2 = validation_history.copy()
+    modes = ['training', 'validation']
+    for mode in range(len(modes)):
+        if modes[mode] == 'training':
+            d = d1
+        elif modes[mode] == 'validation':
+            d = d2
+        for j in range(2):
+            newkey = '{}_{}'.format(modes[mode], list(d.keys())[0])
+            oldkey = list(d.keys())[0]
+            d[newkey] = d.pop(oldkey)
+    d2.update(d1)
+    del d1
+
+    with open(fname, 'w') as csvfile:
+        w = csv.writer(csvfile)
+        w.writerow(d2.keys())
+        w.writerows(zip(*d2.values()))
+    print('History saved.')
+
 def set_loading_index(M, fname_dataset, reserve=0.02):
     with h5py.File(fname_dataset, 'r') as f:
         DataSpec = '/30sec/Spectrogram'
