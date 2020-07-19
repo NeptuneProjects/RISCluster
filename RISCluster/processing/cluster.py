@@ -151,7 +151,6 @@ def pretrain(
         savepath_fig='.'
     ):
     '''Wrapper function for training the autoencoder.'''
-    print(savepath_fig)
     def pretraining_step(engine, batch):
         autoencoder.train()
         optimizer.zero_grad()
@@ -247,14 +246,14 @@ def pretrain(
             compare_images,
             disp.to(device),
             save_img=save_images,
-            savepath_fig='.'
+            savepath_fig=savepath_fig
         )
         trainer.add_event_handler(
             Events.EPOCH_COMPLETED(every=5),
             compare_images,
             disp.to(device),
             save_img=save_images,
-            savepath_fig='.'
+            savepath_fig=savepath_fig
         )
 
     tic=datetime.now()

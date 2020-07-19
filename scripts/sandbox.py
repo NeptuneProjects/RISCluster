@@ -40,7 +40,7 @@ M_train = int(0.8 * M)
 M_val = int(0.2 * M)
 M_test = M
 LR = 0.0001     # Learning rate
-N_EPOCHS = 100  # Number of epochs
+N_EPOCHS = 20  # Number of epochs
 BATCH_SZ = 256  # Batch size
 
 index_train, index_val, index_test = set_loading_index(
@@ -66,8 +66,6 @@ X_val, m, p, n, o, idx_smpl_val = load_data(
 train_loader = DataLoader(X_train, batch_size=BATCH_SZ)
 val_loader = DataLoader(X_val, batch_size=BATCH_SZ)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print('Device in use: {}'.format(device))
 # =============================================================================
 # Print examples of spectrograms
 # =============================================================================
@@ -94,41 +92,24 @@ print('Device in use: {}'.format(device))
 # =============================================================================
 # Pre-train DEC parameters by training the autoencoder:
 # =============================================================================
-importlib.reload(cluster)
 cluster.pretrain(
     train_loader,
     val_loader,
     epochs=N_EPOCHS,
     batch_size=BATCH_SZ,
-    LR=0.0001,
+    LR=LR,
     show_images=True,
-    send_message=False
-    )
+    save_images=True,
+    send_message=False,
+    savepath_fig = savepath_fig
+)
+
+# cluster.view_learningcurve(training_history, validation_history, N_EPOCHS, show=True)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+importlib.reload(cluster)
 
 
 
