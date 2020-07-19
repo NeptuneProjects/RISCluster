@@ -142,15 +142,16 @@ def predict():
 def pretrain(
         train_loader,
         val_loader,
+        run_serial,
         epochs: int,
         batch_size: int,
         LR=0.0001,
-        show_images=True,
-        save_images=True,
+        show=True,
         send_message=True,
-        savepath_fig='.'
+        savepath='.'
     ):
     '''Wrapper function for training the autoencoder.'''
+
     def pretraining_step(engine, batch):
         autoencoder.train()
         optimizer.zero_grad()
@@ -215,6 +216,7 @@ def pretrain(
         'Training',
         pretraining_history
     )
+
     trainer.add_event_handler(
         Events.EPOCH_COMPLETED,
         print_pretraining_log,
@@ -223,40 +225,41 @@ def pretrain(
         validation_history
     )
 
-    if show_images:
-        def compare_images(engine, disp, save_img=True, savepath_fig=savepath_fig):
-            epoch = engine.state.epoch
-            reconstructed_images = autoencoder(disp)
-            figtitle = f'AEC Training Epoch {epoch}'
-            n, o = list(disp.size()[2:])
-            fig = view_specgram_training(disp, reconstructed_images, n, o, figtitle, figsize=(12,9), show=True)
-            if save_img:
-                savepath_snap = savepath_fig + 'Snapshots/'
-                if not os.path.exists(savepath_snap):
-                    os.makedirs(savepath_snap)
-                figname = savepath_snap + 'AEC_Training_Epoch_' + str(epoch) + '.png'
-                fig.savefig(figname)
+    def compare_images(engine, disp, show=show, savepath=savepath):
+        epoch = engine.state.epoch
+        reconstructed_images = autoencoder(disp)
+        figtitle = 'AEC Training Run {}: Epoch {}'.format(run_serial,epoch)
+        n, o = list(disp.size()[2:])
+        fig = view_specgram_training(disp, reconstructed_images, n, o, figtitle, figsize=(12,9), show=show)
 
-        disp = next(iter(train_loader))
-        disp_dim = list(disp.size())[0]
-        disp_idx = sorted(np.random.randint(0, disp_dim, 4))
-        disp = disp[disp_idx]
-        trainer.add_event_handler(
-            Events.STARTED,
-            compare_images,
-            disp.to(device),
-            save_img=save_images,
-            savepath_fig=savepath_fig
-        )
-        trainer.add_event_handler(
-            Events.EPOCH_COMPLETED(every=5),
-            compare_images,
-            disp.to(device),
-            save_img=save_images,
-            savepath_fig=savepath_fig
-        )
+        savepath_snap = savepath + 'Snapshots/'
+        figname = savepath_snap + 'AEC_Training_Epoch_' + str(epoch) + '.png'
+        fig.savefig(figname)
+
+    disp = next(iter(train_loader))
+    disp_dim = list(disp.size())[0]
+    disp_idx = sorted(np.random.randint(0, disp_dim, 4))
+    disp = disp[disp_idx]
+
+    trainer.add_event_handler(
+        Events.STARTED,
+        compare_images,
+        disp.to(device),
+        show,
+        savepath=savepath
+    )
+
+    trainer.add_event_handler(
+        Events.EPOCH_COMPLETED(every=5),
+        compare_images,
+        disp.to(device),
+        show,
+        savepath=savepath
+    )
 
     tic=datetime.now()
+    print('--------------------------------------------------------------')
+    print('Commencing AEC run {} at {}'.format(run_serial, tic))
     trainer.run(train_loader, max_epochs=epochs)
     toc = datetime.now()
     print(f'Elapsed Time: {toc - tic}')
@@ -266,6 +269,11 @@ def pretrain(
         msgcontent = f'''ConvAEC training completed at {toc}.
         Time Elapsed = {(toc-tic)}.'''
         notify(msgsubj, msgcontent)
+
+    # fig = view_learningcurve(pretraining_history, validation_history, N_EPOCHS, show=show)
+    # fname = savepath_fig + '02_AEC_LossCurve_' +
+    print('--------------------------------------------------------------')
+    return autoencoder, pretraining_history, validation_history
 
 # class ConvAEC(nn.Module):
 #     def __init__(self, **kwargs):
@@ -458,28 +466,24 @@ def get_metadata(query_index, sample_index, fname_dataset):
 #     sess = tfcv1.Session(config=tfcv1.ConfigProto(gpu_options=GPU_options))
 #     tfcv1.keras.backend.set_session(sess)
 
-def init_output_env():
-    todays_date = datetime.now().strftime('%Y%m%dT%H%M%S')
-    savepath = '../../../Outputs/'
-    savepath_trial = savepath + 'Trials/' + todays_date + '/'
-    savepath_fig = savepath_trial + 'Figures/'
-    savepath_metric = savepath_trial + 'Metrics/'
-    savepath_data = savepath_trial + 'Data/'
-    savepath_model = savepath + 'Models/'
+def init_aec_output_env():
+    run_serial = datetime.now().strftime('%Y%m%dT%H%M%S')
+    savepath = '../../../Outputs/Models/AEC/'
+    savepath_run = savepath + 'Run' + run_serial + '/'
+    savepath_snap = savepath_run + 'Snapshots/'
 
     folders = [
-        savepath_trial,
-        savepath_fig,
-        savepath_metric,
-        savepath_data
+        savepath_run,
+        savepath_snap,
     ]
 
     for folder in folders:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-    print(f'New trial folder created at {savepath_trial}.')
-    return savepath_data, savepath_fig, savepath_metric, savepath_model
+    print('New AEC run file structure created at '
+          .format(savepath_run))
+    return savepath_run, savepath_snap, run_serial
 
 # def load_test(fname_dataset, M, index_test):
 #     with h5py.File(fname_dataset, 'r') as f:
@@ -795,10 +799,10 @@ def view_learningcurve(training_history, validation_history, N_EPOCHS,
     plt.title('Loss: Mean Absolute Error', weight='bold', size=18)
     plt.legend()
     fig.tight_layout()
-    if show is False:
-        plt.close()
-    else:
+    if show:
         plt.show()
+    else:
+        plt.close()
     return fig
 #
 # def view_LspaceRcnstr(X_val, val_enc, val_reconst, idx, n, o, fname_dataset,
@@ -870,10 +874,10 @@ def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
     fig.suptitle(figtitle, size=18, weight='bold')
     fig.tight_layout()
     fig.subplots_adjust(top=0.92)
-    if show is False:
-        plt.close()
-    else:
+    if show:
         plt.show()
+    else:
+        plt.close()
     return fig
 
 # def view_orig_rcnstr_specgram(X_val, val_reconst, insp_idx, n, o,
