@@ -1,8 +1,8 @@
 .env
 .DS_STORE
 xOld/
-__pycache__/
-.ipynb_checkpoints/
+**/__pycache__
+*.ipynb_checkpoints/
 *.pyo
 *.pyc
 *.ipynb
