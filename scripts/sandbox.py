@@ -31,6 +31,7 @@ importlib.reload(cluster)
 # =============================================================================
 # Initialize environment and load data.
 # =============================================================================
+print('==============================================================')
 fname_dataset = '../../../Data/DetectionData.h5'
 savepath_run, _, run_serial = cluster.init_aec_output_env()
 
@@ -39,8 +40,8 @@ M_train = int(0.8 * M)
 M_val = int(0.2 * M)
 M_test = M
 LR = 0.0001     # Learning rate
-N_EPOCHS = 5  # Number of epochs
-BATCH_SZ = 256  # Batch size
+N_EPOCHS = 600  # Number of epochs
+BATCH_SZ = 128  # Batch size
 
 index_train, index_val, index_test = set_loading_index(
     M,
@@ -103,5 +104,10 @@ autoencoder, pretraining_history, validation_history = cluster.pretrain(
     savepath = savepath_run
 )
 
-
+print('==============================================================')
+# Load the model:
+# autoencoder = Autoencoder()
+# autoencoder.load_state_dict(torch.load(fname))
+# autoencoder.eval()
+# encoder = autoencoder.encoder.state_dict()
 # End of script.
