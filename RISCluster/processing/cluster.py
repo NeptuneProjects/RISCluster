@@ -233,8 +233,8 @@ def pretrain(
         n, o = list(disp.size()[2:])
         fig = view_specgram_training(disp, reconstructed_images, n, o, figtitle, figsize=(12,9), show=show)
 
-        savepath_snap = savepath + 'Snapshots{}/'.format(run_serial)
-        figname = savepath_snap + 'AEC_Training_Epoch_' + str(epoch) + '.png'
+        savepath_snap = savepath + f'Snapshots{run_serial}/'
+        figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
         fig.savefig(figname)
 
     disp = next(iter(train_loader))

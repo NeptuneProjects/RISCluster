@@ -35,13 +35,13 @@ print('==============================================================')
 fname_dataset = '../../../Data/DetectionData.h5'
 savepath_run, _, run_serial = cluster.init_aec_output_env()
 
-M = int(2000)
+M = int(20000)
 M_train = int(0.8 * M)
 M_val = int(0.2 * M)
 M_test = M
 LR = 0.0001     # Learning rate
 N_EPOCHS = 600  # Number of epochs
-BATCH_SZ = 128  # Batch size
+BATCH_SZ = 512  # Batch size
 
 index_train, index_val, index_test = set_loading_index(
     M,
@@ -100,7 +100,7 @@ autoencoder, pretraining_history, validation_history = cluster.pretrain(
     batch_size=BATCH_SZ,
     LR=LR,
     show=False,
-    send_message=False,
+    send_message=True,
     savepath = savepath_run
 )
 
