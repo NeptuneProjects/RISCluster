@@ -596,7 +596,7 @@ def load_data(fname_dataset, M, index, send_message=True):
                 print(dset[index[i], 1:-1, 1:129])
                 pass
 
-            print('%.2f' % (float(100*i/(M-1))) + '% complete.', end='\r')
+            print('    %.2f' % (float(100*i/(M-1))) + '% complete.', end='\r')
         toc = datetime.now()
         print(f'\nTime elapsed = {toc-tic}')
 
