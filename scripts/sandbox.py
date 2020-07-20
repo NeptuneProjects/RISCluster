@@ -35,7 +35,7 @@ print('==============================================================')
 fname_dataset = '../../../Data/DetectionData.h5'
 savepath_run, _, _, run_serial = cluster.init_aec_output_env()
 
-M = int(300000)
+M = int(30000)
 M_train = int(0.8 * M)
 M_val = int(0.2 * M)
 M_test = M
