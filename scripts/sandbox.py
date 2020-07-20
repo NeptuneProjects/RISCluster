@@ -4,8 +4,8 @@ import sys
 sys.path.insert(0, '../../RISClusterPT/')
 
 import h5py
-from ignite.engine import Engine, Events
-from ignite.metrics import Loss, MeanAbsoluteError, MeanSquaredError, Loss
+# from ignite.engine import Engine, Events
+# from ignite.metrics import Loss, MeanAbsoluteError, MeanSquaredError, Loss
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,9 +33,9 @@ importlib.reload(cluster)
 # =============================================================================
 print('==============================================================')
 fname_dataset = '../../../Data/DetectionData.h5'
-savepath_run, _, run_serial = cluster.init_aec_output_env()
+savepath_run, _, _, run_serial = cluster.init_aec_output_env()
 
-M = int(20000)
+M = int(300000)
 M_train = int(0.8 * M)
 M_val = int(0.2 * M)
 M_test = M
@@ -105,6 +105,13 @@ autoencoder, pretraining_history, validation_history = cluster.pretrain(
 )
 
 print('==============================================================')
+
+
+# dict ={'mse': [3.34312431, 4, 76, 2, 5.]}
+# len(dict['mse'])
+#
+# print(f'MSE is {dict["mse"]}')
+# print('MSE is {}'.format(dict['mse']))
 # Load the model:
 # autoencoder = Autoencoder()
 # autoencoder.load_state_dict(torch.load(fname))

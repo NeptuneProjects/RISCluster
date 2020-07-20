@@ -11,7 +11,8 @@ sys.path.insert(0, '../../RISCluster/')
 
 import h5py
 from ignite.engine import Engine, Events
-from ignite.metrics import Loss, MeanAbsoluteError, MeanSquaredError, Loss
+from ignite.handlers import EarlyStopping, ModelCheckpoint
+from ignite.metrics import Loss, MeanAbsoluteError, MeanSquaredError
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -152,7 +153,7 @@ def pretrain(
         savepath='.'
     ):
     '''Wrapper function for training the autoencoder.'''
-
+    # Define the training step to be executed every iteration:
     def pretraining_step(engine, batch):
         autoencoder.train()
         optimizer.zero_grad()
@@ -163,13 +164,17 @@ def pretrain(
         mae = criterion_mae(x_pred, x)
         optimizer.step()
         return loss.item(), mae.item()
-
+    # Instantiate trainer engine using the pre-defined training step function.
+    trainer = Engine(pretraining_step)
+    # Define the validation step to be executed every iteration:
     def validation_step(engine, batch):
         autoencoder.eval()
         with torch.no_grad():
             x = batch.to(device)
             x_pred = autoencoder(x)
             return x_pred, x
+
+    evaluator = Engine(validation_step)
 
     if torch.cuda.is_available():
         device = torch.device('cuda')
@@ -185,9 +190,6 @@ def pretrain(
     criterion_mse = nn.MSELoss()
     criterion_mae = nn.L1Loss()
 
-    trainer = Engine(pretraining_step)
-    evaluator = Engine(validation_step)
-
     pretraining_history = {'mse': [], 'mae': []}
     validation_history = {'mse': [], 'mae': []}
 
@@ -198,14 +200,19 @@ def pretrain(
         evaluator.run(dataloader)
         metrics = evaluator.state.metrics
         if mode == 'Training':
-            print('Epoch[{}/{}] | Training Results: MSE = {:.2f}, MAE = {:.2f} | '
-                  .format(
-                  trainer.state.epoch, epochs, metrics['mse'], metrics['mae']), end='', flush='True')
+            print(
+                f'Epoch[{trainer.state.epoch}/{epochs}] | Training Results: '
+                f'MSE = {metrics["mse"]:.2f}, MAE = {metrics["mae"]:.2f} | ',
+                end='', flush='True'
+            )
         elif mode == 'Validation':
-            print('Validation Results: MSE = {:.2f}, MAE = {:.2f}'
-                  .format(metrics['mse'], metrics['mae']))
+            print(
+                f'Validation Results: MSE = {metrics["mse"]:.2f}, '
+                f'MAE = {metrics["mae"]:.2f}'
+            )
         else:
-            raise ValueError('Incorrect evaluation mode input: Choose "Training" or "Validation"')
+            raise ValueError('Incorrect evaluation mode input: Choose'
+                             '"Training" or "Validation"')
 
         for key in evaluator.state.metrics.keys():
             history_dict[key].append(evaluator.state.metrics[key])
@@ -231,8 +238,14 @@ def pretrain(
         reconstructed_images = autoencoder(disp)
         figtitle = 'AEC Training Run {}: Epoch {}'.format(run_serial,epoch)
         n, o = list(disp.size()[2:])
-        fig = view_specgram_training(disp, reconstructed_images, n, o, figtitle, figsize=(12,9), show=show)
-
+        fig = view_specgram_training(
+            disp,
+            reconstructed_images,
+            n, o,
+            figtitle,
+            figsize=(12,9),
+            show=show
+        )
         savepath_snap = savepath + f'Snapshots{run_serial}/'
         figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
         fig.savefig(figname)
@@ -241,7 +254,6 @@ def pretrain(
     disp_dim = list(disp.size())[0]
     disp_idx = sorted(np.random.randint(0, disp_dim, 4))
     disp = disp[disp_idx]
-
     trainer.add_event_handler(
         Events.STARTED,
         compare_images,
@@ -249,13 +261,37 @@ def pretrain(
         show,
         savepath=savepath
     )
-
     trainer.add_event_handler(
         Events.EPOCH_COMPLETED(every=5),
         compare_images,
         disp.to(device),
         show,
         savepath=savepath
+    )
+
+    def score_function(engine):
+        mse = engine.state.metrics['mse']
+        return -mse
+
+    early_stop_handler = EarlyStopping(
+        patience=10,
+        score_function=score_function,
+        trainer=trainer
+    )
+    evaluator.add_event_handler(
+        Events.COMPLETED,
+        early_stop_handler
+    )
+
+    checkpointer = ModelCheckpoint(
+        savepath + '/tmp',
+        'best',
+        score_function=score_function
+    )
+    evaluator.add_event_handler(
+        Events.COMPLETED,
+        checkpointer,
+        {'autoencoder': autoencoder}
     )
 
     tic=datetime.now()
@@ -274,66 +310,23 @@ def pretrain(
     torch.save(autoencoder.state_dict(),fname)
     print('AEC parameters saved.')
 
-    fig = view_learningcurve(pretraining_history, validation_history, epochs, show=show)
-    fname = savepath + 'AEC_LossCurve_' + run_serial
-    fig.savefig(fname)
-    print('Loss curves saved.')
-
     save_history(pretraining_history, validation_history, savepath, run_serial)
-
+    try:
+        fig = view_learningcurve(
+            pretraining_history,
+            validation_history,
+            show=show
+        )
+        fname = savepath + 'AEC_LossCurve_' + run_serial
+        fig.savefig(fname)
+        print('Loss curves saved.')
+    except:
+        plt.close()
+        print('Unable to save loss curves.')
 
     print(f'Elapsed Time: {toc - tic}')
     print('--------------------------------------------------------------')
     return autoencoder, pretraining_history, validation_history
-
-# class ConvAEC(nn.Module):
-#     def __init__(self, **kwargs):
-#         super(ConvAEC, self).__init__()
-#
-#         self.encoder = nn.Sequential(
-#             nn.Conv2d(1, 8, kernel_size=5, stride=2, padding=0),
-#             nn.ReLU(True),
-#             nn.Conv2d(8, 16, kernel_size=5, stride=2, padding=0),
-#             nn.ReLU(True),
-#             nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),
-#             nn.ReLU(True),
-#             nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
-#             nn.ReLU(True)
-#         )
-#         # Input = (M, 64, 4, 8)
-#         # Output = (, 2048)
-#         self.enc2latent = nn.Sequential(
-#             nn.Flatten(),
-#             nn.Linear(2048, 32),
-#             nn.ReLU(True)
-#         )
-#         # =========================================
-#         self.latent2dec = nn.Sequential(
-#             nn.Linear(32, 2048),
-#             nn.ReLU(True)
-#         )
-#
-#         self.decoder = nn.Sequential(
-#             nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1,
-#                                output_padding=1),
-#             nn.ReLU(True),
-#             nn.ConvTranspose2d(32, 16, kernel_size=5, stride=2, padding=2,
-#                                output_padding=1),
-#             nn.ReLU(True),
-#             nn.ConvTranspose2d(16, 8, kernel_size=5, stride=2, padding=2,
-#                                output_padding=1),
-#             nn.ReLU(True),
-#             nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=2,
-#                                output_padding=1),
-#         )
-#
-#     def forward(self, x):
-#         x = self.encoder(x)
-#         x = self.enc2latent(x)
-#         x = self.latent2dec(x)
-#         x = x.view(-1, 64, 4, 8)
-#         x = self.decoder(x)
-#         return x
 
 # class ClusteringLayer(tf.keras.layers.Layer):
 #     """
@@ -481,11 +474,13 @@ def init_aec_output_env():
     run_serial = datetime.now().strftime('%Y%m%dT%H%M%S')
     savepath = '../../../Outputs/Models/AEC/'
     savepath_run = savepath + 'Run' + run_serial + '/'
-    savepath_snap = savepath_run + 'Snapshots{}/'.format(run_serial)
+    savepath_chkpnt = savepath_run + 'tmp/'
+    savepath_snap = savepath_run + f'Snapshots{run_serial}/'
 
     folders = [
         savepath_run,
-        savepath_snap,
+        savepath_chkpnt,
+        savepath_snap
     ]
 
     for folder in folders:
@@ -493,8 +488,8 @@ def init_aec_output_env():
             os.makedirs(folder)
 
     print('New AEC run file structure created at:\n'
-          '{}'.format(savepath_run))
-    return savepath_run, savepath_snap, run_serial
+          f'{savepath_run}')
+    return savepath_run, savepath_chkpnt, savepath_snap, run_serial
 
 # def load_test(fname_dataset, M, index_test):
 #     with h5py.File(fname_dataset, 'r') as f:
@@ -814,21 +809,21 @@ def set_loading_index(M, fname_dataset, reserve=0.02):
 #         plt.show()
 #     return fig
 #
-def view_learningcurve(training_history, validation_history, N_EPOCHS,
-                       show=True):
+def view_learningcurve(training_history, validation_history, show=True):
+    epochs = len(training_history['mse'])
     fig = plt.figure(figsize=(18,6), dpi=300)
     gs = GridSpec(nrows=1, ncols=2)
     ax = fig.add_subplot(gs[0])
-    plt.plot(range(N_EPOCHS), training_history['mse'], label='Training')
-    plt.plot(range(N_EPOCHS), validation_history['mse'], label='Validation')
+    plt.plot(range(epochs), training_history['mse'], label='Training')
+    plt.plot(range(epochs), validation_history['mse'], label='Validation')
     plt.xlabel('Epochs', size=14)
     plt.ylabel('MSE', size=14)
     plt.title('Loss: Mean Squared Error', weight='bold', size=18)
     plt.legend()
 
     ax = fig.add_subplot(gs[1])
-    plt.plot(range(N_EPOCHS), training_history['mae'], label='Training')
-    plt.plot(range(N_EPOCHS), validation_history['mae'], label='Validation')
+    plt.plot(range(epochs), training_history['mae'], label='Training')
+    plt.plot(range(epochs), validation_history['mae'], label='Validation')
     plt.xlabel('Epochs', size=14)
     plt.ylabel('MAE', size=14)
     plt.title('Loss: Mean Absolute Error', weight='bold', size=18)
