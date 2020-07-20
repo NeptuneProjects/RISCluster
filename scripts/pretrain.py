@@ -35,7 +35,7 @@ print('==============================================================')
 fname_dataset = '../../../Data/DetectionData.h5'
 savepath_run, _, _, run_serial = cluster.init_aec_output_env()
 
-M = int(1000)
+M = int(30000)
 M_train = int(0.8 * M)
 M_val = int(0.2 * M)
 M_test = M
@@ -66,19 +66,41 @@ X_val, m, p, n, o, idx_smpl_val = load_data(
 train_loader = DataLoader(X_train, batch_size=BATCH_SZ)
 val_loader = DataLoader(X_val, batch_size=BATCH_SZ)
 
-fname = '../../../Outputs/Models/AEC/Run20200719T211701/AEC_Params_20200719T211701.pt'
-if torch.cuda.is_available():
-    device = torch.device('cuda')
-    print('CUDA device available, using GPU.')
-else:
-    device = torch.device('cpu')
-    print('CUDA device not available, using CPU.')
-encoder, decoder, autoencoder = cluster.load_autoencoder(fname, device)
-
-
-
-
-
-
-
-# End of script.
+# =============================================================================
+# Print examples of spectrograms
+# =============================================================================
+# insp_idx = sorted(np.random.randint(0,len(X_train),4))
+# fixed_images = X_train[insp_idx,:,:,:].to(device)
+#
+# figtitle = 'Input Spectrograms'
+# fig = cluster.view_specgram(
+#     X_train,
+#     insp_idx,
+#     n,
+#     o,
+#     fname_dataset,
+#     idx_smpl_train,
+#     figtitle,
+#     nrows=2,
+#     ncols=2,
+#     figsize=(12,9),
+#     show=True
+# )
+# fname = savepath_fig + '01_InputSpecGrams_' + \
+#         datetime.now().strftime('%Y%m%dT%H%M%S') + '.png'
+# fig.savefig(fname)
+# =============================================================================
+# Pre-train DEC parameters by training the autoencoder:
+# =============================================================================
+autoencoder, pretraining_history, validation_history = cluster.pretrain(
+    train_loader,
+    val_loader,
+    run_serial,
+    epochs=N_EPOCHS,
+    batch_size=BATCH_SZ,
+    LR=LR,
+    show=False,
+    send_message=True,
+    savepath = savepath_run
+)
+print('==============================================================')

@@ -531,6 +531,16 @@ def init_aec_output_env():
 #     notify(msgsubj, msgcontent)
 #     return X, m, n, o, p, sample_index
 #
+
+def load_autoencoder(fname, device):
+    encoder = Encoder()
+    decoder = Decoder()
+    autoencoder = AEC(encoder, decoder)
+    autoencoder.load_state_dict(torch.load(fname, map_location=device))
+    autoencoder.eval()
+    print('Encoder, Decoder, and Autoencoder loaded.')
+    return encoder, decoder, autoencoder
+
 def load_data(fname_dataset, M, index, send_message=True):
     '''
     *M* random spectrograms are read in and pre-processed iteratively as
