@@ -76,6 +76,54 @@ else:
 encoder, decoder, autoencoder = cluster.load_autoencoder(fname, device)
 
 
+# def train(
+#
+# )
+
+
+N_CLUSTERS = 11
+features = autoencoder.encoder(X_train)
+N_FEATURES = features.size(1)
+ALPHA = 1.0
+
+kmeans = KMeans(n_clusters=N_CLUSTERS, n_init=20)
+labels = kmeans.fit_predict(features.detach().numpy())
+labels_last = np.copy(labels)
+
+decmodel = cluster.DEC(N_CLUSTERS, N_FEATURES, encoder, ALPHA)
+optimizer = optim.Adam(decmodel.parameters(), lr=LR)
+# Training function here:
+
+
+
+
+
+decmodel.train()
+
+predicted = kmeans.fit_predict(features.detach().numpy())
+predicted.shape
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
