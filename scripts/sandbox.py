@@ -75,34 +75,71 @@ else:
     print('CUDA device not available, using CPU.')
 encoder, decoder, autoencoder = cluster.load_autoencoder(fname, device)
 
-
-# def train(
-#
-# )
-
-
 N_CLUSTERS = 11
 features = autoencoder.encoder(X_train)
 N_FEATURES = features.size(1)
 ALPHA = 1.0
+dcecmodel = cluster.DCEC(N_CLUSTERS, N_FEATURES, autoencoder, ALPHA)
+optimizer = optim.Adam(decmodel.parameters(), lr=LR)
+
+
+
+f, x_pred = dcecmodel(X_train)
+print(f.size())
+print(x_pred.size())
+
+######### def train(
+#
+# )
+
+
 
 kmeans = KMeans(n_clusters=N_CLUSTERS, n_init=20)
 labels = kmeans.fit_predict(features.detach().numpy())
 labels_last = np.copy(labels)
 
-decmodel = cluster.DEC(N_CLUSTERS, N_FEATURES, encoder, ALPHA)
-optimizer = optim.Adam(decmodel.parameters(), lr=LR)
+cluster_centers = torch.tensor(
+    kmeans.cluster_centers_, dtype=torch.float, requires_grad=True
+).to(device)
+with torch.no_grad():
+    decmodel.state_dict()["assignment.cluster_centers"].copy_(cluster_centers)
+
+loss_mse = nn.MSELoss()
+loss_kld = nn.KLDivLoss(reduction='sum')
+delta_label = None
+
+
+def training_step(engine, batch):
+    dcecmodel.train()
+    optimizer.zero_grad()
+    x = batch.to(device)
+    q, x_pred = dcecmodel(x)
+    p = target_distribution(q)
+    KLD = loss_kld(q, p)
+    MSE = loss_mse(x_pred, x)
+    loss = MSE + 0.11 * KLD
+    loss.backward()
+    optimizer.step()
+    return loss.item(), KLD.item()
+
+trainer = Engine(training_step)
+
+def validation_step(engine, batch):
+    dcecmodel.eval()
+    with torch.no_grad():
+        x = batch.to(device)
+        q, x_pred = dcecmodel(x)
+        p = target_distribution(q)
+        return x_pred, x, q, p
+
+evaluator = Engine(validation_step)
+
+MeanSquaredError(device=device).attach(evaluator)
+
+
 # Training function here:
 
-
-
-
-
-decmodel.train()
-
-predicted = kmeans.fit_predict(features.detach().numpy())
-predicted.shape
-
+# decmodel.train()
 #
 
 

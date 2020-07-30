@@ -122,11 +122,35 @@ class DEC(nn.Module):
         self.feature_dim = feature_dim
         self.alpha = alpha
         self.assignment = ClusterAssignment(
-            cluster_number, self.feature_dim, alpha
+            self.cluster_number, self.feature_dim, self.alpha
         )
 
     def forward(self, x):
         return self.assignment(self.encoder(x))
+
+class DCEC(nn.Module):
+    def __init__(
+            self,
+            cluster_number: int,
+            feature_dim: int,
+            autoencoder,
+            alpha
+    ):
+        super(DCEC, self).__init__()
+        self.encoder = autoencoder.encoder
+        self.decoder = autoencoder.decoder
+        self.cluster_number = cluster_number
+        self.feature_dim = feature_dim
+        self.alpha = alpha
+        self.assignment = ClusterAssignment(
+            self.cluster_number, self.feature_dim, self.alpha
+        )
+
+    def forward(self, x):
+        z = self.encoder(x)
+        q = self.assignment(z)
+        x = self.decoder(z)
+        return q, x
 
 def target_distribution(q):
     weight = (q ** 2) / torch.sum(q, 0)
