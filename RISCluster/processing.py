@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 import logging
 import random
 
@@ -11,8 +12,6 @@ from obspy.clients.fdsn.mass_downloader import MassDownloader, \
 from obspy.signal.trigger import recursive_sta_lta, trigger_onset
 import pandas as pd
 from scipy import signal
-# from scipy.fft import fftshift
-# from sklearn.preprocessing import maxabs_scale
 
 class SigParam():
     def __init__(self, datadir, network_index, station_index, channel_index,
@@ -36,6 +35,14 @@ class DetectorParam():
         self.LTA = LTA
         self.trigger_on = trigger_on
         self.trigger_off = trigger_off
+
+# def build_dtvec(starttime, dt):
+#     pass
+#     return None
+#
+# def build_fvec(cutoff, fs):
+#     pass
+#     return None
 
 def detector_recstalta(tr, signal_args, detector_args):
     # Detect events using recursive STA/LTA:
@@ -167,6 +174,19 @@ def get_datetime(datetime_index):
     datetime = datetimes[datetime_index]
     return datetime
 
+def get_metadata(query_index, sample_index, fname_dataset):
+    '''Returns station metadata given sample index.'''
+    with h5py.File(fname_dataset, 'r') as f:
+        DataSpec = '/30sec/Catalogue'
+        dset = f[DataSpec]
+        metadata = dict()
+        counter = 0
+        for i in query_index:
+            query = sample_index[i]
+            metadata[counter] = json.loads(dset[query])
+            counter += 1
+    return metadata
+
 def get_network(network_index):
     '''Input: Integer network index (0).
        Output: Network name string'''
@@ -198,6 +218,10 @@ def get_station(station_index):
                     'RS13', 'RS14', 'RS15', 'RS16', 'RS17', 'RS18']
     station_name = station_list[station_index]
     return station_name
+
+# def get_trace():
+#     pass
+#     return None
 
 def mass_data_downloader(savepath, start='20141201', stop='20161201',
                          Network='XH', Station='*', Channel='HH*'):

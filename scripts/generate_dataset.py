@@ -13,19 +13,19 @@ import concurrent.futures
 from datetime import datetime
 import json
 import sys
-sys.path.insert(0, '../../RISCluster/')
+sys.path.insert(0, '../RISCluster/')
 
 import h5py
 import numpy as np
 
-from RISCluster.processing import processing as process
-from RISCluster.utils.utils import notify
+import processing as process
+from utils import notify
 
 # ========================== Initialize Parameters ============================
 # v v v v Modify these parameters when switching to Velella! v v v v
-num_workers = 17
-# datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
-datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
+num_workers = 1
+datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+# datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
 # ^ ^ ^ ^ Modify these parameters when switching to Velella! ^ ^ ^ ^
 network_index = 0
 station_index = np.arange(0, 34)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         tic = datetime.now()
         datetime_index = datetime_indexes[i]
 
-        if i is not 0:
+        if i != 0:
             print('    ----------------------------------------------------')
         print(f'    Processing {i + 1}/{len(datetime_indexes)}: '
               f'{process.get_datetime(datetime_index)} (Day {datetime_index})')
