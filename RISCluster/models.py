@@ -14,6 +14,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torchvision
+from tqdm import tqdm
 
 import importlib as imp
 import plotting
@@ -348,7 +349,7 @@ def train_DCEC(
         if finished:
             break
 
-    fname = f'{savepath_run}DCEC_Params_ {serial_run}.pt'
+    fname = f'{savepath_run}DCEC_Params_{serial_run}.pt'
     torch.save(model.state_dict(), fname)
     print('DCEC parameters saved.')
 
@@ -375,6 +376,7 @@ def predict_DCEC(model, dataloader, idx_smpl, parameters):
     model.eval()
 
     running_size = 0
+    counter = 0
     for batch_num, batch in enumerate(dataloader):
         x = batch.to(device)
         q, x_rec, z = model(x)
@@ -385,21 +387,24 @@ def predict_DCEC(model, dataloader, idx_smpl, parameters):
         x_rec_ = x_rec.cpu().detach().numpy()
         z_ = z.cpu().detach().numpy()
         idx_subset = idx_smpl[running_size:(running_size + x.size(0))]
-        # for idx in range(x.size(0)):
-        for idx in range(4):
+        print(f'Saving outputs for batch {batch_num}:')
+        for idx in tqdm(range(x.size(0))):
+        # for idx in range(4):
             # Do something here:
             savepath_fig = savepath_run[int(labels_[idx])]
-            print(savepath_fig)
             fig = plotting.view_DCEC_output(
                 x_[idx,:,:,:],
                 labels_[idx],
                 x_rec_[idx,:,:,:],
                 z_[idx,:],
                 idx_subset[idx],
-                show=True
+                show=False
             )
+            figname = f'{savepath_fig}{counter:07d}.png'
+            fig.savefig(figname)
             # - Save stats for histogram
-            pass
+            counter += 1
+
         running_size += x.size(0)
 
 # K-means clusters initialisation

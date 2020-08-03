@@ -38,7 +38,12 @@ if mode == 'pretrain':
         batch_size = [256, 512],
         lr = [0.0001, 0.001]
     )
-    utils.save_exp_config(savepath_exp, serial_exp, parameters, hyperparameters)
+    utils.save_exp_config(
+        savepath_exp,
+        serial_exp,
+        parameters,
+        hyperparameters
+    )
     production.DCEC_pretrain(parameters, hyperparameters)
 # =============================================================================
 # Training Routine
@@ -57,7 +62,9 @@ if mode == 'train':
         show = False,
         send_message = False,
         mode = mode,
-        saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/AEC/Exp20200802T013941/Run_BatchSz=512_LR=0.0001/AEC_Params_20200802T061234.pt'
+        saved_weights = '/Users/williamjenkins/Research/Workflows' + \
+            '/RIS_Clustering/Outputs/Models/AEC/Exp20200802T013941' + \
+            '/Run_BatchSz=512_LR=0.0001/AEC_Params_20200802T061234.pt'
     )
     hyperparameters = dict(
         batch_size = [256, 512],
@@ -71,7 +78,12 @@ if mode == 'train':
     #     gamma = [0.08, 0.1, 0.12],
     #     tol = [0.0001, 0.001, 0.01, 0.1]
     # )
-    utils.save_exp_config(savepath_exp, serial_exp, parameters, hyperparameters)
+    utils.save_exp_config(
+        savepath_exp,
+        serial_exp,
+        parameters,
+        hyperparameters
+    )
     production.DCEC_train(parameters, hyperparameters)
 # =============================================================================
 # Prediction Routine
@@ -89,7 +101,10 @@ if mode == 'predict':
         show = False,
         send_message = False,
         mode = mode,
-        saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCEC/Exp20200802T225523/Run_BatchSz=256_LR=0.001_gamma=0.1_tol=0.01/DCEC_Params_ 20200802T225531.pt'
+        saved_weights = '/Users/williamjenkins/Research/Workflows' + \
+            '/RIS_Clustering/Outputs/Models/DCEC/Exp20200802T225523' + \
+            '/Run_BatchSz=256_LR=0.001_gamma=0.1_tol=0.01/DCEC_Params_ ' + \
+            '20200802T225531.pt'
     )
     utils.save_exp_config(savepath_exp, serial_exp, parameters, None)
     production.DCEC_predict(parameters)
