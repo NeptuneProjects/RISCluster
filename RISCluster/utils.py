@@ -34,7 +34,7 @@ def init_output_env(savepath, mode, **kwargs):
                        f'_tol={kwargs.get("tol")}/'
     elif mode == 'predict':
         n_clusters = kwargs.get('n_clusters')
-        with open(f'{n_clusters}_Clusters', 'w') as f:
+        with open(f'{savepath}{n_clusters}_Clusters', 'w') as f:
             pass
         savepath_run = []
         for label in range(n_clusters):
