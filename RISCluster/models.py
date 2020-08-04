@@ -261,7 +261,7 @@ def train_DCEC(
 
     tb = SummaryWriter(log_dir = savepath_run)
     tb.add_image('images', grid)
-    tb.add_graph(model, images)
+    # tb.add_graph(model, images)
 
     # Initialize Clusters:
     kmeans(model, copy.deepcopy(dataloader), device)
@@ -312,24 +312,18 @@ def train_DCEC(
                 optimizer.step()
 
             running_size += x.size(0)
-            running_loss += loss * x.size(0)
-            running_loss_rec += loss_rec * x.size(0)
-            running_loss_clust += loss_clust * x.size(0)
+            running_loss += loss.cpu().detach().numpy() * x.size(0)
+            running_loss_rec += loss_rec.cpu().detach().numpy() * x.size(0)
+            running_loss_clust += loss_clust.cpu().detach().numpy() * x.size(0)
 
             accum_loss = running_loss / running_size
             accum_loss_rec = running_loss_rec / running_size
             accum_loss_clust = running_loss_clust / running_size
 
             training_history['iter'].append(total_counter)
-            training_history['loss'].append(
-                accum_loss.cpu().detach().numpy()
-            )
-            training_history['mse'].append(
-                accum_loss_rec.cpu().detach().numpy()
-            )
-            training_history['kld'].append(
-                accum_loss_clust.cpu().detach().numpy()
-            )
+            training_history['loss'].append(accum_loss)
+            training_history['mse'].append(accum_loss_rec)
+            training_history['kld'].append(accum_loss_clust)
 
             tb.add_scalar('Loss', accum_loss, total_counter)
             tb.add_scalar('MSE', accum_loss_rec, total_counter)
