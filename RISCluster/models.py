@@ -72,7 +72,7 @@ def pretrain_DCEC(
 
     tb = SummaryWriter(log_dir=savepath_run)
     tb.add_image('images', grid)
-    tb.add_graph(model, images)
+    # tb.add_graph(model, images)
 
     finished = False
     for epoch in range(n_epochs):
@@ -111,7 +111,7 @@ def pretrain_DCEC(
             plotting.compare_images(
                 model,
                 tra_loader,
-                disp,
+                disp.to(device),
                 epoch,
                 savepath_run,
                 show
