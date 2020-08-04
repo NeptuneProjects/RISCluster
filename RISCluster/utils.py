@@ -10,12 +10,31 @@ from dotenv import load_dotenv
 import h5py
 import numpy as np
 import torch
+from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm
 from twilio.rest import Client
+
+class SeismoDataset(Dataset):
+    def __init__(self, data, transform=None):
+        self.data = torch.from_numpy(data).float()
+        self.transform = transform
+
+    def __getitem__(self, index):
+        x = self.data[index]
+
+        if self.transform:
+            x = self.transform(x)
+
+        return x
+
+    def __len__(self):
+        return len(self.data)
 
 def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
     for key in hyperparameters:
         tuning_runs *= len(hyperparameters[key])
+
     return(tuning_runs)
 
 def init_output_env(savepath, mode, **kwargs):
@@ -43,57 +62,39 @@ def init_output_env(savepath, mode, **kwargs):
                 os.makedirs(savepath_cluster)
             savepath_run.append(savepath_cluster)
     else:
-        raise ValueError('Incorrect mode selected; choose "pretrain", "train", or "eval".')
+        raise ValueError(
+                'Incorrect mode selected; choose "pretrain", "train", or "eval".'
+            )
 
     return savepath_run, serial_run
 
 def init_exp_env(mode, savepath):
     serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
     if mode == 'pretrain':
-        savepath_exp = savepath + 'Models/AEC/Exp' + serial_exp + '/'
+        savepath_exp = f'{savepath}Models/AEC/Exp{serial_exp}/'
     elif mode == 'train':
-        savepath_exp = savepath + 'Models/DCEC/Exp' + serial_exp + '/'
+        savepath_exp = f'{savepath}Models/DCEC/Exp{serial_exp}/'
     elif mode == 'predict':
-        savepath_exp = savepath + 'Trials/Exp' + serial_exp + '/'
+        savepath_exp = f'{savepath}Trials/Exp{serial_exp}/'
     else:
-        raise ValueError('Incorrect mode selected; choose "pretrain", "train", or "eval".')
+        raise ValueError(
+                'Incorrect mode selected; choose "pretrain", "train", or "eval".'
+            )
     if not os.path.exists(savepath_exp):
         os.makedirs(savepath_exp)
     print('New experiment file structure created at:\n'
           f'{savepath_exp}')
+
     return savepath_exp, serial_exp
 
-def load_weights(model, fname, device):
-    model.load_state_dict(torch.load(fname, map_location=device))
-    model.eval()
-    print(f'Weights loaded to {device}')
-    return model
-
-def load_data(fname_dataset, M, index, send_message=True):
-    '''
-    *M* random spectrograms are read in and pre-processed iteratively as
-    follows:
-    1. Open the file and specified h5 dataset.
-    2. Read the *m*th spectrogram from file.  Each spectrogram is of shape
-    (*n*, *o*).
-    3. Omit unnecessary data when assigning data into memory to cut down on
-    memory usage and to make subsequent convolutions and transpositions
-    straightforward with regard to data dimensions.  Specifically, index *n*[0]
-    contains low frequency data that is of no interest for our high-frequency
-    analaysis; *n*[65] is a vector of time values; and *o*[0] is a vector of
-    frequency values.  Additional *o* indices may be omitted to reduce the
-    length of spectrogram being analyzed.
-    4. Add a fourth axis for the amplitude dimension.  This is requried for
-    subsequent steps.
-    At the conclusion of reading in and pre-processing, data has been omitted
-    in such a way that the final shape of the array is
-    (*m*, *n*, *o*, *p*) = (*M*, 64, 128, 1).
-    '''
+def load_dataset(fname_dataset, index, send_message=False):
+    M = len(index)
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
         DataSpec = '/30sec/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
+        m -= 1
         print('--------------------------------------------------------------')
         print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
         print(f'Loading {M} samples...')
@@ -101,38 +102,35 @@ def load_data(fname_dataset, M, index, send_message=True):
 
         np.seterr(all='raise')
         # X = np.empty([M, n-2, o-173, 1])
-        X = torch.empty([M, 1, n-2, o-173])
+        X = np.empty([M, 1, n-2, o-173])
         idx_sample = np.empty([M,], dtype=np.int)
         dset_arr = np.empty([n, o])
-        # dset_arr = torch.empty([1, n, o])
         count = 0
-        for i in range(M):
+        for i in tqdm(range(M)):
             try:
                 dset_arr = dset[index[i], 1:-1, 1:129]
                 dset_arr /= dset_arr.max()
-                X[count,:,:,:] = torch.from_numpy(np.expand_dims(dset_arr,
-                                                                 axis=0))
+                X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
                 idx_sample[count,] = int(index[i])
                 count += 1
             except:
                 print('Numpy "Divide-by-zero Warning" raised, '
                       'skipping spectrogram.')
-                print('Sample Index = {}'.format(index[i]))
+                print(f'Sample Index = {index[i]}')
                 print(dset[index[i], 1:-1, 1:129])
                 pass
 
-            print('    %.2f' % (float(100*i/(M-1))) + '% complete.', end='\r')
         toc = datetime.now()
         print(f'\nTime elapsed = {toc-tic}')
 
-    m, p, n, o = list(X.size())
-    print(f'Shape of output is {(m, p, n, o)}')
-    if send_message:
-        msgsubj = 'Data Loaded'
-        msgcontent = f'''{M} spectrograms loaded successfully at {toc}.
-Time Elapsed = {(toc-tic)}'''
-        notify(msgsubj, msgcontent)
-    return X, m, p, n, o, idx_sample
+    return SeismoDataset(X)
+
+def load_weights(model, fname, device):
+    model.load_state_dict(torch.load(fname, map_location=device))
+    model.eval()
+    print(f'Weights loaded to {device}')
+
+    return model
 
 def notify(msgsubj, msgcontent):
     '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012
@@ -150,8 +148,11 @@ def notify(msgsubj, msgcontent):
     try:
         # Create a secure SSL context
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL('smtp.gmail.com',
-                              port=465, context=context) as s:
+        with smtplib.SMTP_SSL(
+                'smtp.gmail.com',
+                port=465,
+                context=context
+            ) as s:
             s.login(username, password)
             receiver_email = os.getenv('RX_EMAIL')
             s.sendmail(username, receiver_email, msg.as_string())
@@ -163,10 +164,12 @@ def notify(msgsubj, msgcontent):
         client = Client()
         orig_whatsapp_number = 'whatsapp:' + os.getenv('ORIG_PHONE_NUMBER')
         rx_whatsapp_number = 'whatsapp:' + os.getenv('RX_PHONE_NUMBER')
-        msgcontent = '*' + msgsubj + '*\n' + msgcontent
-        client.messages.create(body=msgcontent,
-                               from_=orig_whatsapp_number,
-                               to=rx_whatsapp_number)
+        msgcontent = f'*{msgsubj}*\n{msgcontent}'
+        client.messages.create(
+            body=msgcontent,
+            from_=orig_whatsapp_number,
+            to=rx_whatsapp_number
+        )
         print('Job completion notification sent by WhatsApp.')
     except:
         print('Unable to send WhatsApp notification upon job completion.')
@@ -185,7 +188,7 @@ def save_exp_config(savepath, serial, parameters, hyperparameters):
 
 def save_history(training_history, validation_history, savepath, run_serial):
     if validation_history is not None:
-        fname = savepath + f'AEC_History{run_serial}.csv'
+        fname = f'{savepath}AEC_History{run_serial}.csv'
         d1 = training_history.copy()
         d2 = validation_history.copy()
         modes = ['training', 'validation']
@@ -201,14 +204,30 @@ def save_history(training_history, validation_history, savepath, run_serial):
         d2.update(d1)
         del d1
     else:
-        fname = savepath + f'DCEC_History{run_serial}.csv'
+        fname = f'{savepath}DCEC_History{run_serial}.csv'
         d2 = training_history
 
     with open(fname, 'w') as csvfile:
         w = csv.writer(csvfile)
         w.writerow(d2.keys())
         w.writerows(zip(*d2.values()))
+
     print('History saved.')
+
+def save_labels(label_list, savepath, serial):
+    fname = f'{savepath}Labels{serial}.csv'
+    keys = label_list[0].keys()
+    if not os.path.exists(fname):
+        with open(fname, 'w') as csvfile:
+            w = csv.DictWriter(csvfile, keys)
+            w.writeheader()
+            w.writerows(label_list)
+    else:
+        with open(fname, 'a') as csvfile:
+            w = csv.DictWriter(csvfile, keys)
+            w.writerows(label_list)
+
+    print('Labels saved.')
 
 def set_device():
     if torch.cuda.is_available():
@@ -217,18 +236,94 @@ def set_device():
     else:
         device = torch.device('cpu')
         print('CUDA device not available, using CPU.')
+
     return device
 
-def set_loading_index(M, fname_dataset, reserve=0.02):
+# =============================================================================
+#  Functions to set/save/get indices of training/validation/prediction samples.
+# =============================================================================
+def set_TraVal_index(M, fname_dataset, reserve=0.0):
     with h5py.File(fname_dataset, 'r') as f:
         DataSpec = '/30sec/Spectrogram'
         m, _, _ = f[DataSpec].shape
-    index = np.random.choice(np.arange(1,m), size=int(M * (2 + reserve)), replace=False)
-    split = int(len(index)/2)
-    index_test = index[split:]
-    index_train_val = index[0:split]
-    split_pct = 0.8
-    split = int(split_pct * len(index_train_val))
-    index_train = index_train_val[0:split]
-    index_val = index_train_val[split:]
-    return index_train, index_val, index_test
+        m -= 1
+        if M > m:
+            print(f'{M} spectrograms requested, but only {m} '
+                  f'available in database; setting M to {m}.')
+            M = m
+    index = np.random.choice(
+        np.arange(1,m),
+        size=int(M * (1+reserve)),
+        replace=False
+    )
+    split_fraction = 0.8
+    split = int(split_fraction * len(index))
+    index_tra = index[0:split]
+    index_val = index[split:]
+
+    return index_tra, index_val, M
+
+def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
+    index_tra, index_val, M = set_TraVal_index(M, fname_dataset)
+    index = dict(
+        index_tra=index_tra,
+        index_val=index_val
+    )
+    serial = datetime.now().strftime('%Y%m%dT%H%M%S')
+    savepath = f'{savepath}TraValIndex_M={M}_Res={reserve}_{serial}.pkl'
+    with open(savepath, 'wb') as f:
+        pickle.dump(index, f)
+    print(f'{M} training & validation indices saved to:')
+    print(savepath)
+
+    return index_tra, index_val, savepath
+
+def load_TraVal_index(fname_dataset, loadpath):
+    with open(loadpath, 'rb') as f:
+        data = pickle.load(f)
+        index_tra = data['index_tra']
+        index_val = data['index_val']
+
+    return index_tra, index_val
+
+def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
+    with h5py.File(fname_dataset, 'r') as f:
+        DataSpec = '/30sec/Spectrogram'
+        m, _, _ = f[DataSpec].shape
+        m -= 1
+
+    index = np.arange(1, m)
+
+    if exclude:
+        idx_ex = load_TraVal_index(fname_dataset, indexpath)
+        idx_ex = sorted(set(np.concatenate(idx_ex).flatten()))
+        index_avail = [i for i in list(index) if i not in idx_ex]
+    else:
+        index_avail = index
+
+    index_val = np.random.choice(
+        index_avail,
+        size=int(M * (1+reserve)),
+        replace=False
+    )
+    return index_val
+
+def set_M(fname_dataset, indexpath, exclude=True):
+    with h5py.File(fname_dataset, 'r') as f:
+        DataSpec = '/30sec/Spectrogram'
+        m, _, _ = f[DataSpec].shape
+        m -= 1
+    print('Determining number of prediction samples...')
+    print(f'{m} samples in dataset...')
+
+    if exclude:
+        idx_tra, idx_val = load_TraVal_index(fname_dataset, indexpath)
+        M_TraVal = len(idx_tra) + len(idx_val)
+        print(f'{M_TraVal} training/validation samples...')
+        M = m - M_TraVal
+        print(f'{m} - {M_TraVal} = {M} prediction samples to be used.')
+    else:
+        M = m
+        print(f'{M} prediction samples to be used.')
+
+    return M

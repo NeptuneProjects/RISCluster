@@ -13,6 +13,13 @@ from obspy.signal.trigger import recursive_sta_lta, trigger_onset
 import pandas as pd
 from scipy import signal
 
+class DetectorParam():
+    def __init__(self, STA, LTA, trigger_on, trigger_off):
+        self.STA = STA
+        self.LTA = LTA
+        self.trigger_on = trigger_on
+        self.trigger_off = trigger_off
+
 class SigParam():
     def __init__(self, datadir, network_index, station_index, channel_index,
                  datetime_index, taper_trace, pre_feed, cutoff, T_seg, NFFT,
@@ -28,13 +35,6 @@ class SigParam():
         self.T_seg = T_seg
         self.NFFT = NFFT
         self.overlap = overlap
-
-class DetectorParam():
-    def __init__(self, STA, LTA, trigger_on, trigger_off):
-        self.STA = STA
-        self.LTA = LTA
-        self.trigger_on = trigger_on
-        self.trigger_off = trigger_off
 
 # def build_dtvec(starttime, dt):
 #     pass

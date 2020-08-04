@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
 from datetime import datetime
 import os
@@ -122,7 +123,7 @@ def pretrain_DCEC(
         running_val_mae = 0.0
 
         if early_stopping:
-            savepath_chkpnt = savepath_run + 'tmp/'
+            savepath_chkpnt = f'{savepath_run}tmp/'
             if not os.path.exists(savepath_chkpnt):
                 os.makedirs(savepath_chkpnt)
             val_loss = 0.0
@@ -147,7 +148,7 @@ def pretrain_DCEC(
                 if val_loss < best_val_loss:
                     strikes = 0
                     best_val_loss = val_loss
-                    fname = savepath_chkpnt + 'AEC_Best_Weights.pt'
+                    fname = f'{savepath_chkpnt}AEC_Best_Weights.pt'
                     torch.save(model.state_dict(), fname)
                 else:
                     strikes += 1
@@ -267,6 +268,7 @@ def train_DCEC(
     # Initialize Target Distribution:
     q, preds_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
+
     total_counter = 0
     finished = False
     for epoch in range(n_epochs):
@@ -362,9 +364,11 @@ def train_DCEC(
 def predict_DCEC(model, dataloader, idx_smpl, parameters):
     device = parameters['device']
     savepath_exp = parameters['savepath']
+    serial_exp = parameters['serial']
     mode = parameters['mode']
     loadpath = parameters['saved_weights']
     n_clusters = parameters['n_clusters']
+    max_workers = parameters['max_workers']
 
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
@@ -375,36 +379,52 @@ def predict_DCEC(model, dataloader, idx_smpl, parameters):
     model.load_state_dict(torch.load(loadpath, map_location=device))
     model.eval()
 
+    label_list = []
+
     running_size = 0
     counter = 0
     for batch_num, batch in enumerate(dataloader):
         x = batch.to(device)
         q, x_rec, z = model(x)
-        labels = torch.argmax(q, dim=1)
-
-        x_ = x.cpu().detach().numpy()
-        labels_ = labels.cpu().detach().numpy()
-        x_rec_ = x_rec.cpu().detach().numpy()
-        z_ = z.cpu().detach().numpy()
-        idx_subset = idx_smpl[running_size:(running_size + x.size(0))]
-        print(f'Saving outputs for batch {batch_num}:')
-        for idx in tqdm(range(x.size(0))):
-        # for idx in range(4):
-            # Do something here:
-            savepath_fig = savepath_run[int(labels_[idx])]
-            fig = plotting.view_DCEC_output(
-                x_[idx,:,:,:],
-                labels_[idx],
-                x_rec_[idx,:,:,:],
-                z_[idx,:],
-                idx_subset[idx],
-                show=False
-            )
-            figname = f'{savepath_fig}{counter:07d}.png'
-            fig.savefig(figname)
-            # - Save stats for histogram
-            counter += 1
-
+        label = torch.argmax(q, dim=1)
+        A = [{
+            'x': x[i].cpu().detach().numpy(),
+            'label': label[i].cpu().detach().numpy(),
+            'x_rec': x_rec[i].cpu().detach().numpy(),
+            'z': z[i].cpu().detach().numpy(),
+            'idx': idx_smpl[running_size:(running_size + x.size(0))][i],
+            'savepath': savepath_run[int(label[i])]} for i in range(x.size(0))]
+        print('--------------------------------------------------------------')
+        print(f'Saving outputs for Batch {batch_num}:')
+        utils.save_labels(
+            [{k: v for k, v in d.items() if \
+                (k == 'idx' or k == 'label')} for d in A],
+            savepath_exp,
+            serial_exp
+        )
+        print('Saving spectrograms to file...')
+        # Parallel Implementation
+        with ProcessPoolExecutor(max_workers=max_workers) as exec:
+            futures = [exec.submit(plotting.save_DCEC_output, **a) for a in A]
+            kwargs = {
+                'total': len(futures),
+                'unit': 'it',
+                'unit_scale': True,
+                'leave': True
+            }
+            for future in tqdm(as_completed(futures), **kwargs):
+                future.result()
+        # Serial Implementation:
+        # for i in tqdm(range(x.size(0))):
+        #     plotting.save_DCEC_output(
+        #         A[i]['x'],
+        #         A[i]['label'],
+        #         A[i]['x_rec'],
+        #         A[i]['z'],
+        #         A[i]['idx'],
+        #         A[i]['savepath'],
+        #     )
+        # - Save stats for histograms
         running_size += x.size(0)
 
 # K-means clusters initialisation

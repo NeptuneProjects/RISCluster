@@ -1,3 +1,5 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import csv
 from datetime import datetime
 import os
 import sys
@@ -11,6 +13,7 @@ from sklearn.cluster import KMeans
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import importlib as imp
@@ -19,42 +22,62 @@ import networks
 imp.reload(networks)
 from  networks import AEC, DCEC
 
+import plotting
+imp.reload(plotting)
+from plotting import view_DCEC_output as w_spec
+
+import processing
+imp.reload(processing)
+
 import production
 imp.reload(production)
 
 import utils
 imp.reload(utils)
 
-# =============================================================================
-# Universal Parameters
-# =============================================================================
-mode = 'pretrain'
-fname_dataset = '../../../Data/DetectionData.h5'
-savepath = '../../../Outputs/'
-loadpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/AEC/Exp20200802T013941/Run_BatchSz=512_LR=0.0001/AEC_Params_20200802T061234.pt'
-device = utils.set_device()
+label_list = []
 
-model = DCEC(n_clusters=14)
-model.load_state_dict(torch.load(loadpath, map_location=device), strict=False)
+idx1 = np.arange(0,10)
+label1 = np.random.choice(np.arange(0,11),10)
+other = np.random.rand(10,20)
+A = [
+        {
+        'idx': idx1[i],
+        'label': label1[i],
+        'other': other
+        } for i in range(len(idx1))
+    ]
 
-# autoencoder = AEC()
-# autoencoder.load_state_dict(torch.load(loadpath, map_location=device))
-# autoencoder.eval()
-# # print(list(autoencoder.named_parameters()))
+label_list += [{k: v for k, v in d.items() if (k == 'idx' or k == 'label')} for d in A]
+print(label_list)
+# print('=============')
+idx2 = np.arange(10,20)
+label2 = np.random.choice(np.arange(0,11),10)
+B = [
+        {
+        'idx': idx2[i],
+        'label': label2[i],
+        'other': other
+        } for i in range(len(idx2))
+    ]
+
+label_list += [{k: v for k, v in d.items() if (k == 'idx' or k == 'label')} for d in B]
+print(label_list)
+print('')
+
+fname = 'test.csv'
+keys = label_list[0].keys()
+if not os.path.exists(fname):
+    with open(fname, 'w') as csvfile:
+        w = csv.DictWriter(csvfile, keys)
+        w.writeheader()
+        w.writerows(label_list)
+else:
+    with open(fname, 'a') as csvfile:
+        w = csv.DictWriter(csvfile, keys)
+        w.writerows(label_list)
+
+
+
+
 #
-# model = DCEC(n_clusters = 14)
-# print(autoencoder)
-# print(model)
-#
-# def copy_params(module_src, module_dest):
-#     params_src = module_src.named_parameters()
-#     params_dest = module_dest.named_parameters()
-#     dict_dest = dict(params_dest)
-#     for name, param in params_src:
-#         if name in dict_dest:
-#             print(name)
-#             dict_dest[name].data.copy_(param.data)
-#
-# copy_params(autoencoder.encoder, model.encoder)
-# copy_params(autoencoder.decoder, model.decoder)
-# End of script.

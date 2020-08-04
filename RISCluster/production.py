@@ -17,31 +17,28 @@ imp.reload(utils)
 
 def DCEC_pretrain(parameters, hyperparameters):
     print('==============================================================')
+    print('Executing Pre-training Mode')
     tic = datetime.now()
     # ==== Unpack Parameters ==================================================
     fname_dataset = parameters['fname_dataset']
-    M = parameters['M']
+    # M = parameters['M']
     show = parameters['show']
     send_message = parameters['send_message']
     mode = parameters['mode']
     device = parameters['device']
+    indexpath = parameters['indexpath']
     # ==== Load Data ==========================================================
-    M_tra = int(0.8 * M)
-    M_val = int(0.2 * M)
-    index_tra, index_val, _ = utils.set_loading_index(
-        M,
+    index_tra, index_val = utils.load_TraVal_index(fname_dataset, indexpath)
+    M_tra = len(index_tra)
+    M_val = len(index_val)
+
+    tra_dataset = utils.load_dataset(
         fname_dataset,
-        reserve=0.02
-    )
-    X_tra, m, p, n, o, idx_smpl_tra = utils.load_data(
-        fname_dataset,
-        M_tra,
         index_tra,
         send_message
     )
-    X_val, m, p, n, o, idx_smpl_val = utils.load_data(
+    val_dataset = utils.load_dataset(
         fname_dataset,
-        M_val,
         index_val,
         send_message
     )
@@ -63,8 +60,8 @@ def DCEC_pretrain(parameters, hyperparameters):
 
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
-        tra_loader = DataLoader(X_tra, batch_size=batch_size)
-        val_loader = DataLoader(X_val, batch_size=batch_size)
+        tra_loader = DataLoader(tra_dataset, batch_size=batch_size)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size)
         dataloaders = [tra_loader, val_loader]
         # ==== Pre-train DCEC parameters by training the autoencoder: =========
         models.pretrain_DCEC(
@@ -90,26 +87,22 @@ def DCEC_pretrain(parameters, hyperparameters):
 
 def DCEC_train(parameters, hyperparameters):
     print('==============================================================')
+    print('Executing Training Mode')
     tic = datetime.now()
     # ==== Unpack Parameters ==================================================
     fname_dataset = parameters['fname_dataset']
-    M = parameters['M']
+    # M = parameters['M']
     n_clusters = parameters['n_clusters']
     show = parameters['show']
     send_message = parameters['send_message']
     mode = parameters['mode']
     device = parameters['device']
+    indexpath = parameters['indexpath']
     # ==== Load Data ==========================================================
-    M_tra = int(0.8 * M)
-    M_val = int(0.2 * M)
-    index_tra, _, _ = utils.set_loading_index(
-        M,
+    index_tra, _ = utils.load_TraVal_index(fname_dataset, indexpath)
+    M_tra = len(index_tra)
+    tra_dataset = utils.load_dataset(
         fname_dataset,
-        reserve=0.02
-    )
-    X_tra, m, p, n, o, idx_smpl_tra = utils.load_data(
-        fname_dataset,
-        M_tra,
         index_tra,
         send_message
     )
@@ -133,8 +126,7 @@ def DCEC_train(parameters, hyperparameters):
 
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
-        dataloader = DataLoader(X_tra, batch_size=batch_size)
-
+        dataloader = DataLoader(tra_dataset, batch_size=batch_size)
         # ==== Train DCEC parameters: =========================================
         models.train_DCEC(
             model,
@@ -161,6 +153,9 @@ def DCEC_train(parameters, hyperparameters):
 
 def DCEC_predict(parameters):
     print('==============================================================')
+    print('Executing Prediction Mode')
+    tic = datetime.now()
+    # ==== Unpack Parameters ==================================================
     fname_dataset = parameters['fname_dataset']
     device = parameters['device']
     M = parameters['M']
@@ -170,21 +165,32 @@ def DCEC_predict(parameters):
     send_message = parameters['send_message']
     mode = parameters['mode']
     saved_weights = parameters['saved_weights']
-
-    _, _, index_tst = utils.set_loading_index(
+    indexpath = parameters['indexpath']
+    exclude = parameters['exclude']
+    # ==== Load Data ==========================================================
+    if isinstance(M, str) and (M == 'all'):
+        M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
+    index_tst = utils.set_Tst_index(
         M,
         fname_dataset,
-        reserve=0.02
+        indexpath,
+        exclude=exclude
     )
-    X_tst, m, p, n, o, idx_smpl_tst = utils.load_data(
+    tst_dataset = utils.load_dataset(
         fname_dataset,
-        M,
         index_tst,
         send_message
     )
 
-    dataloader = DataLoader(X_tst, batch_size=batch_size)
+    dataloader = DataLoader(tst_dataset, batch_size=batch_size)
     model = DCEC(n_clusters).to(device)
 
-    models.predict_DCEC(model, dataloader, idx_smpl_tst, parameters)
+    models.predict_DCEC(model, dataloader, index_tst, parameters)
+    print('--------------------------------------------------------------')
+    toc = datetime.now()
+    msgcontent = f'DCEC outputs saved.\nTime Elapsed = {toc-tic}.'
+    print(msgcontent)
+    if send_message:
+        msgsubj = 'DCEC Outputs Saved'
+        utils.notify(msgsubj, msgcontent)
     print('==============================================================')
