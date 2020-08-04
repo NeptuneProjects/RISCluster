@@ -16,9 +16,9 @@ if __name__ == '__main__':
     fname_dataset = '../../../Data/DetectionData.h5'
     savepath = '../../../Outputs/'
     # Use this for local dev:
-    indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
+    # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
     # Use this for full run on Velella:
-    # indexpath = '../../../Data/TraValIndex_M=35000_Res=0.0_20200803T212141.pkl'
+    indexpath = '../../../Data/TraValIndex_M=35000_Res=0.0_20200803T212141.pkl'
     # Use this for troubleshooting:
     # indexpath = '../../../Data/TraValIndex_M=1000_Res=0.0_20200803T221100.pkl'
     # =========================================================================
@@ -30,7 +30,7 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=20,
+            n_epochs=600,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
