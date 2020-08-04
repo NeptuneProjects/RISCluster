@@ -1,5 +1,3 @@
-from datetime import datetime
-import os
 import sys
 sys.path.insert(0, '../RISCluster/')
 
@@ -17,7 +15,8 @@ if __name__ == '__main__':
     mode = 'predict'
     fname_dataset = '../../../Data/DetectionData.h5'
     savepath = '../../../Outputs/'
-    indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
+    # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
+    indexpath = '../../../Data/TraValIndex_M=35000_Res=0.0_20200803T212141.pkl'
     # =========================================================================
     # Pre-Training Routine
     # =========================================================================
@@ -27,17 +26,17 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=10,
+            n_epochs=600,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
             send_message=False,
             mode=mode,
             early_stopping=True,
-            patience=1
+            patience=10
         )
         hyperparameters = dict(
-            batch_size=[256, 512],
+            batch_size=[256, 512, 1024],
             lr=[0.0001, 0.001]
         )
         utils.save_exp_config(
@@ -56,9 +55,9 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=10,
+            n_epochs=600,
             n_clusters=11,
-            update_interval=5,
+            update_interval=300,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
