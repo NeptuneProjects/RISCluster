@@ -68,7 +68,7 @@ def pretrain_DCEC(
     grid = torchvision.utils.make_grid(images)
 
     disp_idx = sorted(np.random.randint(0, images.size(0), 4))
-    disp = images[disp_idx].to(device)
+    disp = images[disp_idx]
 
     tb = SummaryWriter(log_dir=savepath_run)
     tb.add_image('images', grid)
