@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # Universal Parameters
     # =========================================================================
     # Select from 'pretrain', 'train', or 'predict':
-    mode = 'predict'
+    mode = 'pretrain'
     fname_dataset = '../../../Data/DetectionData.h5'
     savepath = '../../../Outputs/'
     # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
