@@ -30,7 +30,7 @@ if __name__ == '__main__':
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
-            send_message=False,
+            send_message=True,
             mode=mode,
             early_stopping=True,
             patience=10
