@@ -30,7 +30,7 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=600,
+            n_epochs=10,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
