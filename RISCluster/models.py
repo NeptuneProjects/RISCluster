@@ -93,13 +93,13 @@ def pretrain_DCEC(
                 loss_mse.backward()
                 optimizer.step()
 
-            running_tra_mse += loss_mse * x.size(0)
-            running_tra_mae += loss_mae * x.size(0)
+            running_tra_mse += loss_mse.cpu().detach().numpy() * x.size(0)
+            running_tra_mae += loss_mae.cpu().detach().numpy() * x.size(0)
 
         epoch_tra_mse = running_tra_mse / M_tra
         epoch_tra_mae = running_tra_mae / M_tra
-        training_history['mse'].append(epoch_tra_mse.cpu().detach().numpy())
-        training_history['mae'].append(epoch_tra_mae.cpu().detach().numpy())
+        training_history['mse'].append(epoch_tra_mse)
+        training_history['mae'].append(epoch_tra_mae)
         tb.add_scalar('Training MSE', epoch_tra_mse, epoch)
         tb.add_scalar('Training MAE', epoch_tra_mae, epoch)
 
@@ -138,8 +138,8 @@ def pretrain_DCEC(
                 loss_mse = criterion_mse(x_rec, x)
                 loss_mae = criterion_mae(x_rec, x)
 
-            running_val_mse += loss_mse * x.size(0)
-            running_val_mae += loss_mae * x.size(0)
+            running_val_mse += loss_mse.cpu().detach().numpy() * x.size(0)
+            running_val_mae += loss_mae.cpu().detach().numpy() * x.size(0)
 
             if early_stopping:
                 running_size += x.size(0)
@@ -162,8 +162,8 @@ def pretrain_DCEC(
             M_val = running_size
         epoch_val_mse = running_val_mse / M_val
         epoch_val_mae = running_val_mae / M_val
-        validation_history['mse'].append(epoch_val_mse.cpu().detach().numpy())
-        validation_history['mae'].append(epoch_val_mae.cpu().detach().numpy())
+        validation_history['mse'].append(epoch_val_mse)
+        validation_history['mae'].append(epoch_val_mae)
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
         tb.add_scalar('Validation MAE', epoch_val_mae, epoch)
 
