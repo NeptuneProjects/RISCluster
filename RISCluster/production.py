@@ -73,12 +73,18 @@ def DCEC_pretrain(parameters, hyperparameters):
             lr,
             parameters
         )
+        if send_message:
+            toc = datetime.now()
+            msgsubj = 'DCEC Pre-training & Tuning Status Update'
+            msgcontent = f'Tuning run {tuning_count}/{tuning_runs} complete.'+\
+                         f'\nTime Elapsed = {toc-tic}'
+            utils.notify(msgsubj, msgcontent)
         tuning_count += 1
 
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'''DCEC pre-training & tuning completed at {toc}.
-    Time Elapsed = {(toc-tic)}.'''
+    msgcontent = f'DCEC pre-training & tuning completed at {toc}.' + \
+                 f'\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
         msgsubj = 'DCEC Pre-training & Tuning Complete'
@@ -139,12 +145,18 @@ def DCEC_train(parameters, hyperparameters):
             tol,
             parameters
         )
+        if send_message:
+            toc = datetime.now()
+            msgsubj = 'DCEC Training & Tuning Status Update'
+            msgcontent = f'Tuning run {tuning_count}/{tuning_runs} complete.'+\
+                         f'\nTime Elapsed = {toc-tic}'
+            utils.notify(msgsubj, msgcontent)
         tuning_count += 1
 
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'''DCEC training & tuning completed at {toc}.
-    Time Elapsed = {toc-tic}.'''
+    msgcontent = f'DCEC training & tuning completed at {toc}.' + \
+                 f'\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
         msgsubj = 'DCEC Training & Tuning Complete'

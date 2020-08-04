@@ -74,15 +74,39 @@ def pretrain_DCEC(
     tb.add_image('images', grid)
     # tb.add_graph(model, images)
 
+    if early_stopping:
+        savepath_chkpnt = f'{savepath_run}tmp/'
+        if not os.path.exists(savepath_chkpnt):
+            os.makedirs(savepath_chkpnt)
+        best_val_loss = 10000
+
     finished = False
     for epoch in range(n_epochs):
+        print('-' * 100)
+        print(
+            f'Epoch [{epoch+1}/{n_epochs}] | '
+            f'Batch Size = {batch_size} | LR = {lr}'
+        )
         # ==== Training Loop: =================================================
         model.train(True)
 
         running_tra_mse = 0.0
         running_tra_mae = 0.0
+        running_size = 0
 
-        for batch in tra_loader:
+        pbar_tra = tqdm(
+            tra_loader,
+            leave=True,
+            desc=" Traininig",
+            unit="batch",
+            postfix={
+                "MAE": "%.6f" % 0.0,
+                "MSE": "%.6f" % 0.0
+            },
+            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+        )
+
+        for batch in pbar_tra:
             x = batch.to(device)
             optimizer.zero_grad()
 
@@ -95,6 +119,12 @@ def pretrain_DCEC(
 
             running_tra_mse += loss_mse.cpu().detach().numpy() * x.size(0)
             running_tra_mae += loss_mae.cpu().detach().numpy() * x.size(0)
+            running_size += x.size(0)
+
+            pbar_tra.set_postfix(
+                MAE = f"{(running_tra_mae / running_size):.6f}",
+                MSE = f"{(running_tra_mse / running_size):.6f}"
+            )
 
         epoch_tra_mse = running_tra_mse / M_tra
         epoch_tra_mae = running_tra_mae / M_tra
@@ -121,16 +151,21 @@ def pretrain_DCEC(
 
         running_val_mse = 0.0
         running_val_mae = 0.0
+        running_size = 0
 
-        if early_stopping:
-            savepath_chkpnt = f'{savepath_run}tmp/'
-            if not os.path.exists(savepath_chkpnt):
-                os.makedirs(savepath_chkpnt)
-            val_loss = 0.0
-            best_val_loss = 10000
-            running_size = 0
+        pbar_val = tqdm(
+            val_loader,
+            leave=True,
+            desc="Validation",
+            unit="batch",
+            postfix={
+                "MSE": "%.6f" % 0.0,
+                "MAE": "%.6f" % 0.0
+            },
+            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+        )
 
-        for batch in val_loader:
+        for batch in pbar_val:
             model.eval()
             with torch.no_grad():
                 x = batch.to(device)
@@ -140,26 +175,13 @@ def pretrain_DCEC(
 
             running_val_mse += loss_mse.cpu().detach().numpy() * x.size(0)
             running_val_mae += loss_mae.cpu().detach().numpy() * x.size(0)
+            running_size += x.size(0)
 
-            if early_stopping:
-                running_size += x.size(0)
-                val_loss = running_val_mse / running_size
+            pbar_val.set_postfix(
+                MSE = f"{(running_val_mse / running_size):.6f}",
+                MAE = f"{(running_val_mae / running_size):.6f}"
+            )
 
-                if val_loss < best_val_loss:
-                    strikes = 0
-                    best_val_loss = val_loss
-                    fname = f'{savepath_chkpnt}AEC_Best_Weights.pt'
-                    torch.save(model.state_dict(), fname)
-                else:
-                    strikes += 1
-
-                if epoch > patience and strikes > patience:
-                    print('Stopping Early.')
-                    finished = True
-                    break
-
-        if finished:
-            M_val = running_size
         epoch_val_mse = running_val_mse / M_val
         epoch_val_mae = running_val_mae / M_val
         validation_history['mse'].append(epoch_val_mse)
@@ -167,15 +189,20 @@ def pretrain_DCEC(
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
         tb.add_scalar('Validation MAE', epoch_val_mae, epoch)
 
-        print(
-            f'Epoch [{epoch+1}/{n_epochs}] | Training: '
-            f'MSE = {epoch_tra_mse:.4f}, MAE = {epoch_tra_mae:.4f} | '
-            f'Validation: MSE = {epoch_val_mse:.4f}, '
-            f'MAE = {epoch_val_mae:.4f}'
-        )
+        if early_stopping:
 
-        if finished:
-            break
+            if epoch_val_mse < best_val_loss:
+                strikes = 0
+                best_val_loss = epoch_val_mse
+                fname = f'{savepath_chkpnt}AEC_Best_Weights.pt'
+                torch.save(model.state_dict(), fname)
+            else:
+                strikes += 1
+
+            if epoch > patience and strikes > patience:
+                print('Stopping Early.')
+                finished = True
+                break
 
     if early_stopping and (finished == True or epoch == n_epochs-1):
         src_file = f'{savepath_chkpnt}AEC_Best_Weights.pt'

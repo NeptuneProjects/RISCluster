@@ -106,7 +106,7 @@ def load_dataset(fname_dataset, index, send_message=False):
         idx_sample = np.empty([M,], dtype=np.int)
         dset_arr = np.empty([n, o])
         count = 0
-        for i in tqdm(range(M)):
+        for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
             try:
                 dset_arr = dset[index[i], 1:-1, 1:129]
                 dset_arr /= dset_arr.max()
@@ -121,7 +121,12 @@ def load_dataset(fname_dataset, index, send_message=False):
                 pass
 
         toc = datetime.now()
-        print(f'\nTime elapsed = {toc-tic}')
+        msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
+                     f'\nTime Elapsed = {(toc-tic)}'
+        print(msgcontent)
+        if send_message:
+            msgsubj = 'Data Loaded'
+            notify(msgsubj, msgcontent)
 
     return SeismoDataset(X)
 
