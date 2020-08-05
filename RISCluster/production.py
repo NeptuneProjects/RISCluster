@@ -53,7 +53,11 @@ def DCEC_pretrain(parameters, hyperparameters):
         print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
         print(f'Batch Size = {batch_size}, LR = {lr}')
         # ==== Instantiate Model, Optimizer, & Loss Functions =================
-        model = AEC().to(device)
+        model = AEC()
+        if (device.type == 'cuda') and (torch.cuda.device_count() > 1):
+            print(f'{torch.cuda.device_count()} GPUs in use.')
+            model = nn.DataParallel(model)
+        model.to(device)
         model.apply(init_weights)
 
         criterion_mse = nn.MSELoss(reduction='mean')
