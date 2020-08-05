@@ -35,7 +35,7 @@ def compare_images(
         figsize=(12,9),
         show=show
     )
-    savepath_snap = savepath + 'snapshots/'
+    savepath_snap = savepath + '/snapshots/'
     if not os.path.exists(savepath_snap):
         os.makedirs(savepath_snap)
     figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'

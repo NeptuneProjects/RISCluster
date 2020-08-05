@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 import importlib as imp
 import models
@@ -27,6 +28,7 @@ def DCEC_pretrain(parameters, hyperparameters):
     mode = parameters['mode']
     device = parameters['device']
     indexpath = parameters['indexpath']
+    savepath_exp = parameters['savepath']
     # ==== Load Data ==========================================================
     index_tra, index_val = utils.load_TraVal_index(fname_dataset, indexpath)
     M_tra = len(index_tra)
@@ -89,6 +91,9 @@ def DCEC_pretrain(parameters, hyperparameters):
     if send_message:
         msgsubj = 'DCEC Pre-training & Tuning Complete'
         utils.notify(msgsubj, msgcontent)
+
+    print('To view results in Tensorboard, run the following command:')
+    print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
 
 def DCEC_train(parameters, hyperparameters):

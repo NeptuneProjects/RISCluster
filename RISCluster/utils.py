@@ -37,37 +37,6 @@ def calc_tuning_runs(hyperparameters):
 
     return(tuning_runs)
 
-def init_output_env(savepath, mode, **kwargs):
-    serial_run = datetime.now().strftime('%Y%m%dT%H%M%S')
-    if mode == 'pretrain':
-        savepath_run = f'{savepath}Run' + \
-                       f'_BatchSz={kwargs.get("batch_size")}' + \
-                       f'_LR={kwargs.get("lr")}/'
-        if not os.path.exists(savepath_run):
-            os.makedirs(savepath_run)
-    elif mode == 'train':
-        savepath_run = f'{savepath}Run' + \
-                       f'_BatchSz={kwargs.get("batch_size")}' + \
-                       f'_LR={kwargs.get("lr")}' + \
-                       f'_gamma={kwargs.get("gamma")}' + \
-                       f'_tol={kwargs.get("tol")}/'
-    elif mode == 'predict':
-        n_clusters = kwargs.get('n_clusters')
-        with open(f'{savepath}{n_clusters}_Clusters', 'w') as f:
-            pass
-        savepath_run = []
-        for label in range(n_clusters):
-            savepath_cluster = f'{savepath}Cluster{label:02d}/'
-            if not os.path.exists(savepath_cluster):
-                os.makedirs(savepath_cluster)
-            savepath_run.append(savepath_cluster)
-    else:
-        raise ValueError(
-                'Incorrect mode selected; choose "pretrain", "train", or "eval".'
-            )
-
-    return savepath_run, serial_run
-
 def init_exp_env(mode, savepath):
     serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
     if mode == 'pretrain':
@@ -86,6 +55,37 @@ def init_exp_env(mode, savepath):
           f'{savepath_exp}')
 
     return savepath_exp, serial_exp
+
+def init_output_env(savepath, mode, **kwargs):
+    serial_run = datetime.now().strftime('%Y%m%dT%H%M%S')
+    if mode == 'pretrain':
+        savepath_run = f'{savepath}Run' + \
+                       f'_BatchSz={kwargs.get("batch_size")}' + \
+                       f'_LR={kwargs.get("lr")}'
+        if not os.path.exists(savepath_run):
+            os.makedirs(savepath_run)
+    elif mode == 'train':
+        savepath_run = f'{savepath}Run' + \
+                       f'_BatchSz={kwargs.get("batch_size")}' + \
+                       f'_LR={kwargs.get("lr")}' + \
+                       f'_gamma={kwargs.get("gamma")}' + \
+                       f'_tol={kwargs.get("tol")}'
+    elif mode == 'predict':
+        n_clusters = kwargs.get('n_clusters')
+        with open(f'{savepath}{n_clusters}_Clusters', 'w') as f:
+            pass
+        savepath_run = []
+        for label in range(n_clusters):
+            savepath_cluster = f'{savepath}Cluster{label:02d}'
+            if not os.path.exists(savepath_cluster):
+                os.makedirs(savepath_cluster)
+            savepath_run.append(savepath_cluster)
+    else:
+        raise ValueError(
+                'Incorrect mode selected; choose "pretrain", "train", or "eval".'
+            )
+
+    return savepath_run, serial_run
 
 def load_dataset(fname_dataset, index, send_message=False):
     M = len(index)
@@ -193,7 +193,7 @@ def save_exp_config(savepath, serial, parameters, hyperparameters):
 
 def save_history(training_history, validation_history, savepath, run_serial):
     if validation_history is not None:
-        fname = f'{savepath}AEC_History{run_serial}.csv'
+        fname = f'{savepath}/AEC_History{run_serial}.csv'
         d1 = training_history.copy()
         d2 = validation_history.copy()
         modes = ['training', 'validation']
@@ -209,7 +209,7 @@ def save_history(training_history, validation_history, savepath, run_serial):
         d2.update(d1)
         del d1
     else:
-        fname = f'{savepath}DCEC_History{run_serial}.csv'
+        fname = f'{savepath}/DCEC_History{run_serial}.csv'
         d2 = training_history
 
     with open(fname, 'w') as csvfile:
@@ -220,7 +220,7 @@ def save_history(training_history, validation_history, savepath, run_serial):
     print('History saved.')
 
 def save_labels(label_list, savepath, serial):
-    fname = f'{savepath}Labels{serial}.csv'
+    fname = f'{savepath}/Labels{serial}.csv'
     keys = label_list[0].keys()
     if not os.path.exists(fname):
         with open(fname, 'w') as csvfile:

@@ -77,7 +77,7 @@ def pretrain_DCEC(
     # tb.add_graph(model, images)
 
     if early_stopping:
-        savepath_chkpnt = f'{savepath_run}tmp/'
+        savepath_chkpnt = f'{savepath_run}/tmp/'
         if not os.path.exists(savepath_chkpnt):
             os.makedirs(savepath_chkpnt)
         best_val_loss = 10000
@@ -206,12 +206,20 @@ def pretrain_DCEC(
                 finished = True
                 break
 
+    tb.add_hparams(
+        {'Batch Size': batch_size, 'LR': lr},
+        {
+            'hp/Training MSE': epoch_tra_mse,
+            'hp/Validation MSE': epoch_val_mse
+        }
+    )
+    tb.close()
     if early_stopping and (finished == True or epoch == n_epochs-1):
         src_file = f'{savepath_chkpnt}AEC_Best_Weights.pt'
-        dst_file = f'{savepath_run}AEC_Params_{serial_run}.pt'
+        dst_file = f'{savepath_run}/AEC_Params_{serial_run}.pt'
         shutil.move(src_file, dst_file)
     else:
-        fname = f'{savepath_run}AEC_Params_ {serial_run}.pt'
+        fname = f'{savepath_run}/AEC_Params_ {serial_run}.pt'
         torch.save(model.state_dict(), fname)
     print('AEC parameters saved.')
 
@@ -221,10 +229,10 @@ def pretrain_DCEC(
         savepath_run,
         serial_run
         )
-    tb.close()
+
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
-    return model
+    return model, tb
 
 def train_DCEC(
         model,
@@ -374,7 +382,7 @@ def train_DCEC(
         if finished:
             break
 
-    fname = f'{savepath_run}DCEC_Params_{serial_run}.pt'
+    fname = f'{savepath_run}/DCEC_Params_{serial_run}.pt'
     torch.save(model.state_dict(), fname)
     print('DCEC parameters saved.')
 
