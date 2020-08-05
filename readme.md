@@ -15,8 +15,8 @@ Xie, Girshick, and Farhadi (2016): https://arxiv.org/abs/1511.06335)
 Guo, Zhu, Liu, and Jin (2017): https://link.springer.com/chapter/10.1007/978-3-319-70096-0_39
 
 Project assembled by William Jenkins
-wjenkins [@] ucsd [dot] edu
-http://noiselab.ucsd.edu
-Scripps Institution of Oceanography
-University of California San Diego
-La Jolla, California, USA
+<br>wjenkins [@] ucsd [dot] edu
+<br>http://noiselab.ucsd.edu
+<br>Scripps Institution of Oceanography
+<br>University of California San Diego
+<br>La Jolla, California, USA
