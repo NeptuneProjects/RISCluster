@@ -3,6 +3,8 @@ import os
 import sys
 sys.path.insert(0, '../RISCluster/')
 
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
