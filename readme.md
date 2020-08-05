@@ -1,5 +1,5 @@
 # Deep Convolutional Embedded Clustering
-This project is a PyTorch implementation of deep convolutional embedded clustering (DCEC) in the unsupervised classification of seismic signals detected on a 34-station passive broadband seismic array on the Ross Ice Shelf from November 2014 to November 2016.  The workflow requires the following elements:
+This repository is a PyTorch implementation of deep convolutional embedded clustering (DCEC) in the unsupervised classification of seismic signals detected on a 34-station passive broadband seismic array on the Ross Ice Shelf from November 2014 to November 2016.  The workflow requires the following elements:
 1. Import modules and set up environment
 2. Load and pre-process data
 3. Construct a convolutional auto-encoder (AEC)
@@ -9,9 +9,14 @@ This project is a PyTorch implementation of deep convolutional embedded clusteri
 7. Simultaneously train the DCEC model to maximize clustering while fine tuning AEC parameters.
 8. Feed unseen data to DCEC model and evaluate performance.
 
-This work has been heavily adapted from the master thesis of Dylan Snover (https://github.com/dsnover/Unsupervised_Machine_Learning_for_Urban_Seismic_Noise), whose own work follows Xie, Girshick, and Farhadi (2016, https://arxiv.org/abs/1511.06335).  Additionally, this workflow draws from Guo, Zhu, Liu, and Jin (2017, https://link.springer.com/chapter/10.1007/978-3-319-70096-0_39)
+## References:
+Master thesis of Dylan Snover: https://github.com/dsnover/Unsupervised_Machine_Learning_for_Urban_Seismic_Noise
+Xie, Girshick, and Farhadi (2016): https://arxiv.org/abs/1511.06335)
+Guo, Zhu, Liu, and Jin (2017): https://link.springer.com/chapter/10.1007/978-3-319-70096-0_39
 
 Project assembled by William Jenkins
+wjenkins [@] ucsd [dot] edu
+http://noiselab.ucsd.edu
 Scripps Institution of Oceanography
 University of California San Diego
 La Jolla, California, USA
