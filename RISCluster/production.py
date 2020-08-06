@@ -86,13 +86,19 @@ def DCEC_pretrain(parameters, hyperparameters):
                 )
                 completed = True
             except RuntimeError as e:
-                if ('CUDA' and 'out of memory') in str(e) and oom_attempt < 120:
+                if ('CUDA' and 'out of memory') in str(e):
                     oom_attempt += 1
                     torch.cuda.empty_cache()
-                    print(f'| WARNING: Out of memory, attempting rerun {oom_attempt}.')
-                    time.sleep(1)
+                    print(f'| WARNING: Out of memory, re-attempt: {oom_attempt}', end='\r')
+                    time.sleep(2)
                 else:
                     raise e
+            except KeyboardInterrupt:
+                print('Re-attempt terminated by user, ending program.')
+                torch.cuda.empty_cache()
+                raise e
+            finally:
+                torch.cuda.empty_cache()
 
         if send_message:
             toc = datetime.now()
