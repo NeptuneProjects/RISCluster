@@ -56,6 +56,7 @@ def DCEC_pretrain(parameters, hyperparameters):
         print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
         print(f'Batch Size = {batch_size}, LR = {lr}')
         while not completed:
+            q_tic = datetime.now()
             try:
                 # ==== Instantiate Model, Optimizer, & Loss Functions =================
                 model = AEC()
@@ -89,14 +90,17 @@ def DCEC_pretrain(parameters, hyperparameters):
                 if ('CUDA' and 'out of memory') in str(e):
                     oom_attempt += 1
                     torch.cuda.empty_cache()
-                    print(f'| WARNING: Out of memory, re-attempt: {oom_attempt}', end='\r')
-                    time.sleep(2)
+                    queued = str(datetime.now() - q_tic)
+                    print(
+                        f'| WARNING: Out of memory, queued for: {queued[-7]}',
+                        end='\r'
+                    )
+                    time.sleep(1)
                 else:
                     raise e
             except KeyboardInterrupt:
                 print('Re-attempt terminated by user, ending program.')
                 torch.cuda.empty_cache()
-                raise e
             finally:
                 torch.cuda.empty_cache()
 
