@@ -52,11 +52,11 @@ def DCEC_pretrain(parameters, hyperparameters):
     for batch_size, lr in product(*hyperparam_values):
         completed = False
         oom_attempt = 0
+        print('--------------------------------------------------------------')
+        print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
+        print(f'Batch Size = {batch_size}, LR = {lr}')
         while not completed:
             try:
-                print('--------------------------------------------------------------')
-                print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
-                print(f'Batch Size = {batch_size}, LR = {lr}')
                 # ==== Instantiate Model, Optimizer, & Loss Functions =================
                 model = AEC()
                 # if (device.type == 'cuda') and (torch.cuda.device_count() > 1):
