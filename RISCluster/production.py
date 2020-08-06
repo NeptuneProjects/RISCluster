@@ -55,8 +55,8 @@ def DCEC_pretrain(parameters, hyperparameters):
         print('--------------------------------------------------------------')
         print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
         print(f'Batch Size = {batch_size}, LR = {lr}')
+        q_tic = datetime.now()
         while not completed:
-            q_tic = datetime.now()
             try:
                 # ==== Instantiate Model, Optimizer, & Loss Functions =================
                 model = AEC()
