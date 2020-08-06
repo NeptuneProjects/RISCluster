@@ -88,6 +88,7 @@ def DCEC_pretrain(parameters, hyperparameters):
                 completed = True
             except RuntimeError as e:
                 if ('CUDA' and 'out of memory') in str(e):
+                    queued_flag = True
                     oom_attempt += 1
                     torch.cuda.empty_cache()
                     queued = str(datetime.now() - q_tic)
@@ -109,6 +110,10 @@ def DCEC_pretrain(parameters, hyperparameters):
             msgsubj = 'DCEC Pre-training & Tuning Status Update'
             msgcontent = f'Tuning run {tuning_count}/{tuning_runs} complete.'+\
                          f'\nTime Elapsed = {toc-tic}'
+            if queued_flag:
+                msgcontent = msgcontent + '\nBefore this tuning run, your' + \
+                    'program encountered an out-of-memory error on CUDA ' + \
+                    f'device and was queued for {queued[:-7].}'
             utils.notify(msgsubj, msgcontent)
         tuning_count += 1
 
