@@ -92,7 +92,7 @@ def DCEC_pretrain(parameters, hyperparameters):
                     torch.cuda.empty_cache()
                     queued = str(datetime.now() - q_tic)
                     print(
-                        f'| WARNING: Out of memory, queued for: {queued[-7]}',
+                        f'| WARNING: Out of memory, queued for: {queued[:-7]}',
                         end='\r'
                     )
                     time.sleep(1)
