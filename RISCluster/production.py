@@ -113,7 +113,7 @@ def DCEC_pretrain(parameters, hyperparameters):
             if queued_flag:
                 msgcontent = msgcontent + '\nBefore this tuning run, your' + \
                     'program encountered an out-of-memory error on CUDA ' + \
-                    f'device and was queued for {queued[:-7].}'
+                    f'device and was queued for {queued[:-7]}.'
             utils.notify(msgsubj, msgcontent)
         tuning_count += 1
 
