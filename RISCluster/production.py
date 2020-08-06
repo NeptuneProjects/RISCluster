@@ -2,6 +2,7 @@ from datetime import datetime
 from itertools import product
 import sys
 sys.path.insert(0, '../RISCluster/')
+import time
 
 import torch
 import torch.nn as nn
@@ -85,10 +86,11 @@ def DCEC_pretrain(parameters, hyperparameters):
                 )
                 completed = True
             except RuntimeError as e:
-                if ('CUDA' and 'out of memory') in str(e) and oom_attempt < 50:
+                if ('CUDA' and 'out of memory') in str(e) and oom_attempt < 120:
                     oom_attempt += 1
                     torch.cuda.empty_cache()
                     print(f'| WARNING: Out of memory, attempting rerun {oom_attempt}.')
+                    time.sleep(1)
                 else:
                     raise e
 
