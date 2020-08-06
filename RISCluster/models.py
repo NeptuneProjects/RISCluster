@@ -124,9 +124,9 @@ def pretrain_DCEC(
             running_size += x.size(0)
 
             pbar_tra.set_postfix(
-                MAE = f"{(running_tra_mae / running_size):.6f}",
-                MSE = f"{(running_tra_mse / running_size):.6f}"
-            )
+                MAE = f"{(running_tra_mae / running_size):.4e}",
+                MSE = f"{(running_tra_mse / running_size):.4e}"
+                )
 
         epoch_tra_mse = running_tra_mse / M_tra
         epoch_tra_mae = running_tra_mae / M_tra
@@ -180,8 +180,8 @@ def pretrain_DCEC(
             running_size += x.size(0)
 
             pbar_val.set_postfix(
-                MSE = f"{(running_val_mse / running_size):.6f}",
-                MAE = f"{(running_val_mae / running_size):.6f}"
+                MSE = f"{(running_val_mse / running_size):.4e}",
+                MAE = f"{(running_val_mae / running_size):.4e}"
             )
 
         epoch_val_mse = running_val_mse / M_val

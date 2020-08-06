@@ -49,36 +49,49 @@ def DCEC_pretrain(parameters, hyperparameters):
     tuning_runs = utils.calc_tuning_runs(hyperparameters)
     tuning_count = 1
     for batch_size, lr in product(*hyperparam_values):
-        print('--------------------------------------------------------------')
-        print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
-        print(f'Batch Size = {batch_size}, LR = {lr}')
-        # ==== Instantiate Model, Optimizer, & Loss Functions =================
-        model = AEC()
-        # if (device.type == 'cuda') and (torch.cuda.device_count() > 1):
-            # print(f'{torch.cuda.device_count()} GPUs in use.')
-            # model = nn.DataParallel(model)
-        model.to(device)
-        model.apply(init_weights)
+        completed = False
+        oom_attempt = 0
+        while not completed:
+            try:
+                print('--------------------------------------------------------------')
+                print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
+                print(f'Batch Size = {batch_size}, LR = {lr}')
+                # ==== Instantiate Model, Optimizer, & Loss Functions =================
+                model = AEC()
+                # if (device.type == 'cuda') and (torch.cuda.device_count() > 1):
+                    # print(f'{torch.cuda.device_count()} GPUs in use.')
+                    # model = nn.DataParallel(model)
+                model.to(device)
+                model.apply(init_weights)
 
-        criterion_mse = nn.MSELoss(reduction='mean')
-        criterion_mae = nn.L1Loss(reduction='mean')
-        criteria = [criterion_mse, criterion_mae]
+                criterion_mse = nn.MSELoss(reduction='mean')
+                criterion_mae = nn.L1Loss(reduction='mean')
+                criteria = [criterion_mse, criterion_mae]
 
-        optimizer = optim.Adam(model.parameters(), lr=lr)
+                optimizer = optim.Adam(model.parameters(), lr=lr)
 
-        tra_loader = DataLoader(tra_dataset, batch_size=batch_size)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size)
-        dataloaders = [tra_loader, val_loader]
-        # ==== Pre-train DCEC parameters by training the autoencoder: =========
-        models.pretrain_DCEC(
-            model,
-            dataloaders,
-            criteria,
-            optimizer,
-            batch_size,
-            lr,
-            parameters
-        )
+                tra_loader = DataLoader(tra_dataset, batch_size=batch_size)
+                val_loader = DataLoader(val_dataset, batch_size=batch_size)
+                dataloaders = [tra_loader, val_loader]
+                # ==== Pre-train DCEC parameters by training the autoencoder: =========
+                models.pretrain_DCEC(
+                    model,
+                    dataloaders,
+                    criteria,
+                    optimizer,
+                    batch_size,
+                    lr,
+                    parameters
+                )
+                completed = True
+            except RuntimeError as e:
+                if ('CUDA' and 'out of memory') in str(e) and oom_attempt < 50:
+                    oom_attempt += 1
+                    torch.cuda.empty_cache()
+                    print(f'| WARNING: Out of memory, attempting rerun {oom_attempt}.')
+                else:
+                    raise e
+
         if send_message:
             toc = datetime.now()
             msgsubj = 'DCEC Pre-training & Tuning Status Update'
