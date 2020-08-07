@@ -55,6 +55,7 @@ def DCEC_pretrain(parameters, hyperparameters):
         print('--------------------------------------------------------------')
         print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
         print(f'Batch Size = {batch_size}, LR = {lr}')
+        queued_flag = False
         q_tic = datetime.now()
         while not completed:
             try:

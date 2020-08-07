@@ -1,81 +1,116 @@
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import csv
-from datetime import datetime
-import os
 import sys
 sys.path.insert(0, '../RISCluster/')
 
-import h5py
-from matplotlib.gridspec import GridSpec
-import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.cluster import KMeans
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import importlib as imp
 
-import networks
-imp.reload(networks)
-from  networks import AEC, DCEC
+# import networks
+# imp.reload(networks)
+# from  networks import AEC, DCEC
+#
+# import plotting
+# imp.reload(plotting)
+# from plotting import view_DCEC_output as w_spec
+#
+# import processing
+# imp.reload(processing)
+#
+# import production
+# imp.reload(production)
+#
+# import utils
+# imp.reload(utils)
 
-import plotting
-imp.reload(plotting)
-from plotting import view_DCEC_output as w_spec
+# Encoder Layers
+class Encoder(nn.Module):
+    def __init__(self):
+        super(Encoder, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=3, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.Conv2d(8, 16, kernel_size=3, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(True)
+        )
 
-import processing
-imp.reload(processing)
+    def forward(self, x):
+        x = self.encoder(x)
+        return x
 
-import production
-imp.reload(production)
+class Flattener(nn.Module):
+    def __init__(self):
+        super(Flattener, self).__init__()
+        self.flattener = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(2048, 32),
+            nn.ReLU(True)
+        )
 
-import utils
-imp.reload(utils)
+    def forward(self, x):
+        x = self.flattener(x)
+        return x
 
-label_list = []
+# Decoder Layers
+class Unflattener(nn.Module):
+    def __init__(self):
+        super(Unflattener, self).__init__()
+        self.latent2dec = nn.Sequential(
+            nn.Linear(32, 2048),
+            nn.ReLU(True)
+        )
 
-idx1 = np.arange(0,10)
-label1 = np.random.choice(np.arange(0,11),10)
-other = np.random.rand(10,20)
-A = [
-        {
-        'idx': idx1[i],
-        'label': label1[i],
-        'other': other
-        } for i in range(len(idx1))
-    ]
+    def forward(self, x):
+        x = self.latent2dec(x)
+        return x
 
-label_list += [{k: v for k, v in d.items() if (k == 'idx' or k == 'label')} for d in A]
-print(label_list)
-# print('=============')
-idx2 = np.arange(10,20)
-label2 = np.random.choice(np.arange(0,11),10)
-B = [
-        {
-        'idx': idx2[i],
-        'label': label2[i],
-        'other': other
-        } for i in range(len(idx2))
-    ]
+class Decoder(nn.Module):
+    def __init__(self):
+        super(Decoder, self).__init__()
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, 16, kernel_size=3, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(16, 8, kernel_size=3, stride=2, padding=0),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(8, 1, kernel_size=5, stride=2, padding=0),
+        )
 
-label_list += [{k: v for k, v in d.items() if (k == 'idx' or k == 'label')} for d in B]
-print(label_list)
-print('')
+    def forward(self, x):
+        x = x.view(-1, 64, 4, 8)
+        x = self.decoder(x)
+        return x
 
-fname = 'test.csv'
-keys = label_list[0].keys()
-if not os.path.exists(fname):
-    with open(fname, 'w') as csvfile:
-        w = csv.DictWriter(csvfile, keys)
-        w.writeheader()
-        w.writerows(label_list)
-else:
-    with open(fname, 'a') as csvfile:
-        w = csv.DictWriter(csvfile, keys)
-        w.writerows(label_list)
+
+
+
+x = torch.rand(800, 1, 64, 128)
+encoder = Encoder()
+flattener = Flattener()
+unflattener = Unflattener()
+decoder = Decoder()
+
+
+z_ = encoder(x)
+z = flattener(z_)
+x_r_ = unflattener(z)
+x_r = decoder(x_r_)
+
+print('-' * 60)
+print(f'INPUT: {x.size()}')
+print(f'CONV2D: {z_.size()}')
+print(f'FLATTEN: {z.size()}')
+print(f'UNFLATTEN: {x_r_.size()}')
+print(f'CONV2DT: {x_r.size()}')
+
+
 
 
 
