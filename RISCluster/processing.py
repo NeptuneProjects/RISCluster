@@ -427,5 +427,5 @@ def workflow_wrapper(
         tr_out, S_out, catdict = detector(tr, signal_args, detector_args, 'classic')
         return tr_out, S_out, catdict
     except:
-        print(f'\n    Station {get_station(station_index)} skipped.')
+        # print(f'\n    Station {get_station(station_index)} skipped.')
         return None, None, None
