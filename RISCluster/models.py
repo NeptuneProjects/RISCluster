@@ -441,7 +441,8 @@ def predict_DCEC(model, dataloader, idx_smpl, parameters):
                 'total': len(futures),
                 'unit': 'it',
                 'unit_scale': True,
-                'leave': True
+                'leave': True,
+                'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}'
             }
             for future in tqdm(as_completed(futures), **kwargs):
                 future.result()

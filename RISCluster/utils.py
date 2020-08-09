@@ -91,7 +91,7 @@ def load_dataset(fname_dataset, index, send_message=False):
     M = len(index)
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
-        DataSpec = '/30sec/Spectrogram'
+        DataSpec = '/7sec/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
         m -= 1
@@ -102,7 +102,7 @@ def load_dataset(fname_dataset, index, send_message=False):
 
         np.seterr(all='raise')
         # X = np.empty([M, n-2, o-173, 1])
-        X = np.empty([M, 1, n-2, o-173])
+        X = np.empty([M, 1, 64, 128])
         idx_sample = np.empty([M,], dtype=np.int)
         dset_arr = np.empty([n, o])
         count = 0
@@ -249,7 +249,7 @@ def set_device():
 # =============================================================================
 def set_TraVal_index(M, fname_dataset, reserve=0.0):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/30sec/Spectrogram'
+        DataSpec = '/7sec/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
         if M > m:
@@ -293,7 +293,7 @@ def load_TraVal_index(fname_dataset, loadpath):
 
 def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/30sec/Spectrogram'
+        DataSpec = '/7sec/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
 
@@ -315,7 +315,7 @@ def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
 
 def set_M(fname_dataset, indexpath, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/30sec/Spectrogram'
+        DataSpec = '/7sec/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
     print('Determining number of prediction samples...')
