@@ -27,9 +27,9 @@ from utils import notify
 if __name__ == '__main__':
     # ========================== Initialize Parameters ============================
     # v v v v Modify these parameters when switching to Velella! v v v v
-    num_workers = 12
-    datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
-    # datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
+    num_workers = 17
+    # datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+    datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
     # ^ ^ ^ ^ Modify these parameters when switching to Velella! ^ ^ ^ ^
     network_index = 0
     station_index = np.arange(0, 34)
