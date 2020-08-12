@@ -93,11 +93,11 @@ class Decoder(nn.Module):
 #         x = x.view(-1, 64, 4, 8)
 #         x = self.decoder(x)
 #         return x
-#
-# def init_weights(m):
-#     if type(m) in [nn.Linear, nn.Conv2d, nn.ConvTranspose2d]:
-#         torch.nn.init.xavier_uniform_(m.weight)
-        # m.bias.data.fill_(0.01)
+
+def init_weights(m):
+    if type(m) in [nn.Linear, nn.Conv2d, nn.ConvTranspose2d]:
+        torch.nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.01)
 
 # Clustering Layer
 class ClusteringLayer(nn.Module):
