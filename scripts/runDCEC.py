@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # Select from 'pretrain', 'train', or 'predict':
     mode = 'pretrain'
     fname_dataset = '../../../Data/DetectionData_New.h5'
-    # savepath = '../../../Outputs/'
+    savepath = '../../../Outputs/'
     # Use this for local dev:
     # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=100_Res=0.0_20200809T125533.pkl'
     # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
