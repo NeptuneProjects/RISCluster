@@ -103,7 +103,7 @@ if __name__ == '__main__':
             for future in tqdm(as_completed(futures), **kwargs):
                 future.result()
 
-        print('Collecting results...')
+        print('    Collecting results...')
         j = 0
         for future in futures:
             output = future.result()
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                 metadata.extend(output[2])
             j += 1
 
-        print('Saving results...')
+        print('    Saving results...')
         with h5py.File(data_savepath+data_savename, 'a') as f:
             if ('/' + group_name) not in f:
                 print(f'    No h5 group found, creating group "{group_name}" '
