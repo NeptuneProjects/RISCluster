@@ -19,7 +19,8 @@ if __name__ == '__main__':
     # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=100_Res=0.0_20200809T125533.pkl'
     # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
     # Use this for full run on Velella:
-    indexpath = '../../../Data/TraValIndex_M=35000_Res=0.0_20200803T212141.pkl'
+    # indexpath = '../../../Data/TraValIndex_M=35000_Res=0.0_20200803T212141.pkl'
+    indexpath = '../../../Data/TraValIndex_M=100000_Res=0.0_20200812T063630.pkl'
     # Use this for troubleshooting on Velella:
     # indexpath = '../../../Data/TraValIndex_M=1000_Res=0.0_20200803T221100.pkl'
     # =========================================================================
