@@ -344,7 +344,7 @@ def train_DCEC(
                 q, x_rec, _ = model(x)
                 loss_rec = criterion_mse(x_rec, x)
                 loss_clust = criterion_kld(torch.log(q), tar_dist) / x.size(0)
-                loss = loss_rec + gamma * loss_clust
+                loss = (1-gamma) * loss_rec + gamma * loss_clust
                 loss.backward()
                 optimizer.step()
 
@@ -473,7 +473,7 @@ def kmeans(model, dataloader, device):
     # Returns:
         weights: Assigned to model's clustering layer weights
     '''
-    km = KMeans(n_clusters=model.n_clusters, n_init=20)
+    km = KMeans(n_clusters=model.n_clusters, n_init=100)
     z_array = None
     model.eval()
     for batch in dataloader:
