@@ -99,7 +99,7 @@ def pretrain_DCEC(
         pbar_tra = tqdm(
             tra_loader,
             leave=True,
-            desc=" Traininig",
+            desc=" Training",
             unit="batch",
             postfix={
                 "MAE": "%.6f" % 0.0,
@@ -126,7 +126,7 @@ def pretrain_DCEC(
             pbar_tra.set_postfix(
                 MAE = f"{(running_tra_mae / running_size):.4e}",
                 MSE = f"{(running_tra_mse / running_size):.4e}"
-                )
+            )
 
         epoch_tra_mse = running_tra_mse / M_tra
         epoch_tra_mae = running_tra_mae / M_tra
@@ -297,11 +297,13 @@ def train_DCEC(
     grid = torchvision.utils.make_grid(images)
 
     tb = SummaryWriter(log_dir = savepath_run)
-    tb.add_image('images', grid)
+    # tb.add_image('images', grid)
     # tb.add_graph(model, images)
 
     # Initialize Clusters:
+    print('Initiating clusters with k-means...')
     kmeans(model, copy.deepcopy(dataloader), device)
+    print('Clusters initiated.')
     # Initialize Target Distribution:
     q, preds_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
@@ -309,6 +311,11 @@ def train_DCEC(
     total_counter = 0
     finished = False
     for epoch in range(n_epochs):
+        print('-' * 110)
+        print(
+            f'Epoch [{epoch+1}/{n_epochs}] | '
+            f'Batch Size = {batch_size} | LR = {lr} | gamma = {gamma} | tol = {tol}'
+        )
         model.train(True)
 
         running_loss = 0.0
@@ -316,17 +323,31 @@ def train_DCEC(
         running_loss_clust = 0.0
         running_size = 0
         # batch_num = 0
+
+        pbar = tqdm(
+            dataloader,
+            leave=True,
+            unit="batch",
+            postfix={
+                "MSE": "%.6f" % 0.0,
+                "KLD": "%.6f" % 0.0,
+                "Loss": "%.6f" % 0.0
+            },
+            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+        )
+
         # Iterate over data:
-        for batch_num, batch in enumerate(dataloader):
+        for batch_num, batch in enumerate(pbar):
             x = batch.to(device)
             # Uptade target distribution, check performance
-            if (batch_num % update_interval == 0) and not \
+            if (total_counter % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
                 q, preds = predict_labels(model, dataloader, device)
                 p = target_distribution(q)
                 # check stop criterion
                 delta_label = np.sum(preds != preds_prev).astype(np.float32) \
                               / preds.shape[0]
+                tb.add_scalar('delta', delta_label, total_counter)
                 preds_prev = np.copy(preds)
                 if delta_label < tol:
                     print('Stop criterion met, training complete.')
@@ -342,9 +363,9 @@ def train_DCEC(
             # Calculate losses and backpropagate
             with torch.set_grad_enabled(True):
                 q, x_rec, _ = model(x)
-                loss_rec = criterion_mse(x_rec, x)
-                loss_clust = criterion_kld(torch.log(q), tar_dist) / x.size(0)
-                loss = (1-gamma) * loss_rec + gamma * loss_clust
+                loss_rec = (1-gamma) * criterion_mse(x_rec, x)
+                loss_clust = gamma * criterion_kld(torch.log(q), tar_dist) / x.size(0)
+                loss = loss_rec + loss_clust
                 loss.backward()
                 optimizer.step()
 
@@ -357,10 +378,26 @@ def train_DCEC(
             accum_loss_rec = running_loss_rec / running_size
             accum_loss_clust = running_loss_clust / running_size
 
+            pbar.set_postfix(
+                MSE = f"{accum_loss_rec:.4e}",
+                KLD = f"{accum_loss_clust:.4e}",
+                Loss = f"{accum_loss:.4e}"
+            )
+
             training_history['iter'].append(total_counter)
             training_history['loss'].append(accum_loss)
             training_history['mse'].append(accum_loss_rec)
             training_history['kld'].append(accum_loss_clust)
+
+            tb.add_scalars(
+                'Losses',
+                {
+                    'Loss': accum_loss,
+                    'MSE': accum_loss_rec,
+                    'KLD': accum_loss_clust
+                },
+                total_counter
+            )
 
             tb.add_scalar('Loss', accum_loss, total_counter)
             tb.add_scalar('MSE', accum_loss_rec, total_counter)
@@ -370,11 +407,11 @@ def train_DCEC(
                 tb.add_histogram(name, weight, total_counter)
                 tb.add_histogram(f'{name}.grad', weight.grad, total_counter)
 
-            print(
-                f'Epoch [{epoch+1}/{n_epochs}] Batch [{batch_num}]| '
-                f'Training: Loss = {accum_loss:.9f}, '
-                f'MSE = {accum_loss_rec:.9f}, KLD = {accum_loss_clust:.9f}'
-            )
+            # print(
+                # f'Epoch [{epoch+1}/{n_epochs}] Batch [{batch_num}]| '
+                # f'Training: Loss = {accum_loss:.9f}, '
+                # f'MSE = {accum_loss_rec:.9f}, KLD = {accum_loss_clust:.9f}'
+            # )
 
             batch_num += 1
             total_counter += 1
@@ -382,12 +419,19 @@ def train_DCEC(
         if finished:
             break
 
+    tb.add_hparams(
+        {'Batch Size': batch_size, 'LR': lr, 'gamma': gamma, 'tol': tol},
+        {
+            'hp/MSE': accum_loss_rec,
+            'hp/KLD': accum_loss_clust,
+            'hp/Loss': accum_loss
+        }
+    )
+    tb.close()
     fname = f'{savepath_run}/DCEC_Params_{serial_run}.pt'
     torch.save(model.state_dict(), fname)
     print('DCEC parameters saved.')
-
     utils.save_history(training_history, None, savepath_run, serial_run)
-    tb.close()
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model

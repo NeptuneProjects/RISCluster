@@ -55,6 +55,8 @@ def DCEC_pretrain(parameters, hyperparameters):
         print('--------------------------------------------------------------')
         print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
         print(f'Batch Size = {batch_size}, LR = {lr}')
+        print('To view results in Tensorboard, run the following command:')
+        print(f'cd {savepath_exp} && tensorboard --logdir=.')
         queued_flag = False
         q_tic = datetime.now()
         while not completed:
@@ -144,6 +146,7 @@ def DCEC_train(parameters, hyperparameters):
     send_message = parameters['send_message']
     mode = parameters['mode']
     device = parameters['device']
+    savepath_exp = parameters['savepath']
     indexpath = parameters['indexpath']
     # ==== Load Data ==========================================================
     index_tra, _ = utils.load_TraVal_index(fname_dataset, indexpath)
@@ -164,6 +167,8 @@ def DCEC_train(parameters, hyperparameters):
             f'Batch Size = {batch_size}, LR = {lr}, '
             f'gamma = {gamma}, tol = {tol}'
         )
+        print('To view results in Tensorboard, run the following command:')
+        print(f'cd {savepath_exp} && tensorboard --logdir=.')
         # ==== Instantiate Model, Optimizer, & Loss Functions =================
         model = DCEC(n_clusters).to(device)
 
@@ -202,6 +207,8 @@ def DCEC_train(parameters, hyperparameters):
     if send_message:
         msgsubj = 'DCEC Training & Tuning Complete'
         utils.notify(msgsubj, msgcontent)
+    print('To view results in Tensorboard, run the following command:')
+    print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
 
 def DCEC_predict(parameters):

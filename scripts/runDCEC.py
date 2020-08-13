@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # Universal Parameters
     # =========================================================================
     # Select from 'pretrain', 'train', or 'predict':
-    mode = 'pretrain'
+    mode = 'train'
     fname_dataset = '../../../Data/DetectionData_New.h5'
     savepath = '../../../Outputs/'
     # Use this for local dev:
@@ -61,23 +61,21 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=600,
-            n_clusters=11,
+            n_epochs=100,
+            n_clusters=5,
             update_interval=300,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
-            send_message=False,
+            send_message=True,
             mode=mode,
-            saved_weights='/Users/williamjenkins/Research/Workflows' + \
-                '/RIS_Clustering/Outputs/Models/AEC/Exp20200802T013941' + \
-                '/Run_BatchSz=512_LR=0.0001/AEC_Params_20200802T061234.pt'
+            saved_weights='../../../Outputs/Models/AEC/Exp20200812T075316/Run_BatchSz=512_LR=0.0001/AEC_Params_20200812T104220.pt'
         )
         hyperparameters = dict(
-            batch_size=[256, 512],
-            lr=[0.0001, 0.001],
+            batch_size=[512],
+            lr=[0.0001],
             gamma=[0.1],
-            tol=[0.01]
+            tol=[0.001]
         )
         # hyperparameters = dict(
         #     batch_size = [128, 256, 512, 1024, 2048],
