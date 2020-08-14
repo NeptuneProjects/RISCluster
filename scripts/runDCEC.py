@@ -108,7 +108,7 @@ if __name__ == '__main__':
             show=False,
             send_message=True,
             mode=mode,
-            saved_weights='../../../Outputs/Models/DCEC/Exp20200812T230703/Run_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCEC_Params_20200812T230733.pt',
+            saved_weights='../../../Outputs/Models/DCEC/Exp20200813T071353/Run_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCEC_Params_20200813T071500.pt',
             max_workers=14
         )
         utils.save_exp_config(savepath_exp, serial_exp, parameters, None)
