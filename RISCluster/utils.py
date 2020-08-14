@@ -297,21 +297,24 @@ def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
         m, _, _ = f[DataSpec].shape
         m -= 1
 
-    index = np.arange(1, m)
+    index = np.arange(1, m+1)
 
     if exclude:
         idx_ex = load_TraVal_index(fname_dataset, indexpath)
         idx_ex = sorted(set(np.concatenate(idx_ex).flatten()))
-        index_avail = [i for i in list(index) if i not in idx_ex]
+        index_avail = np.setdiff1d(index, idx_ex)
     else:
         index_avail = index
 
-    index_val = np.random.choice(
+    # print(len(index_avail))
+    # print(M)
+
+    index_tst = np.random.choice(
         index_avail,
         size=int(M * (1+reserve)),
         replace=False
     )
-    return index_val
+    return index_tst
 
 def set_M(fname_dataset, indexpath, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:

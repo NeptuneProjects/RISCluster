@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # Universal Parameters
     # =========================================================================
     # Select from 'pretrain', 'train', or 'predict':
-    mode = 'train'
+    mode = 'predict'
     fname_dataset = '../../../Data/DetectionData_New.h5'
     savepath = '../../../Outputs/'
     # Use this for local dev:
@@ -98,20 +98,17 @@ if __name__ == '__main__':
         parameters = dict(
             fname_dataset=fname_dataset,
             device=utils.set_device(),
-            M = 500, # Select integer or 'all'
+            M = 'all', # Select integer or 'all'
             indexpath=indexpath,
-            exclude=True,
-            batch_size=256,
-            n_clusters=11,
+            exclude=False,
+            batch_size=1024,
+            n_clusters=5,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
-            send_message=False,
+            send_message=True,
             mode=mode,
-            saved_weights='/Users/williamjenkins/Research/Workflows' + \
-                '/RIS_Clustering/Outputs/Models/DCEC/Exp20200802T225523' + \
-                '/Run_BatchSz=256_LR=0.001_gamma=0.1_tol=0.01/DCEC_Params_ ' +\
-                '20200802T225531.pt',
+            saved_weights='../../../Outputs/Models/DCEC/Exp20200812T230703/Run_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCEC_Params_20200812T230733.pt',
             max_workers=14
         )
         utils.save_exp_config(savepath_exp, serial_exp, parameters, None)
