@@ -9,6 +9,7 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
+import seaborn as sns
 import torch
 
 import importlib
@@ -117,7 +118,16 @@ def save_DCEC_output(x, label, x_rec, z, idx, savepath):
 #     else:
 #         plt.show()
 #     return fig
-#
+
+def view_clusters(pca2d, labels):
+    fig = plt.figure(figsize=(6,6), dpi=300)
+    sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
+    plt.legend()
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    fig.tight_layout()
+    return fig
+
 def view_learningcurve(training_history, validation_history, show=True):
     epochs = len(training_history['mse'])
     fig = plt.figure(figsize=(18,6), dpi=300)

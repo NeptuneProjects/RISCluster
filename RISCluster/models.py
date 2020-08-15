@@ -12,8 +12,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 import torch
-import torch.nn as nn
+# import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torchvision
@@ -274,6 +275,7 @@ def train_DCEC(
     model.load_state_dict(
         torch.load(loadpath, map_location=device), strict=False
     )
+    model.eval()
 
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
@@ -302,10 +304,10 @@ def train_DCEC(
 
     # Initialize Clusters:
     print('Initiating clusters with k-means...')
-    kmeans(model, copy.deepcopy(dataloader), device)
+    labels = kmeans(model, copy.deepcopy(dataloader), device)
     print('Clusters initiated.')
     # Initialize Target Distribution:
-    q, preds_prev = predict_labels(model, dataloader, device)
+    q, labels_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
     total_counter = 0
@@ -316,7 +318,7 @@ def train_DCEC(
             f'Epoch [{epoch+1}/{n_epochs}] | '
             f'Batch Size = {batch_size} | LR = {lr} | gamma = {gamma} | tol = {tol}'
         )
-        model.train(True)
+        # model.train(True)
 
         running_loss = 0.0
         running_loss_rec = 0.0
@@ -342,13 +344,13 @@ def train_DCEC(
             # Uptade target distribution, check performance
             if (total_counter % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
-                q, preds = predict_labels(model, dataloader, device)
+                q, labels = predict_labels(model, dataloader, device)
                 p = target_distribution(q)
                 # check stop criterion
-                delta_label = np.sum(preds != preds_prev).astype(np.float32) \
-                              / preds.shape[0]
+                delta_label = np.sum(labels != labels_prev).astype(np.float32) \
+                              / labels.shape[0]
                 tb.add_scalar('delta', delta_label, total_counter)
-                preds_prev = np.copy(preds)
+                labels_prev = np.copy(labels)
                 if delta_label < tol:
                     print('Stop criterion met, training complete.')
                     finished = True
@@ -358,6 +360,7 @@ def train_DCEC(
             tar_dist = torch.from_numpy(tar_dist).to(device)
 
             # zero the parameter gradients
+            model.train()
             optimizer.zero_grad()
 
             # Calculate losses and backpropagate
@@ -368,6 +371,9 @@ def train_DCEC(
                 loss = loss_rec + loss_clust
                 loss.backward()
                 optimizer.step()
+
+            if total_counter % update_interval == 0:
+                pca(labels, model, dataloader, device, tb, total_counter)
 
             running_size += x.size(0)
             running_loss += loss.cpu().detach().numpy() * x.size(0)
@@ -533,6 +539,24 @@ def kmeans(model, dataloader, device):
     # Update clustering layer weights
     weights = torch.from_numpy(km.cluster_centers_)
     model.clustering.set_weight(weights.to(device))
+    return km.labels_
+
+def pca(labels, model, dataloader, device, tb, total_counter):
+    z_array = None
+    model.eval()
+    for batch in dataloader:
+        x = batch.to(device)
+        _, _, z = model(x)
+        if z_array is not None:
+            z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
+        else:
+            z_array = z.cpu().detach().numpy()
+
+    pca2 = PCA(n_components=model.n_clusters).fit(z_array)
+    pca2d = pca2.transform(z_array)
+    fig = plotting.view_clusters(pca2d, labels)
+    tb.add_figure('PCA_Z', fig, global_step=total_counter, close=True)
+
 
 def predict_labels(model, dataloader, device):
     '''
@@ -544,7 +568,7 @@ def predict_labels(model, dataloader, device):
         device: PyTorch device object ('cpu' or 'gpu')
     # Returns:
         q_array [n_samples, n_clusters]: Soft assigned label probabilities
-        preds [n_samples,]: Hard assigned label based on max of q_array
+        labels [n_samples,]: Hard assigned label based on max of q_array
     '''
     q_array = None
     model.eval()
@@ -556,8 +580,8 @@ def predict_labels(model, dataloader, device):
         else:
             q_array = q.cpu().detach().numpy()
 
-    preds = np.argmax(q_array.data, axis=1)
-    return np.round(q_array, 5), preds
+    labels = np.argmax(q_array.data, axis=1)
+    return np.round(q_array, 5), labels
 
 def target_distribution(q):
     '''
