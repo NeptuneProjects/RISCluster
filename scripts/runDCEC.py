@@ -61,7 +61,7 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=100,
+            n_epochs=200,
             n_clusters=5,
             update_interval=300,
             savepath=savepath_exp,
@@ -74,7 +74,7 @@ if __name__ == '__main__':
         hyperparameters = dict(
             batch_size=[512],
             lr=[0.0001],
-            gamma=[0.1],
+            gamma=[0.01, 0.05, 0.1, 0.2],
             tol=[0.001]
         )
         # hyperparameters = dict(
