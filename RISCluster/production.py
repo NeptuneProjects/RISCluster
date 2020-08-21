@@ -1,5 +1,6 @@
 from datetime import datetime
 from itertools import product
+import os
 import sys
 sys.path.insert(0, '../RISCluster/')
 import time
@@ -227,6 +228,13 @@ def DCEC_predict(parameters):
     saved_weights = parameters['saved_weights']
     indexpath = parameters['indexpath']
     exclude = parameters['exclude']
+    # ==== Checks =============================================================
+    if not os.path.exists(saved_weights):
+        raise ValueError('Saved weights file not found.')
+    if not os.path.exists(fname_dataset):
+        raise ValueError('Dataset file not found.')
+    if not os.path.exists(indexpath):
+        raise ValueError('Index file not found.')
     # ==== Load Data ==========================================================
     if isinstance(M, str) and (M == 'all'):
         M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
