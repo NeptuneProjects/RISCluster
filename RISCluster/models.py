@@ -483,19 +483,20 @@ def predict_DCEC(model, dataloader, idx_smpl, parameters):
             savepath_exp,
             serial_exp
         )
-        print('Saving spectrograms to file...')
-        # Parallel Implementation
-        with ProcessPoolExecutor(max_workers=max_workers) as exec:
-            futures = [exec.submit(plotting.save_DCEC_output, **a) for a in A]
-            kwargs = {
-                'total': len(futures),
-                'unit': 'it',
-                'unit_scale': True,
-                'leave': True,
-                'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}'
-            }
-            for future in tqdm(as_completed(futures), **kwargs):
-                future.result()
+        # print('Saving spectrograms to file...')
+        # # Parallel Implementation
+        # with ProcessPoolExecutor(max_workers=max_workers) as exec:
+        #     futures = [exec.submit(plotting.save_DCEC_output, **a) for a in A]
+        #     kwargs = {
+        #         'total': len(futures),
+        #         'unit': 'it',
+        #         'unit_scale': True,
+        #         'leave': True,
+        #         'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}'
+        #     }
+        #     for future in tqdm(as_completed(futures), **kwargs):
+        #         future.result()
+
         # Serial Implementation:
         # for i in tqdm(range(x.size(0))):
         #     plotting.save_DCEC_output(
