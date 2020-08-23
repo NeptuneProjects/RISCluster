@@ -42,8 +42,8 @@ if __name__ == '__main__':
             patience=10
         )
         hyperparameters = dict(
-            batch_size=[512],
-            lr=[0.0001]
+            batch_size=[256, 512, 1024],
+            lr=[0.00001, 0.0001, 0.001]
         )
         utils.save_exp_config(
             savepath_exp,

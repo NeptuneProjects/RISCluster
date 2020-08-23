@@ -24,6 +24,7 @@ def compare_images(
         disp,
         epoch,
         savepath,
+        tb,
         show=True
     ):
     disp_rec = model(disp)
@@ -42,6 +43,7 @@ def compare_images(
         os.makedirs(savepath_snap)
     figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
     fig.savefig(figname)
+    return fig
 
 def save_DCM_output(x, label, x_rec, z, idx, savepath):
     # print(f'x={type(x)} | label={type(label)} | x_r={type(x_rec)} | z={type(z)} | idx={type(idx)} | path={type(savepath)}')

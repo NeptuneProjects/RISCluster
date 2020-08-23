@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
@@ -142,7 +142,7 @@ def pretrain_DCM(
             tb.add_histogram(f'{name}.grad', weight.grad, epoch)
 
         if epoch == 0 or (epoch % 5) == 0:
-            plotting.compare_images(
+            fig = plotting.compare_images(
                 model,
                 tra_loader,
                 disp.to(device),
@@ -150,6 +150,7 @@ def pretrain_DCM(
                 savepath_run,
                 show
             )
+            tb.add_figure('TrainingProgress', fig, global_step=epoch, close=True)
         # ==== Validation Loop: ===============================================
         model.train(False)
 
