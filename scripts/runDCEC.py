@@ -51,7 +51,7 @@ if __name__ == '__main__':
             parameters,
             hyperparameters
         )
-        production.DCEC_pretrain(parameters, hyperparameters)
+        production.DCM_pretrain(parameters, hyperparameters)
     # =========================================================================
     # Training Routine
     # =========================================================================
@@ -90,12 +90,12 @@ if __name__ == '__main__':
             parameters,
             hyperparameters
         )
-        production.DCEC_train(parameters, hyperparameters)
+        production.DCM_train(parameters, hyperparameters)
     # =========================================================================
     # Prediction Routine
     # =========================================================================
     if mode == 'predict':
-        saved_weights = '../../../Outputs/Models/DCEC/Exp20200816T210257/Run_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCEC_Params_20200816T234307.pt'
+        saved_weights = '../../../Outputs/Models/DCM/Exp20200816T210257/Run_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCEC_Params_20200816T234307.pt'
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
@@ -114,5 +114,5 @@ if __name__ == '__main__':
             max_workers=14
         )
         utils.save_exp_config(savepath_exp, serial_exp, parameters, None)
-        production.DCEC_predict(parameters)
+        production._predict(parameters)
 # End of script.

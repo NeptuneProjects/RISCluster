@@ -27,7 +27,7 @@ def compare_images(
         show=True
     ):
     disp_rec = model(disp)
-    figtitle = f'DCEC Pre-training: Epoch {epoch}'
+    figtitle = f'DCM Pre-training: Epoch {epoch}'
     n, o = list(disp.size()[2:])
     fig = view_specgram_training(
         disp,
@@ -43,9 +43,9 @@ def compare_images(
     figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
     fig.savefig(figname)
 
-def save_DCEC_output(x, label, x_rec, z, idx, savepath):
+def save_DCM_output(x, label, x_rec, z, idx, savepath):
     # print(f'x={type(x)} | label={type(label)} | x_r={type(x_rec)} | z={type(z)} | idx={type(idx)} | path={type(savepath)}')
-    fig = view_DCEC_output(x, label, x_rec, z, idx, show=False)
+    fig = view_DCM_output(x, label, x_rec, z, idx, show=False)
     # print(f'{savepath}{idx:07d}.png')
     fig.savefig(f'{savepath}/{idx:07d}.png')
     return None
@@ -241,7 +241,7 @@ def view_learningcurve(training_history, validation_history, show=True):
         plt.close()
     return fig
 
-def view_DCEC_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
+def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)
     gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
     # Original Spectrogram

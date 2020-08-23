@@ -139,9 +139,9 @@ class AEC(nn.Module):
         x = self.decoder(x)
         return x
 
-class DCEC(nn.Module):
+class DCM(nn.Module):
     def __init__(self, n_clusters):
-        super(DCEC, self).__init__()
+        super(DCM, self).__init__()
         self.n_clusters = n_clusters
         self.encoder = Encoder()
         self.decoder = Decoder()

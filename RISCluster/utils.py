@@ -42,7 +42,7 @@ def init_exp_env(mode, savepath):
     if mode == 'pretrain':
         savepath_exp = f'{savepath}Models/AEC/Exp{serial_exp}/'
     elif mode == 'train':
-        savepath_exp = f'{savepath}Models/DCEC/Exp{serial_exp}/'
+        savepath_exp = f'{savepath}Models/DCM/Exp{serial_exp}/'
     elif mode == 'predict':
         savepath_exp = f'{savepath}Trials/Exp{serial_exp}/'
     else:
@@ -209,7 +209,7 @@ def save_history(training_history, validation_history, savepath, run_serial):
         d2.update(d1)
         del d1
     else:
-        fname = f'{savepath}/DCEC_History{run_serial}.csv'
+        fname = f'{savepath}/DCM_History{run_serial}.csv'
         d2 = training_history
 
     with open(fname, 'w') as csvfile:

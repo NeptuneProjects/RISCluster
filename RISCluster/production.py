@@ -14,11 +14,11 @@ from torch.utils.tensorboard import SummaryWriter
 import importlib as imp
 import models
 imp.reload(models)
-from networks import AEC, DCEC, init_weights
+from networks import AEC, DCM, init_weights
 import utils
 imp.reload(utils)
 
-def DCEC_pretrain(parameters, hyperparameters):
+def DCM_pretrain(parameters, hyperparameters):
     print('==============================================================')
     print('Executing Pre-training Mode')
     tic = datetime.now()
@@ -84,8 +84,8 @@ def DCEC_pretrain(parameters, hyperparameters):
                 tra_loader = DataLoader(tra_dataset, batch_size=batch_size)
                 val_loader = DataLoader(val_dataset, batch_size=batch_size)
                 dataloaders = [tra_loader, val_loader]
-                # ==== Pre-train DCEC parameters by training the autoencoder: =========
-                models.pretrain_DCEC(
+                # ==== Pre-train DCM parameters by training the autoencoder: =========
+                models.pretrain_DCM(
                     model,
                     dataloaders,
                     criteria,
@@ -116,7 +116,7 @@ def DCEC_pretrain(parameters, hyperparameters):
 
         if send_message:
             toc = datetime.now()
-            msgsubj = 'DCEC Pre-training & Tuning Status Update'
+            msgsubj = 'DCM Pre-training & Tuning Status Update'
             msgcontent = f'Tuning run {tuning_count}/{tuning_runs} complete.'+\
                          f'\nTime Elapsed = {toc-tic}'
             if queued_flag:
@@ -129,18 +129,18 @@ def DCEC_pretrain(parameters, hyperparameters):
 
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'DCEC pre-training & tuning completed at {toc}.' + \
+    msgcontent = f'DCM pre-training & tuning completed at {toc}.' + \
                  f'\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
-        msgsubj = 'DCEC Pre-training & Tuning Complete'
+        msgsubj = 'DCM Pre-training & Tuning Complete'
         utils.notify(msgsubj, msgcontent)
 
     print('To view results in Tensorboard, run the following command:')
     print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
 
-def DCEC_train(parameters, hyperparameters):
+def DCM_train(parameters, hyperparameters):
     print('==============================================================')
     print('Executing Training Mode')
     tic = datetime.now()
@@ -184,7 +184,7 @@ def DCEC_train(parameters, hyperparameters):
         print('To view results in Tensorboard, run the following command:')
         print(f'cd {savepath_exp} && tensorboard --logdir=.')
         # ==== Instantiate Model, Optimizer, & Loss Functions =================
-        model = DCEC(n_clusters).to(device)
+        model = DCM(n_clusters).to(device)
 
         criterion_mse = nn.MSELoss(reduction='mean')
         criterion_kld = nn.KLDivLoss(reduction='sum')
@@ -193,8 +193,8 @@ def DCEC_train(parameters, hyperparameters):
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
         dataloader = DataLoader(tra_dataset, batch_size=batch_size)
-        # ==== Train DCEC parameters: =========================================
-        models.train_DCEC(
+        # ==== Train DCM parameters: =========================================
+        models.train_DCM(
             model,
             dataloader,
             criteria,
@@ -208,7 +208,7 @@ def DCEC_train(parameters, hyperparameters):
         )
         if send_message:
             toc = datetime.now()
-            msgsubj = 'DCEC Training & Tuning Status Update'
+            msgsubj = 'DCM Training & Tuning Status Update'
             msgcontent = f'Tuning run {tuning_count}/{tuning_runs} complete.'+\
                          f'\nTime Elapsed = {toc-tic}'
             utils.notify(msgsubj, msgcontent)
@@ -216,17 +216,17 @@ def DCEC_train(parameters, hyperparameters):
 
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'DCEC training & tuning completed at {toc}.' + \
+    msgcontent = f'DCM training & tuning completed at {toc}.' + \
                  f'\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
-        msgsubj = 'DCEC Training & Tuning Complete'
+        msgsubj = 'DCM Training & Tuning Complete'
         utils.notify(msgsubj, msgcontent)
     print('To view results in Tensorboard, run the following command:')
     print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
 
-def DCEC_predict(parameters):
+def DCM_predict(parameters):
     print('==============================================================')
     print('Executing Prediction Mode')
     tic = datetime.now()
@@ -265,14 +265,14 @@ def DCEC_predict(parameters):
     )
 
     dataloader = DataLoader(tst_dataset, batch_size=batch_size)
-    model = DCEC(n_clusters).to(device)
+    model = DCM(n_clusters).to(device)
 
-    models.predict_DCEC(model, dataloader, index_tst, parameters)
+    models.predict_DCM(model, dataloader, index_tst, parameters)
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'DCEC outputs saved.\nTime Elapsed = {toc-tic}.'
+    msgcontent = f'DCM outputs saved.\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
-        msgsubj = 'DCEC Outputs Saved'
+        msgsubj = 'DCM Outputs Saved'
         utils.notify(msgsubj, msgcontent)
     print('==============================================================')

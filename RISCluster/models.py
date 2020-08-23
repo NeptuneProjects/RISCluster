@@ -26,7 +26,7 @@ imp.reload(plotting)
 import utils
 imp.reload(utils)
 
-def pretrain_DCEC(
+def pretrain_DCM(
         model,
         dataloaders,
         criteria,
@@ -235,7 +235,7 @@ def pretrain_DCEC(
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model, tb
 
-def train_DCEC(
+def train_DCM(
         model,
         dataloader,
         criteria,
@@ -249,7 +249,7 @@ def train_DCEC(
         ):
     '''
     Function facilitates training (i.e., clustering and fine-tuning of AEC) and
-    of the DCEC model.
+    of the DCM model.
     # Arguments:
         model: PyTorch model instance
         dataloader: PyTorch dataloader instance
@@ -317,7 +317,11 @@ def train_DCEC(
         print('-' * 110)
         print(
             f'Epoch [{epoch+1}/{n_epochs}] | '
-            f'Batch Size = {batch_size} | LR = {lr} | gamma = {gamma} | tol = {tol}'
+            f'# Clusters = {n_clusters} | '
+            f'Batch Size = {batch_size} | '
+            f'LR = {lr} | '
+            f'gamma = {gamma} | '
+            f'tol = {tol}'
         )
         # model.train(True)
 
@@ -435,15 +439,15 @@ def train_DCEC(
         }
     )
     tb.close()
-    fname = f'{savepath_run}/DCEC_Params_{serial_run}.pt'
+    fname = f'{savepath_run}/DCM_Params_{serial_run}.pt'
     torch.save(model.state_dict(), fname)
-    print('DCEC parameters saved.')
+    print('DCM parameters saved.')
     utils.save_history(training_history, None, savepath_run, serial_run)
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model
 
-def predict_DCEC(model, dataloader, idx_smpl, parameters):
+def predict_DCM(model, dataloader, idx_smpl, parameters):
     device = parameters['device']
     savepath_exp = parameters['savepath']
     serial_exp = parameters['serial']
@@ -487,7 +491,7 @@ def predict_DCEC(model, dataloader, idx_smpl, parameters):
         # print('Saving spectrograms to file...')
         # # Parallel Implementation
         # with ProcessPoolExecutor(max_workers=max_workers) as exec:
-        #     futures = [exec.submit(plotting.save_DCEC_output, **a) for a in A]
+        #     futures = [exec.submit(plotting.save_DCM_output, **a) for a in A]
         #     kwargs = {
         #         'total': len(futures),
         #         'unit': 'it',
@@ -500,7 +504,7 @@ def predict_DCEC(model, dataloader, idx_smpl, parameters):
 
         # Serial Implementation:
         # for i in tqdm(range(x.size(0))):
-        #     plotting.save_DCEC_output(
+        #     plotting.save_DCM_output(
         #         A[i]['x'],
         #         A[i]['label'],
         #         A[i]['x_rec'],
