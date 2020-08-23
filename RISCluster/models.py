@@ -479,18 +479,21 @@ def predict_DCM(model, dataloader, idx_smpl, parameters):
     label_list = []
 
     running_size = 0
-    counter = 0
+    # counter = 0
     for batch_num, batch in enumerate(pbar):
         x = batch.to(device)
-        q, x_rec, z = model(x)
+        # q, x_rec, z = model(x)
+        q, _, _ = model(x)
         label = torch.argmax(q, dim=1)
-        A = [{
-            'x': x[i].cpu().detach().numpy(),
-            'label': label[i].cpu().detach().numpy(),
-            'x_rec': x_rec[i].cpu().detach().numpy(),
-            'z': z[i].cpu().detach().numpy(),
-            'idx': idx_smpl[running_size:(running_size + x.size(0))][i],
-            'savepath': savepath_run[int(label[i])]} for i in range(x.size(0))]
+        A = [
+                {
+                    # 'x': x[i].cpu().detach().numpy(),
+                    'label': label[i].cpu().detach().numpy(),
+                    # 'x_rec': x_rec[i].cpu().detach().numpy(),
+                    # 'z': z[i].cpu().detach().numpy(),
+                    'idx': idx_smpl[running_size:(running_size + x.size(0))][i],
+                    # 'savepath': savepath_run[int(label[i])]
+                } for i in range(x.size(0))]
         # print('--------------------------------------------------------------')
         # print(f'Saving outputs for Batch {batch_num}:')
         utils.save_labels(
