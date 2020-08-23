@@ -66,6 +66,7 @@ def init_output_env(savepath, mode, **kwargs):
             os.makedirs(savepath_run)
     elif mode == 'train':
         savepath_run = f'{savepath}Run' + \
+                       f'_Clusters={kwargs.get("n_clusters")}' + \
                        f'_BatchSz={kwargs.get("batch_size")}' + \
                        f'_LR={kwargs.get("lr")}' + \
                        f'_gamma={kwargs.get("gamma")}' + \

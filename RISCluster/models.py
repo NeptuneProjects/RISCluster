@@ -284,6 +284,7 @@ def train_DCM(
         savepath_exp,
         mode,
         **{
+        'n_clusters': n_clusters,
         'batch_size': batch_size,
         'lr': lr,
         'gamma': gamma,
@@ -433,7 +434,7 @@ def train_DCM(
             break
 
     tb.add_hparams(
-        {'Batch Size': batch_size, 'LR': lr, 'gamma': gamma, 'tol': tol},
+        {'Clusters': n_clusters, 'Batch Size': batch_size, 'LR': lr, 'gamma': gamma, 'tol': tol},
         {
             'hp/MSE': accum_loss_rec,
             'hp/KLD': accum_loss_clust,
