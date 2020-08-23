@@ -8,11 +8,12 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+from sklearn.mixture import GaussianMixture
 import torch
 # import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -465,11 +466,19 @@ def predict_DCM(model, dataloader, idx_smpl, parameters):
     model.load_state_dict(torch.load(loadpath, map_location=device))
     model.eval()
 
+    pbar = tqdm(
+        dataloader,
+        leave=True,
+        desc="Saving cluster labels",
+        unit="batch",
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    )
+
     label_list = []
 
     running_size = 0
     counter = 0
-    for batch_num, batch in enumerate(dataloader):
+    for batch_num, batch in enumerate(pbar):
         x = batch.to(device)
         q, x_rec, z = model(x)
         label = torch.argmax(q, dim=1)
@@ -480,8 +489,8 @@ def predict_DCM(model, dataloader, idx_smpl, parameters):
             'z': z[i].cpu().detach().numpy(),
             'idx': idx_smpl[running_size:(running_size + x.size(0))][i],
             'savepath': savepath_run[int(label[i])]} for i in range(x.size(0))]
-        print('--------------------------------------------------------------')
-        print(f'Saving outputs for Batch {batch_num}:')
+        # print('--------------------------------------------------------------')
+        # print(f'Saving outputs for Batch {batch_num}:')
         utils.save_labels(
             [{k: v for k, v in d.items() if \
                 (k == 'idx' or k == 'label')} for d in A],
@@ -547,6 +556,20 @@ def kmeans(model, dataloader, device):
     model.clustering.set_weight(weights.to(device))
     return km.labels_
 
+def gmm(model, dataloader, device):
+    gmm = GaussianMixture(n_components=model.n_clusters)
+    z_array = None
+    model.eval()
+    for batch in dataloader:
+        x = batch.to(device)
+        _, _, z = model(x)
+        if z_array is not None:
+            z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
+        else:
+            z_array = z.cpu().detach().numpy()
+
+    gmm.fit(z_array)
+
 def pca(labels, model, dataloader, device, tb, total_counter):
     z_array = None
     model.eval()
@@ -578,7 +601,7 @@ def predict_labels(model, dataloader, device):
     '''
     q_array = None
     model.eval()
-    for batch in dataloader:
+    for batch in tqdm(dataloader):
         x = batch.to(device)
         q, _, _ = model(x)
         if q_array is not None:
