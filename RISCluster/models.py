@@ -609,7 +609,7 @@ def predict_labels(model, dataloader, device):
     '''
     q_array = None
     model.eval()
-    for batch in tqdm(dataloader):
+    for batch in dataloader:
         x = batch.to(device)
         q, _, _ = model(x)
         if q_array is not None:
