@@ -146,8 +146,6 @@ def DCM_train(parameters, hyperparameters):
     tic = datetime.now()
     # ==== Unpack Parameters ==================================================
     fname_dataset = parameters['fname_dataset']
-    # M = parameters['M']
-    # n_clusters = parameters['n_clusters']
     show = parameters['show']
     send_message = parameters['send_message']
     mode = parameters['mode']
