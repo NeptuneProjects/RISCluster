@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # Universal Parameters
     # =========================================================================
     # Select from 'pretrain', 'train', or 'predict':
-    mode = 'train'
+    mode = 'predict'
     fname_dataset = '../../../Data/DetectionData_New.h5'
     savepath = '../../../Outputs/'
     # Use this for local dev:
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # Prediction Routine
     # =========================================================================
     if mode == 'predict':
-        saved_weights = '../../../Outputs/Models/DCM/Exp20200816T210257/Run_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCEC_Params_20200816T234307.pt'
+        saved_weights = '../../../Outputs/Models/DCM/Exp20200823T103757/Run_Clusters=5_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T103846.pt'
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
