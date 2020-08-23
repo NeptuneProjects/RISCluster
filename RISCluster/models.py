@@ -551,6 +551,9 @@ def kmeans(model, dataloader, device):
         else:
             z_array = z.cpu().detach().numpy()
 
+    row_max = z_array.max(axis=1)
+    z_array /= row_max[:, np.newaxis]
+
     # Perform K-means
     km.fit_predict(z_array)
     # Update clustering layer weights
@@ -582,6 +585,9 @@ def pca(labels, model, dataloader, device, tb, total_counter):
             z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
         else:
             z_array = z.cpu().detach().numpy()
+
+    row_max = z_array.max(axis=1)
+    z_array /= row_max[:, np.newaxis]
 
     pca2 = PCA(n_components=model.n_clusters).fit(z_array)
     pca2d = pca2.transform(z_array)

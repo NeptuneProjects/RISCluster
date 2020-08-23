@@ -69,7 +69,7 @@ if __name__ == '__main__':
             show=False,
             send_message=True,
             mode=mode,
-            saved_weights='../../../Outputs/Models/AEC/Exp20200812T075316/Run_BatchSz=512_LR=0.0001/AEC_Params_20200812T104220.pt'
+            saved_weights='../../../Outputs/Models/AEC/Exp20200822T211118/Run_BatchSz=256_LR=0.0001/AEC_Params_20200822T220623.pt'
         )
         hyperparameters = dict(
             n_clusters=[6,7,8],
