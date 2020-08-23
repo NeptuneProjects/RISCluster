@@ -187,7 +187,7 @@ def get_datetime(datetime_index):
 def get_metadata(query_index, sample_index, fname_dataset):
     '''Returns station metadata given sample index.'''
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/30sec/Catalogue'
+        DataSpec = '/7sec/Catalogue'
         dset = f[DataSpec]
         metadata = dict()
         counter = 0

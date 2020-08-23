@@ -240,6 +240,7 @@ def train_DCEC(
         dataloader,
         criteria,
         optimizer,
+        n_clusters,
         batch_size,
         lr,
         gamma,
@@ -265,7 +266,7 @@ def train_DCEC(
     # Unpack parameters:
     device = parameters['device']
     n_epochs = parameters['n_epochs']
-    n_clusters = parameters['n_clusters']
+    # n_clusters = parameters['n_clusters']
     update_interval = parameters['update_interval']
     savepath_exp = parameters['savepath']
     show = parameters['show']

@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # Universal Parameters
     # =========================================================================
     # Select from 'pretrain', 'train', or 'predict':
-    mode = 'predict'
+    mode = 'train'
     fname_dataset = '../../../Data/DetectionData_New.h5'
     savepath = '../../../Outputs/'
     # Use this for local dev:
@@ -42,8 +42,8 @@ if __name__ == '__main__':
             patience=10
         )
         hyperparameters = dict(
-            batch_size=[256, 512, 1024],
-            lr=[0.00001, 0.0001, 0.001]
+            batch_size=[512],
+            lr=[0.0001]
         )
         utils.save_exp_config(
             savepath_exp,
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             device=utils.set_device(),
             indexpath=indexpath,
             n_epochs=200,
-            n_clusters=5,
+            n_clusters=6,
             update_interval=300,
             savepath=savepath_exp,
             serial=serial_exp,
@@ -72,9 +72,10 @@ if __name__ == '__main__':
             saved_weights='../../../Outputs/Models/AEC/Exp20200812T075316/Run_BatchSz=512_LR=0.0001/AEC_Params_20200812T104220.pt'
         )
         hyperparameters = dict(
+            n_clusters=[6,7,8]
             batch_size=[512],
             lr=[0.0001],
-            gamma=[0.01, 0.05, 0.1, 0.2],
+            gamma=[0.1],
             tol=[0.001]
         )
         # hyperparameters = dict(

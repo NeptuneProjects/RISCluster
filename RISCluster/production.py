@@ -147,7 +147,7 @@ def DCEC_train(parameters, hyperparameters):
     # ==== Unpack Parameters ==================================================
     fname_dataset = parameters['fname_dataset']
     # M = parameters['M']
-    n_clusters = parameters['n_clusters']
+    # n_clusters = parameters['n_clusters']
     show = parameters['show']
     send_message = parameters['send_message']
     mode = parameters['mode']
@@ -174,11 +174,11 @@ def DCEC_train(parameters, hyperparameters):
     hyperparam_values = [v for v in hyperparameters.values()]
     tuning_runs = utils.calc_tuning_runs(hyperparameters)
     tuning_count = 1
-    for batch_size, lr, gamma, tol in product(*hyperparam_values):
+    for n_clusters, batch_size, lr, gamma, tol in product(*hyperparam_values):
         print('--------------------------------------------------------------')
         print(f'Hyperparemeter Tuning Run {tuning_count}/{tuning_runs}')
         print(
-            f'Batch Size = {batch_size}, LR = {lr}, '
+            f'# Clusters = {n_clusters}, Batch Size = {batch_size}, LR = {lr}, '
             f'gamma = {gamma}, tol = {tol}'
         )
         print('To view results in Tensorboard, run the following command:')
@@ -199,6 +199,7 @@ def DCEC_train(parameters, hyperparameters):
             dataloader,
             criteria,
             optimizer,
+            n_clusters,
             batch_size,
             lr,
             gamma,

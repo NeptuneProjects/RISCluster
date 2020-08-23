@@ -3,9 +3,10 @@ import os
 import sys
 sys.path.insert(0, '../RISCluster/')
 
+import h5py
 import matplotlib
-matplotlib.use('Agg')
-from matplotlib.gridspec import GridSpec
+# matplotlib.use('Agg')
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
@@ -128,10 +129,96 @@ def view_clusters(pca2d, labels):
     fig.tight_layout()
     return fig
 
+def view_detections(fname_dataset, image_index, figtitle,
+                  nrows=2, ncols=2, figsize=(12,9), show=True):
+    sample_index = np.arange(0, len(image_index))
+
+    with h5py.File(fname_dataset, 'r') as f:
+        M = len(image_index)
+        DataSpec = '/7sec/Spectrogram'
+        dset = f[DataSpec]
+        fvec = dset[1, 0:64, 0]
+        tvec = dset[1, 65, 1:129]
+        m, _, _ = dset.shape
+        m -= 1
+        n = 64
+        o = 128
+        X = np.empty([M, n, o])
+        dset_arr = np.empty([n, o])
+
+        for i in range(M):
+            dset_arr = dset[image_index[i], 1:-1, 1:129]
+            dset_arr /= dset_arr.max()
+            X[i,:,:] = dset_arr
+
+    with h5py.File(fname_dataset, 'r') as f:
+        M = len(image_index)
+        DataSpec = '/7sec/Trace'
+        dset = f[DataSpec]
+        k = 635
+
+        tr = np.empty([M, k])
+        dset_arr = np.empty([k,])
+
+        for i in range(M):
+            dset_arr = dset[image_index[i], 0:k]
+            tr[i,:] = dset_arr/1e-6
+
+    extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
+    '''Plots selected spectrograms from input data.'''
+    if not len(sample_index) == nrows * ncols:
+        raise ValueError('Subplot/sample number mismatch: check dimensions.')
+    metadata = get_metadata(sample_index, image_index, fname_dataset)
+    fig = plt.figure(figsize=figsize, dpi=300)
+    gs_sup = gridspec.GridSpec(nrows=nrows, ncols=ncols, hspace=0.4, wspace=0.25)
+    counter = 0
+    for i in range(len(sample_index)):
+        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_sup[i], hspace=0)
+
+        ax = fig.add_subplot(gs_sub[0])
+        plt.imshow(X[sample_index[i],:,:], extent=extent, aspect='auto', origin='lower')
+        ax.set_xticks([])
+        plt.ylabel('Frequency (Hz)')
+        station = metadata[counter]['Station']
+        try:
+            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        except:
+            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        plt.title(f'Station {station}\nTrigger: {time_on}; '
+                  f'Index: {image_index[sample_index[i]]}')
+        # divider = make_axes_locatable(ax)
+        # cax = divider.append_axes("right", size="5%", pad=0.05)
+        # plt.colorbar(cax=cax)
+
+        tvec = np.linspace(extent[0], extent[1], tr.shape[1])
+
+        ax = fig.add_subplot(gs_sub[1])
+        plt.plot(tvec, tr[i,:])
+        plt.xlabel('Time (s)')
+        plt.ylabel('Velocity (1e-6 m/s)')
+
+        # divider = make_axes_locatable(ax)
+        # cax = divider.append_axes("right", size="5%", pad=0.05)
+        # cax.axis('off')
+
+        counter += 1
+    fig.suptitle(figtitle, size=18, weight='bold')
+    # fig.tight_layout()
+    fig.subplots_adjust(top=0.90)
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
 def view_learningcurve(training_history, validation_history, show=True):
     epochs = len(training_history['mse'])
     fig = plt.figure(figsize=(18,6), dpi=300)
-    gs = GridSpec(nrows=1, ncols=2)
+    gs = gridspec.GridSpec(nrows=1, ncols=2)
     ax = fig.add_subplot(gs[0])
     plt.plot(range(epochs), training_history['mse'], label='Training')
     plt.plot(range(epochs), validation_history['mse'], label='Validation')
@@ -156,7 +243,7 @@ def view_learningcurve(training_history, validation_history, show=True):
 
 def view_DCEC_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)
-    gs = GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
+    gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
     # Original Spectrogram
     ax = fig.add_subplot(gs[0])
     plt.imshow(np.squeeze(x), aspect='auto')
@@ -199,7 +286,7 @@ def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
     X_T = fixed_images.detach().cpu().numpy()
     X_V = reconstructed_images.detach().cpu().numpy()
     fig = plt.figure(figsize=figsize, dpi=300)
-    gs = GridSpec(nrows=2, ncols=4)
+    gs = gridspec.GridSpec(nrows=2, ncols=4)
     counter = 0
     for i in range(fixed_images.size()[0]):
         ax = fig.add_subplot(gs[0,counter])
@@ -295,7 +382,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         raise ValueError('Subplot/sample number mismatch: check dimensions.')
     metadata = get_metadata(insp_idx, sample_index, fname_dataset)
     fig = plt.figure(figsize=figsize, dpi=300)
-    gs = GridSpec(nrows=nrows, ncols=ncols)
+    gs = gridspec.GridSpec(nrows=nrows, ncols=ncols)
     counter = 0
     for i in range(len(insp_idx)):
 
