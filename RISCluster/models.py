@@ -380,8 +380,8 @@ def train_DCM(
                 loss.backward()
                 optimizer.step()
 
-            if batch_num % update_interval == 0:
-                pca(labels, model, dataloader, device, tb, n_iter)
+            # if batch_num % update_interval == 0:
+            #     pca(labels, model, dataloader, device, tb, n_iter)
 
             running_size += x.size(0)
             running_loss += loss.cpu().detach().numpy() * x.size(0)
@@ -431,6 +431,8 @@ def train_DCM(
 
         if finished:
             break
+
+    pca(labels, model, dataloader, device, tb, n_iter)
 
     tb.add_hparams(
         {'Clusters': n_clusters, 'Batch Size': batch_size, 'LR': lr, 'gamma': gamma, 'tol': tol},

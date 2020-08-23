@@ -80,7 +80,7 @@ if __name__ == '__main__':
             batch_size=[512],
             lr=[0.0001],
             gamma=[0.1],
-            tol=[0.01, 0.001]
+            tol=[0.001, 0.0001]
         )
         # hyperparameters = dict(
         #     batch_size = [128, 256, 512, 1024, 2048],
