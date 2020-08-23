@@ -314,7 +314,6 @@ def train_DCM(
     q, labels_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
-    total_counter = 0
     finished = False
     for epoch in range(n_epochs):
         print('-' * 110)
@@ -350,14 +349,14 @@ def train_DCM(
         for batch_num, batch in enumerate(pbar):
             x = batch.to(device)
             # Uptade target distribution, check performance
-            if (total_counter % update_interval == 0) and not \
+            if (batch_num % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
                 q, labels = predict_labels(model, dataloader, device)
                 p = target_distribution(q)
                 # check stop criterion
                 delta_label = np.sum(labels != labels_prev).astype(np.float32) \
                               / labels.shape[0]
-                tb.add_scalar('delta', delta_label, total_counter)
+                tb.add_scalar('delta', delta_label, batch_num)
                 labels_prev = np.copy(labels)
                 if delta_label < tol:
                     print('Stop criterion met, training complete.')
@@ -380,8 +379,8 @@ def train_DCM(
                 loss.backward()
                 optimizer.step()
 
-            if total_counter % update_interval == 0:
-                pca(labels, model, dataloader, device, tb, total_counter)
+            if batch_num % update_interval == 0:
+                pca(labels, model, dataloader, device, tb, batch_num)
 
             running_size += x.size(0)
             running_loss += loss.cpu().detach().numpy() * x.size(0)
@@ -398,7 +397,7 @@ def train_DCM(
                 Loss = f"{accum_loss:.4e}"
             )
 
-            training_history['iter'].append(total_counter)
+            training_history['iter'].append(batch_num)
             training_history['loss'].append(accum_loss)
             training_history['mse'].append(accum_loss_rec)
             training_history['kld'].append(accum_loss_clust)
@@ -410,16 +409,16 @@ def train_DCM(
                     'MSE': accum_loss_rec,
                     'KLD': accum_loss_clust
                 },
-                total_counter
+                batch_num
             )
 
-            tb.add_scalar('Loss', accum_loss, total_counter)
-            tb.add_scalar('MSE', accum_loss_rec, total_counter)
-            tb.add_scalar('KLD', accum_loss_clust, total_counter)
+            tb.add_scalar('Loss', accum_loss, batch_num)
+            tb.add_scalar('MSE', accum_loss_rec, batch_num)
+            tb.add_scalar('KLD', accum_loss_clust, batch_num)
 
             for name, weight in model.named_parameters():
-                tb.add_histogram(name, weight, total_counter)
-                tb.add_histogram(f'{name}.grad', weight.grad, total_counter)
+                tb.add_histogram(name, weight, batch_num)
+                tb.add_histogram(f'{name}.grad', weight.grad, batch_num)
 
             # print(
                 # f'Epoch [{epoch+1}/{n_epochs}] Batch [{batch_num}]| '
@@ -428,7 +427,6 @@ def train_DCM(
             # )
 
             batch_num += 1
-            total_counter += 1
 
         if finished:
             break
@@ -578,7 +576,7 @@ def gmm(model, dataloader, device):
 
     gmm.fit(z_array)
 
-def pca(labels, model, dataloader, device, tb, total_counter):
+def pca(labels, model, dataloader, device, tb, counter):
     z_array = None
     model.eval()
     for batch in dataloader:
@@ -595,7 +593,7 @@ def pca(labels, model, dataloader, device, tb, total_counter):
     pca2 = PCA(n_components=model.n_clusters).fit(z_array)
     pca2d = pca2.transform(z_array)
     fig = plotting.view_clusters(pca2d, labels)
-    tb.add_figure('PCA_Z', fig, global_step=total_counter, close=True)
+    tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
 
 
 def predict_labels(model, dataloader, device):

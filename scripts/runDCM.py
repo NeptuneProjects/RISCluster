@@ -66,8 +66,8 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=200,
-            update_interval=100,
+            n_epochs=600,
+            update_interval=10,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
@@ -76,11 +76,11 @@ if __name__ == '__main__':
             saved_weights='../../../Outputs/Models/AEC/Exp20200822T211118/Run_BatchSz=256_LR=0.0001/AEC_Params_20200822T220623.pt'
         )
         hyperparameters = dict(
-            n_clusters=[5,6,7,8],
+            n_clusters=[5,6],
             batch_size=[512],
             lr=[0.0001],
             gamma=[0.1],
-            tol=[0.001]
+            tol=[0.01, 0.001]
         )
         # hyperparameters = dict(
         #     batch_size = [128, 256, 512, 1024, 2048],
