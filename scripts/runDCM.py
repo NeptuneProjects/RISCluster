@@ -1,3 +1,5 @@
+import argparse
+import configparser
 import sys
 sys.path.insert(0, '../RISCluster/')
 
@@ -8,11 +10,14 @@ import utils
 imp.reload(utils)
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Enter model mode.")
+    parser.add_argument('mode', help="Enter 'pretrain', 'train', or 'predict'.")
+    args = parser.parse_args()
     # =========================================================================
     # Universal Parameters
     # =========================================================================
     # Select from 'pretrain', 'train', or 'predict':
-    mode = 'predict'
+    mode = args.mode
     fname_dataset = '../../../Data/DetectionData_New.h5'
     savepath = '../../../Outputs/'
     # Use this for local dev:
@@ -63,7 +68,7 @@ if __name__ == '__main__':
             indexpath=indexpath,
             n_epochs=200,
             n_clusters=6,
-            update_interval=300,
+            update_interval=100,
             savepath=savepath_exp,
             serial=serial_exp,
             show=False,
