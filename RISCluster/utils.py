@@ -132,7 +132,7 @@ def load_dataset(fname_dataset, index, send_message=False):
     return SeismoDataset(X)
 
 def load_weights(model, fname, device):
-    model.load_state_dict(torch.load(fname, map_location=device))
+    model.load_state_dict(torch.load(fname, map_location=device), strict=False)
     model.eval()
     print(f'Weights loaded to {device}')
 
