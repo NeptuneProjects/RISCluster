@@ -72,7 +72,7 @@ if __name__ == '__main__':
             saved_weights='../../../Outputs/Models/AEC/Exp20200812T075316/Run_BatchSz=512_LR=0.0001/AEC_Params_20200812T104220.pt'
         )
         hyperparameters = dict(
-            n_clusters=[6,7,8]
+            n_clusters=[6,7,8],
             batch_size=[512],
             lr=[0.0001],
             gamma=[0.1],
