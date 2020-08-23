@@ -314,6 +314,7 @@ def train_DCM(
     q, labels_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
+    n_iter = 1
     finished = False
     for epoch in range(n_epochs):
         print('-' * 110)
@@ -356,7 +357,7 @@ def train_DCM(
                 # check stop criterion
                 delta_label = np.sum(labels != labels_prev).astype(np.float32) \
                               / labels.shape[0]
-                tb.add_scalar('delta', delta_label, batch_num)
+                tb.add_scalar('delta', delta_label, n_iter)
                 labels_prev = np.copy(labels)
                 if delta_label < tol:
                     print('Stop criterion met, training complete.')
@@ -380,7 +381,7 @@ def train_DCM(
                 optimizer.step()
 
             if batch_num % update_interval == 0:
-                pca(labels, model, dataloader, device, tb, batch_num)
+                pca(labels, model, dataloader, device, tb, n_iter)
 
             running_size += x.size(0)
             running_loss += loss.cpu().detach().numpy() * x.size(0)
@@ -409,16 +410,16 @@ def train_DCM(
                     'MSE': accum_loss_rec,
                     'KLD': accum_loss_clust
                 },
-                batch_num
+                n_iter
             )
 
-            tb.add_scalar('Loss', accum_loss, batch_num)
-            tb.add_scalar('MSE', accum_loss_rec, batch_num)
-            tb.add_scalar('KLD', accum_loss_clust, batch_num)
+            tb.add_scalar('Loss', accum_loss, n_iter)
+            tb.add_scalar('MSE', accum_loss_rec, n_iter)
+            tb.add_scalar('KLD', accum_loss_clust, n_iter)
 
             for name, weight in model.named_parameters():
-                tb.add_histogram(name, weight, batch_num)
-                tb.add_histogram(f'{name}.grad', weight.grad, batch_num)
+                tb.add_histogram(name, weight, n_iter)
+                tb.add_histogram(f'{name}.grad', weight.grad, n_iter)
 
             # print(
                 # f'Epoch [{epoch+1}/{n_epochs}] Batch [{batch_num}]| '
@@ -426,7 +427,7 @@ def train_DCM(
                 # f'MSE = {accum_loss_rec:.9f}, KLD = {accum_loss_clust:.9f}'
             # )
 
-            batch_num += 1
+            n_iter += 1
 
         if finished:
             break
