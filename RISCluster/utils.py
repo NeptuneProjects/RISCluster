@@ -218,7 +218,7 @@ def save_history(training_history, validation_history, savepath, run_serial):
         w.writerow(d2.keys())
         w.writerows(zip(*d2.values()))
 
-    print('History saved.')
+    # print('History saved.')
 
 def save_labels(label_list, savepath, serial):
     fname = f'{savepath}/Labels{serial}.csv'
@@ -233,7 +233,7 @@ def save_labels(label_list, savepath, serial):
             w = csv.DictWriter(csvfile, keys)
             w.writerows(label_list)
 
-    print('Labels saved.')
+    # print('Labels saved.')
 
 def set_device():
     if torch.cuda.is_available():
