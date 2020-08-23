@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # =========================================================================
     # Pre-Training Routine
     # =========================================================================
-    if mode == 'train':
+    if mode == 'pretrain':
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
