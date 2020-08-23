@@ -114,5 +114,5 @@ if __name__ == '__main__':
             max_workers=14
         )
         utils.save_exp_config(savepath_exp, serial_exp, parameters, None)
-        production._predict(parameters)
+        production.DCM_predict(parameters)
 # End of script.
