@@ -101,7 +101,7 @@ def pretrain_DCM(
         pbar_tra = tqdm(
             tra_loader,
             leave=True,
-            desc=" Training",
+            desc="  Training",
             unit="batch",
             postfix={
                 "MAE": "%.6f" % 0.0,
