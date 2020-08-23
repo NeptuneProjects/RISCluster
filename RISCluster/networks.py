@@ -119,7 +119,7 @@ def init_weights(m):
 
 # Clustering Layer
 class ClusteringLayer(nn.Module):
-    def __init__(self, n_clusters, n_features=32, alpha=1.0):
+    def __init__(self, n_clusters, n_features=16, alpha=1.0):
         super(ClusteringLayer, self).__init__()
         self.n_features = n_features
         self.n_clusters = n_clusters
@@ -163,7 +163,7 @@ class DCM(nn.Module):
         self.n_clusters = n_clusters
         self.encoder = Encoder()
         self.decoder = Decoder()
-        self.clustering = ClusteringLayer(self.n_clusters, n_features=32, alpha=1.0)
+        self.clustering = ClusteringLayer(self.n_clusters, n_features=16, alpha=1.0)
 
     def forward(self, x):
         z = self.encoder(x)
