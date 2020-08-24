@@ -429,10 +429,10 @@ def train_DCM(
 
             n_iter += 1
 
+        pca(labels, model, dataloader, device, tb, epoch)
+
         if finished:
             break
-
-    pca(labels, model, dataloader, device, tb, n_iter)
 
     tb.add_hparams(
         {'Clusters': n_clusters, 'Batch Size': batch_size, 'LR': lr, 'gamma': gamma, 'tol': tol},
