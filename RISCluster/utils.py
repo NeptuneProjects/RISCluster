@@ -3,6 +3,7 @@ from datetime import datetime
 from email.message import EmailMessage
 import os
 import pickle
+from shutil import copyfile
 import smtplib
 import ssl
 
@@ -181,12 +182,13 @@ def notify(msgsubj, msgcontent):
         print('Unable to send WhatsApp notification upon job completion.')
         pass
 
-def save_exp_config(savepath, serial, parameters, hyperparameters):
+def save_exp_config(savepath, serial, init_file, parameters, hyperparameters):
     fname = f'{savepath}ExpConfig{serial}'
     if hyperparameters is not None:
         configs = [parameters, hyperparameters]
     else:
         configs = parameters
+    copyfile(init_file, f'{fname}.ini')
     with open(f'{fname}.txt', 'w') as f:
         f.write(str(configs))
     with open(f'{fname}.pkl', 'wb') as f:
