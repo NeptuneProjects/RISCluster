@@ -314,6 +314,8 @@ def train_DCM(
     q, labels_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
+    pca(labels, model, dataloader, device, tb, 0)
+
     n_iter = 1
     finished = False
     for epoch in range(n_epochs):
@@ -429,7 +431,7 @@ def train_DCM(
 
             n_iter += 1
 
-        pca(labels, model, dataloader, device, tb, epoch)
+        pca(labels, model, dataloader, device, tb, epoch+1)
 
         if finished:
             break
