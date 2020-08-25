@@ -1,33 +1,29 @@
 import argparse
 import configparser
+import os
 import sys
 sys.path.insert(0, '../RISCluster/')
 
-import importlib as imp
 import production
-imp.reload(production)
 import utils
-imp.reload(utils)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Enter model mode.")
-    parser.add_argument('mode', help="Enter 'pretrain', 'train', or 'predict'.")
+    parser = argparse.ArgumentParser(
+        description="Enter model mode and configuration file."
+    )
+    parser.add_argument('init_file', help="Enter path to init file.")
     args = parser.parse_args()
+    init_file = args.init_file
+    config = configparser.ConfigParser()
+    # init_file = '../init_predict.ini'
+    config.read(init_file)
     # =========================================================================
     # Universal Parameters
     # =========================================================================
-    # Select from 'pretrain', 'train', or 'predict':
-    mode = args.mode
-    fname_dataset = '../../../Data/DetectionData_New.h5'
-    savepath = '../../../Outputs/'
-    # Use this for local dev:
-    # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=100_Res=0.0_20200809T125533.pkl'
-    # indexpath = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/TraValIndex_M=500_Res=0.0_20200803T202014.pkl'
-    # Use this for full run on Velella:
-    # indexpath = '../../../Data/TraValIndex_M=35000_Res=0.0_20200803T212141.pkl'
-    indexpath = '../../../Data/TraValIndex_M=100000_Res=0.0_20200812T063630.pkl'
-    # Use this for troubleshooting on Velella:
-    # indexpath = '../../../Data/TraValIndex_M=1000_Res=0.0_20200803T221100.pkl'
+    mode = config['UNIVERSAL']['mode']
+    fname_dataset = config['UNIVERSAL']['fname_dataset']
+    savepath = config['UNIVERSAL']['savepath']
+    indexpath = config['UNIVERSAL']['indexpath']
     # =========================================================================
     # Pre-Training Routine
     # =========================================================================
@@ -37,22 +33,25 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=600,
+            n_epochs=int(config['PARAMETERS']['n_epochs']),
             savepath=savepath_exp,
             serial=serial_exp,
-            show=False,
-            send_message=True,
+            show=config['PARAMETERS'].getboolean('show'),
+            send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
-            early_stopping=True,
-            patience=10
+            early_stopping=config['PARAMETERS'].getboolean('early_stopping'),
+            patience=config['PARAMETERS']['patience']
         )
+        batch_size = config['HYPERPARAMETERS']['batch_size']
+        lr = config['HYPERPARAMETERS']['lr']
         hyperparameters = dict(
-            batch_size=[256, 512, 1024],
-            lr=[0.00001, 0.0001, 0.001]
+            batch_size=[int(i) for i in batch_size.split(', ')],
+            lr=[float(i) for i in lr.split(', ')]
         )
         utils.save_exp_config(
             savepath_exp,
             serial_exp,
+            init_file,
             parameters,
             hyperparameters
         )
@@ -66,31 +65,31 @@ if __name__ == '__main__':
             fname_dataset=fname_dataset,
             device=utils.set_device(),
             indexpath=indexpath,
-            n_epochs=600,
-            update_interval=20,
+            n_epochs=int(config['PARAMETERS']['n_epochs']),
+            update_interval=int(config['PARAMETERS']['update_interval']),
             savepath=savepath_exp,
             serial=serial_exp,
-            show=False,
-            send_message=True,
+            show=config['PARAMETERS'].getboolean('show'),
+            send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
-            saved_weights='../../../Outputs/Models/AEC/Exp20200822T211118/Run_BatchSz=256_LR=0.0001/AEC_Params_20200822T220623.pt'
+            saved_weights=config['PARAMETERS']['saved_weights'],
         )
+        n_clusters = config['HYPERPARAMETERS']['n_clusters']
+        batch_size = config['HYPERPARAMETERS']['batch_size']
+        lr = config['HYPERPARAMETERS']['lr']
+        gamma = config['HYPERPARAMETERS']['gamma']
+        tol = config['HYPERPARAMETERS']['tol']
         hyperparameters = dict(
-            n_clusters=[5,6],
-            batch_size=[256, 512],
-            lr=[0.0001],
-            gamma=[0.1],
-            tol=[0.001]
+            n_clusters=[int(i) for i in n_clusters.split(', ')],
+            batch_size=[int(i) for i in batch_size.split(', ')],
+            lr=[float(i) for i in lr.split(', ')],
+            gamma=[float(i) for i in gamma.split(', ')],
+            tol=[float(i) for i in tol.split(', ')]
         )
-        # hyperparameters = dict(
-        #     batch_size = [128, 256, 512, 1024, 2048],
-        #     lr = [0.00001, 0.0001, 0.001],
-        #     gamma = [0.08, 0.1, 0.12],
-        #     tol = [0.0001, 0.001, 0.01, 0.1]
-        # )
         utils.save_exp_config(
             savepath_exp,
             serial_exp,
+            init_file,
             parameters,
             hyperparameters
         )
@@ -99,24 +98,28 @@ if __name__ == '__main__':
     # Prediction Routine
     # =========================================================================
     if mode == 'predict':
-        saved_weights = '../../../Outputs/Models/DCM/Exp20200823T103757/Run_Clusters=5_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T103846.pt'
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
             device=utils.set_device(),
-            M = 'all', # Select integer or 'all'
+            M = config['PARAMETERS']['M'], # Select integer or 'all'
             indexpath=indexpath,
-            exclude=False,
-            batch_size=1024,
-            n_clusters=5,
+            exclude=config['PARAMETERS'].getboolean('exclude'),
+            batch_size=int(config['PARAMETERS']['batch_size']),
+            n_clusters=int(config['PARAMETERS']['n_clusters']),
             savepath=savepath_exp,
             serial=serial_exp,
-            show=False,
-            send_message=True,
+            show=config['PARAMETERS'].getboolean('show'),
+            send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
-            saved_weights=saved_weights,
-            max_workers=14
+            saved_weights=config['PARAMETERS']['saved_weights'],
+            max_workers=int(config['PARAMETERS']['max_workers'])
         )
-        utils.save_exp_config(savepath_exp, serial_exp, parameters, None)
+        utils.save_exp_config(
+            savepath_exp,
+            serial_exp,
+            init_file,
+            parameters,
+            None
+        )
         production.DCM_predict(parameters)
-# End of script.
