@@ -102,7 +102,7 @@ if __name__ == '__main__':
         parameters = dict(
             fname_dataset=fname_dataset,
             device=utils.set_device(),
-            M = config['PARAMETERS']['M'], # Select integer or 'all'
+            M = config['PARAMETERS']['m'], # Select integer or 'all'
             indexpath=indexpath,
             exclude=config['PARAMETERS'].getboolean('exclude'),
             batch_size=int(config['PARAMETERS']['batch_size']),
