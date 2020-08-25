@@ -20,9 +20,9 @@ import utils
 importlib.reload(plotting)
 
 
-def view_cluster_results(csvname, fname_dataset, saved_weights, show=True, save=True, savepath='.'):
+def view_cluster_results(csvname, fname_dataset, saved_weights, n_clusters, show=True, save=True, savepath='.'):
     device = utils.set_device()
-    model = DCM(n_clusters=5).to(device)
+    model = DCM(n_clusters=n_clusters).to(device)
     model = utils.load_weights(model, saved_weights, device)
 
     data = genfromtxt(fname, delimiter=',')
@@ -131,7 +131,7 @@ def view_cluster_results(csvname, fname_dataset, saved_weights, show=True, save=
 
 
         fig.suptitle(f'Label {label_list[l]}', size=18, weight='bold')
-        fig.subplots_adjust(top=0.92)
+        fig.subplots_adjust(top=0.91)
         if save:
             fig.savefig(f'{savepath}/Label{label_list[l]}_Examples.png')
         if show:
@@ -142,9 +142,22 @@ def view_cluster_results(csvname, fname_dataset, saved_weights, show=True, save=
 fname = '../../../Outputs/Trials/Exp20200823T115040/Labels20200823T115040.csv'
 fname_dataset = '../../../Data/DetectionData_New.h5'
 savepath = '../../../Paper/Figures'
-saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCM/Exp20200823T103757/Run_Clusters=5_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T103846.pt'
 
-view_cluster_results(fname, fname_dataset, saved_weights, show=True, save=False, savepath=savepath)
+# n_clusters = 5
+# saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCM/Exp20200823T103757/Run_Clusters=5_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T103846.pt'
+n_clusters = 6
+saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCM/Exp20200823T103757/Run_Clusters=6_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T112117.pt'
+# n_clusters = 5
+# saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCM/Exp20200823T143628/Run_Clusters=5_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T143720.pt'
+# n_clusters = 6
+# saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCM/Exp20200823T143628/Run_Clusters=6_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T151124.pt'
+# n_clusters = 7
+# saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCM/Exp20200823T143628/Run_Clusters=7_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T155745.pt'
+# n_clusters = 8
+# saved_weights = '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/DCM/Exp20200823T143628/Run_Clusters=8_BatchSz=512_LR=0.0001_gamma=0.1_tol=0.001/DCM_Params_20200823T164517.pt'
+
+
+view_cluster_results(fname, fname_dataset, saved_weights, n_clusters, show=True, save=False, savepath=savepath)
 
 
 

@@ -13,3 +13,5 @@ sandbox.py
 MakePlots.py
 model_config.txt
 runDCM_depr.py
+.ftpconfig
+.ftpignore

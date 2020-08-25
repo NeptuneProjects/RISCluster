@@ -12,7 +12,6 @@ This repository is a PyTorch implementation of deep convolutional embedded clust
 ## References:
 Master thesis of Dylan Snover: https://github.com/dsnover/
 <br>Xie, Girshick, and Farhadi (2016): https://arxiv.org/abs/1511.06335)
-<br>Guo, Zhu, Liu, and Jin (2017): https://link.springer.com/chapter/10.1007/978-3-319-70096-0_39
 
 Project assembled by William Jenkins
 <br>wjenkins [@] ucsd [dot] edu
