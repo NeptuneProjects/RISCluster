@@ -59,7 +59,9 @@ if __name__ == '__main__':
     # Prediction Routine
     # =========================================================================
     initlist = [f'{init_path}/{l}' for l in os.listdir(init_path) if ".ini" in l]
-    for init_file in initlist:
+    for f, init_file in enumerate(initlist):
+        print('**************************************************************')
+        print(f'Evaluating experiment {f+1}/{len(initlist)}...')
         config = configparser.ConfigParser()
         config.read(init_file)
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
@@ -93,3 +95,5 @@ if __name__ == '__main__':
             tst_dataset=tst_dataset,
         )
         time.sleep(1)
+        print(f'Experiment {f+1}/{len(initlist)} evaluation complete.')
+        print('**************************************************************')
