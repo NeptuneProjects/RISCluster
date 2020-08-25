@@ -50,11 +50,11 @@ if __name__ == '__main__':
         indexpath,
         exclude=exclude
     )
-    # tst_dataset = utils.load_dataset(
-    #     fname_dataset,
-    #     index_tst,
-    #     'True'
-    # )
+    tst_dataset = utils.load_dataset(
+        fname_dataset,
+        index_tst,
+        'True'
+    )
     # =========================================================================
     # Prediction Routine
     # =========================================================================
@@ -87,5 +87,9 @@ if __name__ == '__main__':
             parameters,
             None
         )
-        production.DCM_predict(parameters)
+        production.DCM_predict(
+            parameters,
+            index_tst=index_tst,
+            tst_dataset=tst_dataset,
+        )
         time.sleep(1)

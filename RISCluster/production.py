@@ -224,7 +224,7 @@ def DCM_train(parameters, hyperparameters):
     print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
 
-def DCM_predict(parameters):
+def DCM_predict(parameters, index_tst=None, tst_dataset=None):
     print('==============================================================')
     print('Executing Prediction Mode')
     tic = datetime.now()
