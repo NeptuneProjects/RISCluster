@@ -1,3 +1,5 @@
+import configparser
+import csv
 from datetime import datetime
 import os
 import sys
@@ -12,11 +14,11 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import seaborn as sns
 import torch
+from torch.utils.data import DataLoader
 
-import importlib
-import processing
-importlib.reload(processing)
 from processing import get_metadata
+import utils
+from networks import DCM
 
 def compare_images(
         model,
@@ -131,6 +133,152 @@ def view_clusters(pca2d, labels):
     fig.tight_layout()
     return fig
 
+def view_cluster_results(exppath, show=True, save=True, savepath='.'):
+
+    init_file = [f for f in os.listdir(exppath) if f.endswith('.ini')][0]
+    init_file = f'{exppath}/{init_file}'
+    config = configparser.ConfigParser()
+    config.read(init_file)
+    fname_dataset = config['UNIVERSAL']['fname_dataset']
+    saved_weights = config['PARAMETERS']['saved_weights']
+    n_clusters = int(config['PARAMETERS']['n_clusters'])
+
+    csv_file = [f for f in os.listdir(exppath) if f.endswith('.csv')][0]
+    csv_file = f'{exppath}/{csv_file}'
+    data = np.genfromtxt(csv_file, delimiter=',')
+    data = np.delete(data,0,0)
+    data = data.astype('int')
+    label = data[:,0]
+    index = data[:,1]
+    label_list = np.unique(label)
+
+    device = utils.set_device()
+    model = DCM(n_clusters=n_clusters).to(device)
+    model = utils.load_weights(model, saved_weights, device)
+
+    for l in range(len(label_list)):
+        query = np.where(label == label_list[l])[0]
+        N = 9
+        image_index = np.random.choice(query, N)
+        metadata = get_metadata(range(N), image_index, fname_dataset)
+
+        dataset = utils.load_dataset(fname_dataset, image_index, send_message=False)
+        dataloader = DataLoader(dataset, batch_size=N)
+        X = []
+        for batch in dataloader:
+            X = batch.to(device)
+
+        with h5py.File(fname_dataset, 'r') as f:
+            # M = len(image_index)
+            DataSpec = '/7sec/Spectrogram'
+            dset = f[DataSpec]
+            fvec = dset[1, 0:64, 0]
+            tvec = dset[1, 65, 1:129]
+
+        with h5py.File(fname_dataset, 'r') as f:
+            M = len(image_index)
+            DataSpec = '/7sec/Trace'
+            dset = f[DataSpec]
+            k = 635
+
+            tr = np.empty([M, k])
+            dset_arr = np.empty([k,])
+
+            for i in range(M):
+                dset_arr = dset[image_index[i], 0:k]
+                tr[i,:] = dset_arr/1e-6
+
+        extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
+
+        _, x_r, z = model(X)
+
+        fig = plt.figure(figsize=(12,9), dpi=300)
+        gs_sup = gridspec.GridSpec(nrows=int(np.sqrt(N)), ncols=int(np.sqrt(N)), hspace=0.3, wspace=0.3)
+
+        for i in range(N):
+
+            station = metadata[i]['Station']
+            try:
+                time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                            '%Y-%m-%dT%H:%M:%S.%f').strftime(
+                                            '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+            except:
+                time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                            '%Y-%m-%dT%H:%M:%S').strftime(
+                                            '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+
+            heights = [1, 2, 2]
+            widths = [3, 0.2]
+            gs_sub = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
+
+            tvec = np.linspace(extent[0], extent[1], tr.shape[1])
+            ax = fig.add_subplot(gs_sub[0,0])
+            plt.plot(tvec, tr[i,:])
+            plt.xticks([])
+            plt.yticks([])
+            plt.title(f'Station {station}; Index: {image_index[i]}\nTrigger: {time_on}', fontsize=10)
+
+            ax = fig.add_subplot(gs_sub[1,0])
+            plt.imshow(torch.squeeze(X[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.xticks([])
+
+            ax = fig.add_subplot(gs_sub[2,0])
+            plt.imshow(torch.squeeze(x_r[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+
+            ax = fig.add_subplot(gs_sub[:,1])
+            plt.imshow(np.expand_dims(z[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
+            plt.xticks([])
+            plt.yticks([])
+
+        fig.suptitle(f'Label {label_list[l]}', size=18, weight='bold')
+        fig.subplots_adjust(top=0.91)
+        if save:
+            fig.savefig(f'{savepath}/Label{label_list[l]}_Examples.png')
+        if show:
+            plt.show()
+        else:
+            plt.close()
+
+def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
+    fig = plt.figure(figsize=figsize, dpi=300)
+    gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
+    # Original Spectrogram
+    ax = fig.add_subplot(gs[0])
+    plt.imshow(np.squeeze(x), aspect='auto')
+    plt.ylabel('Frequency Bin')
+    plt.xlabel('Time Bin')
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('Original Spectrogram')
+    # Latent Space Representation:
+    ax = fig.add_subplot(gs[1])
+    plt.imshow(np.expand_dims(z, 1), cmap='viridis', aspect='auto')
+    plt.gca().invert_yaxis()
+    plt.title('Latent Space')
+    plt.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False  # labels along the bottom edge are off
+    )
+    # Reconstructed Spectrogram:
+    ax = fig.add_subplot(gs[2])
+    plt.imshow(np.squeeze(x_rec), aspect='auto')
+    plt.ylabel('Frequency Bin')
+    plt.xlabel('Time Bin')
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('Reconstructed Spectrogram')
+    fig.suptitle(f'Cluster: {label}', size=18, weight='bold')
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.9)
+    if show is False:
+        plt.close()
+    else:
+        plt.show()
+    return fig
+
 def view_detections(fname_dataset, image_index, figtitle,
                   nrows=2, ncols=2, figsize=(12,9), show=True):
     sample_index = np.arange(0, len(image_index))
@@ -243,46 +391,6 @@ def view_learningcurve(training_history, validation_history, show=True):
         plt.close()
     return fig
 
-def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
-    fig = plt.figure(figsize=figsize, dpi=300)
-    gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
-    # Original Spectrogram
-    ax = fig.add_subplot(gs[0])
-    plt.imshow(np.squeeze(x), aspect='auto')
-    plt.ylabel('Frequency Bin')
-    plt.xlabel('Time Bin')
-    plt.gca().invert_yaxis()
-    plt.colorbar()
-    plt.title('Original Spectrogram')
-    # Latent Space Representation:
-    ax = fig.add_subplot(gs[1])
-    plt.imshow(np.expand_dims(z, 1), cmap='viridis', aspect='auto')
-    plt.gca().invert_yaxis()
-    plt.title('Latent Space')
-    plt.tick_params(
-        axis='x',          # changes apply to the x-axis
-        which='both',      # both major and minor ticks are affected
-        bottom=False,      # ticks along the bottom edge are off
-        top=False,         # ticks along the top edge are off
-        labelbottom=False  # labels along the bottom edge are off
-    )
-    # Reconstructed Spectrogram:
-    ax = fig.add_subplot(gs[2])
-    plt.imshow(np.squeeze(x_rec), aspect='auto')
-    plt.ylabel('Frequency Bin')
-    plt.xlabel('Time Bin')
-    plt.gca().invert_yaxis()
-    plt.colorbar()
-    plt.title('Reconstructed Spectrogram')
-    fig.suptitle(f'Cluster: {label}', size=18, weight='bold')
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.9)
-    if show is False:
-        plt.close()
-    else:
-        plt.show()
-    return fig
-
 def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
                            figsize=(12,9), show=True):
     X_T = fixed_images.detach().cpu().numpy()
@@ -318,64 +426,6 @@ def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
     else:
         plt.close()
     return fig
-
-# def view_orig_rcnstr_specgram(X_val, val_reconst, insp_idx, n, o,
-#                               fname_dataset, sample_index, figtitle, nrows=2,
-#                               ncols=4, figsize=(12,9), show=True):
-#     '''Plots selected spectrograms and their latent space reconstructions.'''
-#     if not len(insp_idx) == (nrows * ncols / 2):
-#         raise ValueError('Subplot/sample number mismatch: check dimensions.')
-#     metadata = get_metadata(insp_idx, sample_index, fname_dataset)
-#     fig = plt.figure(figsize=figsize, dpi=300)
-#     gs = GridSpec(nrows=nrows, ncols=ncols)
-#     counter = 0
-#     for i in range(len(insp_idx)):
-#         ax = fig.add_subplot(gs[0,counter])
-#         plt.imshow(np.reshape(X_val[insp_idx[i],:,:,:], (n,o)), aspect='auto')
-#         plt.gca().invert_yaxis()
-#         plt.ylabel('Frequency Bins')
-#         plt.xlabel('Time Bins')
-#         station = metadata[counter]['Station']
-#         try:
-#             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
-#                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
-#                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-#         except:
-#             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
-#                                         '%Y-%m-%dT%H:%M:%S').strftime(
-#                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-#         plt.title(f'Station {station}\nTrigger: {time_on}\n'
-#                   f'Index: {sample_index[insp_idx[i]]}')
-#         if counter == 0:
-#             plt.figtext(0, 0.57, 'Original Spectrograms', rotation='vertical',
-#                         fontweight='bold')
-#         divider = make_axes_locatable(ax)
-#         cax = divider.append_axes("right", size="5%", pad=0.05)
-#         plt.colorbar(cax=cax)
-#
-#         ax = fig.add_subplot(gs[1,counter])
-#         plt.imshow(np.reshape(val_reconst[insp_idx[i],:,:,:], (n,o)),
-#                               aspect='auto')
-#         plt.gca().invert_yaxis()
-#         plt.ylabel('Frequency Bins')
-#         plt.xlabel('Time Bins')
-#         if counter == 0:
-#             plt.figtext(0, 0.15, 'Reconstructed Spectrograms',
-#                         rotation='vertical', fontweight='bold')
-#         divider = make_axes_locatable(ax)
-#         cax = divider.append_axes("right", size="5%", pad=0.05)
-#         plt.colorbar(cax=cax)
-#         counter += 1
-#
-#     fig.suptitle('Spectrograms Reconstructed from Latent Space', size=18,
-#                  weight='bold')
-#     fig.tight_layout()
-#     fig.subplots_adjust(top=0.85, left=0.05)
-#     if show is False:
-#         plt.close()
-#     else:
-#         plt.show()
-#     return fig
 
 def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
                   nrows=2, ncols=2, figsize=(12,9), show=True):
