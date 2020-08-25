@@ -1,8 +1,10 @@
+import configparser
 import csv
 from datetime import datetime
 from email.message import EmailMessage
 import os
 import pickle
+import re
 from shutil import copyfile
 import smtplib
 import ssl
@@ -138,6 +140,58 @@ def load_weights(model, fname, device):
     print(f'Weights loaded to {device}')
 
     return model
+
+def make_pred_configs(loadpath, savepath, overwrite=False):
+    def _parse_nclusters(line):
+        """
+        Do a regex search against all defined regexes and
+        return the key and match result of the first matching regex
+
+        """
+        rx_dict = {'n_clusters': re.compile(r'Clusters=(?P<n_clusters>\d+)')}
+        for key, rx in rx_dict.items():
+            match = rx.search(line)
+            if match:
+                return match.group('n_clusters')
+            else:
+                raise Exception('Unable to parse filename for n_clusters.')
+
+    explist = [f for f in os.listdir(loadpath) if "Exp" in f]
+    for exper in explist:
+        runlist = [f for f in os.listdir(f'{loadpath}/{exper}') if "Run" in f]
+        for run in runlist:
+            fname = f'{savepath}/init_pred_{exper}_{run[4:]}.ini'
+
+            if os.path.isfile(fname):
+                print('File exists;', end='')
+                if not overwrite:
+                    print(' skipping.')
+                    continue
+                elif overwrite:
+                    print(' overwriting.')
+            else:
+                print('Creating new file.')
+
+            config = configparser.ConfigParser()
+            config['UNIVERSAL'] = {
+                'mode': 'predict',
+                'fname_dataset': '../../../Data/DetectionData_New.h5',
+                'savepath': '../../../Outputs/',
+                'indexpath': '../../../Data/TraValIndex_M=100000_Res=0.0_20200812T063630.pkl'
+            }
+            saved_weights = [f for f in os.listdir(f'{loadpath}/{exper}/{run}') if f.endswith('.pt')][0]
+            config['PARAMETERS'] = {
+                'M': 'all',
+                'exclude': 'False',
+                'batch_size': '1024',
+                'show': 'False',
+                'send_message': 'True',
+                'max_workers': '14',
+                'n_clusters': _parse_nclusters(run),
+                'saved_weights': f'{loadpath}/{exper}/{run}/{saved_weights}'
+            }
+            with open(fname, 'w') as configfile:
+                config.write(configfile)
 
 def notify(msgsubj, msgcontent):
     '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012
