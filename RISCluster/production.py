@@ -240,6 +240,7 @@ def DCM_predict(parameters):
     saved_weights = parameters['saved_weights']
     indexpath = parameters['indexpath']
     exclude = parameters['exclude']
+    loaded = parameters['loaded']
     # ==== Checks =============================================================
     if not os.path.exists(saved_weights):
         raise ValueError('Saved weights file not found.')
@@ -248,19 +249,20 @@ def DCM_predict(parameters):
     if not os.path.exists(indexpath):
         raise ValueError('Index file not found.')
     # ==== Load Data ==========================================================
-    if isinstance(M, str) and (M == 'all'):
-        M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
-    index_tst = utils.set_Tst_index(
-        M,
-        fname_dataset,
-        indexpath,
-        exclude=exclude
-    )
-    tst_dataset = utils.load_dataset(
-        fname_dataset,
-        index_tst,
-        send_message
-    )
+    if not loaded:
+        if isinstance(M, str) and (M == 'all'):
+            M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
+        index_tst = utils.set_Tst_index(
+            M,
+            fname_dataset,
+            indexpath,
+            exclude=exclude
+        )
+        tst_dataset = utils.load_dataset(
+            fname_dataset,
+            index_tst,
+            send_message
+        )
 
     dataloader = DataLoader(tst_dataset, batch_size=batch_size)
     model = DCM(n_clusters).to(device)
