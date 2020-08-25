@@ -113,7 +113,8 @@ if __name__ == '__main__':
             send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
             saved_weights=config['PARAMETERS']['saved_weights'],
-            max_workers=int(config['PARAMETERS']['max_workers'])
+            max_workers=int(config['PARAMETERS']['max_workers']),
+            loaded=False
         )
         utils.save_exp_config(
             savepath_exp,
