@@ -141,7 +141,7 @@ def load_weights(model, fname, device):
 
     return model
 
-def make_pred_configs(loadpath, savepath, overwrite=False):
+def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     def _parse_nclusters(line):
         """
         Do a regex search against all defined regexes and
@@ -156,12 +156,15 @@ def make_pred_configs(loadpath, savepath, overwrite=False):
             else:
                 raise Exception('Unable to parse filename for n_clusters.')
 
+    savepath = f"{savepath}/BatchEval{datetime.now().strftime('%m%dT%H%M')}"
+    if not os.path.exists(savepath):
+        os.makedirs(savepath)
+
     explist = [f for f in os.listdir(loadpath) if "Exp" in f]
     for exper in explist:
         runlist = [f for f in os.listdir(f'{loadpath}/{exper}') if "Run" in f]
         for run in runlist:
             fname = f'{savepath}/init_pred_{exper}_{run[4:]}.ini'
-
             if os.path.isfile(fname):
                 print('File exists;', end='')
                 if not overwrite:
