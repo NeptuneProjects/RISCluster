@@ -15,14 +15,14 @@ savepath = '../../ConfigFiles'
 overwrite = False
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(
-    #     description="Enter model mode and configuration file."
-    # )
-    # parser.add_argument('init_path', help="Enter path to folder containing init files.")
-    # args = parser.parse_args()
-    # init_path = args.init_path
+    parser = argparse.ArgumentParser(
+        description="Enter model mode and configuration file."
+    )
+    parser.add_argument('init_path', help="Enter path to folder containing init files.")
+    args = parser.parse_args()
+    init_path = args.init_path
 
-    init_path = '../../ConfigFiles/BatchEval0824T2044'
+    # init_path = '../../ConfigFiles/BatchEval0824T2044'
 
     # =========================================================================
     # Universal Parameters
