@@ -144,7 +144,6 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
         plt.xticks([])
         plt.yticks([])
 
-
     fig.suptitle(figtitle, size=14)
     fig.subplots_adjust(top=0.93)
     if show is False:
