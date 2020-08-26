@@ -124,6 +124,35 @@ def save_DCM_output(x, label, x_rec, z, idx, savepath):
 #         plt.show()
 #     return fig
 
+def view_centroid_output(centroids, X_r, figtitle, show=True):
+    '''Reconstructs spectrograms from cluster centroids.'''
+    n, o = list(X_r.size())[2:]
+    widths = [2, 0.1]
+    heights = [1 for i in range(len(centroids))]
+
+    fig = plt.figure(figsize=(3,2*len(centroids)), dpi=100)
+    gs = gridspec.GridSpec(nrows=len(centroids), ncols=2, hspace=0.5, wspace=0.1, width_ratios=widths)
+
+    for i in range(len(centroids)):
+        ax = fig.add_subplot(gs[i,0])
+        plt.imshow(torch.reshape(X_r[i,:,:,:], (n,o)).detach().numpy(), aspect='auto')
+        plt.gca().invert_yaxis()
+        plt.title(f'Cluster {i}')
+
+        ax = fig.add_subplot(gs[i,1])
+        plt.imshow(np.expand_dims(centroids[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
+        plt.xticks([])
+        plt.yticks([])
+
+
+    fig.suptitle(figtitle, size=14)
+    fig.subplots_adjust(top=0.93)
+    if show is False:
+        plt.close()
+    else:
+        plt.show()
+    return fig
+
 def view_clusters(pca2d, labels):
     fig = plt.figure(figsize=(6,6), dpi=300)
     sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
