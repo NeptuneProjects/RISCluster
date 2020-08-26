@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # ========================== Initialize Parameters ============================
     # v v v v Modify these parameters when switching to Velella! v v v v
     # num_workers = 12
-    num_workers = args.num_workers
+    num_workers = int(args.num_workers)
     datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
     # datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
     # ^ ^ ^ ^ Modify these parameters when switching to Velella! ^ ^ ^ ^
