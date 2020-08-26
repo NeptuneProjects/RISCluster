@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 
 from processing import get_metadata
 import utils
-from networks import DCM
+from networks import AEC, DCM
 
 def compare_images(
         model,
@@ -153,8 +153,11 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     label_list = np.unique(label)
 
     device = utils.set_device()
-    model = DCM(n_clusters=n_clusters).to(device)
-    model = utils.load_weights(model, saved_weights, device)
+    aec = AEC()
+    aec = utils.load_weights(aec, '../../../Outputs/Models/AEC/Exp20200822T211118/Run_BatchSz=256_LR=0.0001/AEC_Params_20200822T220623.pt', device)
+
+    dcm = DCM(n_clusters=n_clusters).to(device)
+    dcm = utils.load_weights(dcm, saved_weights, device)
 
     for l in range(len(label_list)):
         query = np.where(label == label_list[l])[0]
@@ -189,8 +192,8 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
                 tr[i,:] = dset_arr/1e-6
 
         extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
-
-        _, x_r, z = model(X)
+        x_r_pretrain, z_pretrain = aec(X)
+        _, x_r_train, z_train = dcm(X)
 
         fig = plt.figure(figsize=(12,9), dpi=300)
         gs_sup = gridspec.GridSpec(nrows=int(np.sqrt(N)), ncols=int(np.sqrt(N)), hspace=0.3, wspace=0.3)
@@ -207,33 +210,48 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
                                             '%Y-%m-%dT%H:%M:%S').strftime(
                                             '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
-            heights = [1, 2, 2]
-            widths = [3, 0.2]
-            gs_sub = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
+            heights = [1, 3, 3, 3]
+            widths = [4, 0.2, 0.2]
+            gs_sub = gridspec.GridSpecFromSubplotSpec(4, 3, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
 
             tvec = np.linspace(extent[0], extent[1], tr.shape[1])
             ax = fig.add_subplot(gs_sub[0,0])
             plt.plot(tvec, tr[i,:])
             plt.xticks([])
             plt.yticks([])
-            plt.title(f'Station {station}; Index: {image_index[i]}\nTrigger: {time_on}', fontsize=10)
+            plt.title(f'Station {station}; Index: {image_index[i]}\nTrigger: {time_on}', fontsize=8)
 
             ax = fig.add_subplot(gs_sub[1,0])
             plt.imshow(torch.squeeze(X[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
             plt.xticks([])
+            plt.ylabel('Original', size=7)
 
             ax = fig.add_subplot(gs_sub[2,0])
-            plt.imshow(torch.squeeze(x_r[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.imshow(torch.squeeze(x_r_pretrain[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.ylabel('Pre-trained', size=7)
 
-            ax = fig.add_subplot(gs_sub[:,1])
-            plt.imshow(np.expand_dims(z[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
+            ax = fig.add_subplot(gs_sub[3,0])
+            plt.imshow(torch.squeeze(x_r_train[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.ylabel('Trained', size=7)
+
+            ax = fig.add_subplot(gs_sub[1:,1])
+            plt.imshow(np.expand_dims(z_pretrain[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
             plt.xticks([])
             plt.yticks([])
+            ax.xaxis.set_label_position('top')
+            ax.set_xlabel('Pre-trained', size=5, rotation=90)
 
-        fig.suptitle(f'Label {label_list[l]}', size=18, weight='bold')
+            ax = fig.add_subplot(gs_sub[1:,2])
+            plt.imshow(np.expand_dims(z_train[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
+            plt.xticks([])
+            plt.yticks([])
+            ax.xaxis.set_label_position('top')
+            ax.set_xlabel('Trained', size=5, rotation=90)
+
+        fig.suptitle(f'Label {label_list[l]}', size=14)
         fig.subplots_adjust(top=0.91)
         if save:
-            fig.savefig(f'{savepath}/Label{label_list[l]}_Examples.png')
+            fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
         if show:
             plt.show()
         else:

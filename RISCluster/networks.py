@@ -58,9 +58,9 @@ class AEC(nn.Module):
         self.decoder = Decoder()
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        z = self.encoder(x)
+        x = self.decoder(z)
+        return x, z
 
 
 # # Encoder Layers

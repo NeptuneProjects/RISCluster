@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
@@ -115,7 +115,7 @@ def pretrain_DCM(
             optimizer.zero_grad()
 
             with torch.set_grad_enabled(True):
-                x_rec = model(x)
+                x_rec, _ = model(x)
                 loss_mse = criterion_mse(x_rec, x)
                 loss_mae = criterion_mae(x_rec, x)
                 loss_mse.backward()
@@ -174,7 +174,7 @@ def pretrain_DCM(
             model.eval()
             with torch.no_grad():
                 x = batch.to(device)
-                x_rec = model(x)
+                x_rec, _ = model(x)
                 loss_mse = criterion_mse(x_rec, x)
                 loss_mae = criterion_mae(x_rec, x)
 
