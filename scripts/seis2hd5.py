@@ -8,10 +8,9 @@ machine learning applications.  The samples are detected using recursive
 STA/LTA, then saved to .h5 as datasets with metadata.  This script is
 optimized for parallel processing.
 """
-
+import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
-from itertools import repeat
 import json
 import sys
 sys.path.insert(0, '../RISCluster/')
@@ -25,19 +24,25 @@ from processing import workflow_wrapper
 from utils import notify
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description="Enter number of CPUs to be used."
+    )
+    parser.add_argument('num_workers', help="Enter number of workers.")
+    args = parser.parse_args()
     # ========================== Initialize Parameters ============================
     # v v v v Modify these parameters when switching to Velella! v v v v
-    num_workers = 12
-    # datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
-    datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
+    # num_workers = 12
+    num_workers = args.num_workers
+    datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+    # datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
     # ^ ^ ^ ^ Modify these parameters when switching to Velella! ^ ^ ^ ^
     network_index = 0
     station_index = np.arange(0, 34)
     channel_index = 2
-    T_seg = 7 # Duration of traces & spectrograms (sec)
+    T_seg = 4 # Duration of traces & spectrograms (sec)
     NFFT = 128
-    tpersnap = 1 / 2
-    overlap = 0.9 # Fraction of overlap for spectrograms
+    tpersnap = 1 / 4
+    overlap = 0.92 # Fraction of overlap for spectrograms
     taper_trace = 10 # Taper (min)
     pre_feed = 20 # Buffer (min)
     cutoff = 3.0 # Highpass cutoff frequency (Hz)
@@ -46,8 +51,8 @@ if __name__ == '__main__':
     trigger_on = 6.0 # STA/LTA trigger-on threshold
     trigger_off = 5.0 # STA/LTA trigger-off threshold
     data_savepath = '../../../Data/' # Location of .h5 file
-    data_savename = 'DetectionData_New.h5' # File name
-    group_name = str(T_seg) + 'sec' # Group Name (grouped by T_seg)
+    group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
+    data_savename = f'DetectionData_{group_name}.h5' # File name
     print('======================================================================')
     print('Select range of experiment days to compute. Stop day is midnight of the'
           '\nnew day and does NOT include that day\'s data.')
@@ -85,7 +90,8 @@ if __name__ == '__main__':
             STA=STA,
             LTA=LTA,
             trigger_on=trigger_on,
-            trigger_off=trigger_off
+            trigger_off=trigger_off,
+            debug=False
         ) for k in range(len(station_index))]
 
         with ProcessPoolExecutor(max_workers=num_workers) as exec:
@@ -146,7 +152,6 @@ if __name__ == '__main__':
             for j in np.arange(0,m):
                 dset_cat[-m+j,] = json.dumps(metadata[j])
 
-#
     toc_run = datetime.now() - tic_run
     print('----------------------------------------------------------------------')
     print(f'Processing complete at {datetime.now()}; {toc_run} elapsed for '

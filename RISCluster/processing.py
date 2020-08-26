@@ -47,7 +47,7 @@ class SigParam():
 #     pass
 #     return None
 
-def detector(tr, signal_args, detector_args, detector_type):
+def detector(tr, signal_args, detector_args, detector_type='classic'):
     '''Detect events using recursive STA/LTA.'''
     fs = signal_args.fs
     STA = int(detector_args.STA*fs)
@@ -88,7 +88,7 @@ def detector(tr, signal_args, detector_args, detector_type):
     # Analyze and save data from each detection:
     tr_out = np.empty((len(on), int(fs*T_seg + 1)))
     S_out = np.empty((len(on), int(NFFT/2 + 1) + 1,
-                     int(T_seg/(tpersnap*(1 - overlap)) + 1)))
+                     int(T_seg//(tpersnap*(1 - overlap)) + 1)))
     catdict = [{"Network": None,
                 "Station": None,
                 "Channel": None,
@@ -104,13 +104,13 @@ def detector(tr, signal_args, detector_args, detector_type):
                 } for i in range(len(on))]
 
     for i in range(len(on)):
-        # Index is 4+/-1 sec before trigger:
-        i0 = int(on[i] - fs*2 + random.randint(-fs*1/4, fs*1/4))
+        # Index is 1 +/- 1/8 sec before trigger:
+        i0 = int(on[i] - int(fs*1) + random.randint(int(-fs*1/8), int(fs*1/8)))
         # i0 = int(on[i])
         # Index2 is T_seg sec after i0:
         i1 = int(i0 + T_seg*fs)
         # Calculate spectrogram and save to file:
-        t_spec, f_spec, S = get_specgram(tr, fs, i0, i1, NFFT, overlap)
+        t_spec, f_spec, S = get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap)
         t_spec = np.insert(t_spec, 0, np.NAN)
         S = np.hstack((f_spec[:, None], S))
         S_out[i, :, :] = np.vstack((S, t_spec))
@@ -204,12 +204,10 @@ def get_network(network_index):
     network_name = network_list[network_index]
     return network_name
 
-def get_specgram(tr, fs, i0, i1, NFFT, overlap):
-    # tpersnap = 1 # Seconds per snapshot.
-    tpersnap = 1 / 2
-    npersnap = np.floor(fs*tpersnap) # Points per snapshot.
-    if npersnap % 2: # If the index is odd, change to an even index.
-        npersnap = npersnap + 1
+def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
+    npersnap = fs*tpersnap # Points per snapshot.
+    # if npersnap % 2: # If the index is odd, change to an even index.
+    #     npersnap = npersnap + 1
     i0 = int(i0 - npersnap/2)
     i1 = int(i1 + npersnap/2 - 1)
     tr = tr[i0:i1]
@@ -414,18 +412,26 @@ def workflow_wrapper(
         STA,
         LTA,
         trigger_on,
-        trigger_off
+        trigger_off,
+        debug=False
     ):
     signal_args = SigParam(datadir, network_index, station_index,
                                    channel_index, datetime_index, taper_trace,
                                    pre_feed, cutoff, T_seg, NFFT, tpersnap, overlap)
     detector_args = DetectorParam(STA, LTA, trigger_on, trigger_off)
-    try:
+    if debug:
         tr, signal_args = readStream_addBuffer(signal_args)
         inv = read_stationXML(signal_args)
         tr, signal_args = trace_processor(tr, inv, signal_args)
         tr_out, S_out, catdict = detector(tr, signal_args, detector_args, 'classic')
         return tr_out, S_out, catdict
-    except:
-        # print(f'\n    Station {get_station(station_index)} skipped.')
-        return None, None, None
+    else:
+        try:
+            tr, signal_args = readStream_addBuffer(signal_args)
+            inv = read_stationXML(signal_args)
+            tr, signal_args = trace_processor(tr, inv, signal_args)
+            tr_out, S_out, catdict = detector(tr, signal_args, detector_args, 'classic')
+            return tr_out, S_out, catdict
+        except:
+            # print(f'\n    Station {get_station(station_index)} skipped.')
+            return None, None, None
