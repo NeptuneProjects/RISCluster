@@ -82,7 +82,7 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
     off = on_off[:, 1]
     # If no detections found, function returns None.
     if on.size == 0:
-        print('No detections')
+        # print('No detections')
         raise Exception('Unable to process station.')
         # return None, None, None
     # Analyze and save data from each detection:

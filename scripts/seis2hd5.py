@@ -28,6 +28,17 @@ if __name__ == '__main__':
         description="Enter number of CPUs to be used."
     )
     parser.add_argument('num_workers', help="Enter number of workers.")
+    parser.add_argument(
+        'day_start',
+        help="Select range of experiment days to compute.\
+            \n Start day is midnight of the new day."
+    )
+    parser.add_argument(
+        'day_stop',
+        help="Select range of experiment days to compute.\
+            \n Stop day is midnight of the new day and does NOT include that \
+            day's data."
+    )
     args = parser.parse_args()
     # ========================== Initialize Parameters ============================
     # v v v v Modify these parameters when switching to Velella! v v v v
@@ -54,12 +65,18 @@ if __name__ == '__main__':
     group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
     data_savename = f'DetectionData_{group_name}.h5' # File name
     print('======================================================================')
-    print('Select range of experiment days to compute. Stop day is midnight of the'
-          '\nnew day and does NOT include that day\'s data.')
-    day_start = int(input('Start Day: '))
+    # print('Select range of experiment days to compute. Stop day is midnight of the'
+          # '\nnew day and does NOT include that day\'s data.')
+    # day_start = int(input('Start Day: '))
+    day_start = int(args.day_start)
     print(f' - Day {day_start} selected for start.')
-    day_stop = int(input('Stop Day:  '))
+    # day_stop = int(input('Stop Day:  '))
+    day_stop = int(args.day_stop)
     print(f' - Day {day_stop} selected for stop.')
+    print(
+        "NOTE: Stop day is midnight of the new day and does NOT\
+        \n      include that day's data."
+    )
     print('----------------------------------------------------------------------')
     datetime_indexes = np.arange(day_start, day_stop)
     numdays = len(datetime_indexes)
