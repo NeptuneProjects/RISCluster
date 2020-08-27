@@ -119,16 +119,22 @@ def init_weights(m):
 
 # Clustering Layer
 class ClusteringLayer(nn.Module):
-    def __init__(self, n_clusters, n_features=16, alpha=1.0):
+    def __init__(self, n_clusters, n_features=16, alpha=1.0, weights=None):
         super(ClusteringLayer, self).__init__()
         self.n_features = n_features
         self.n_clusters = n_clusters
         self.alpha = alpha
-        self.weight = nn.Parameter(torch.Tensor(self.n_clusters, self.n_features))
-        self.weight = nn.init.xavier_uniform_(self.weight)
+        if weights is None:
+            initial_weights = torch.zeros(
+                self.cluster_number, self.embedding_dimension, dtype=torch.float
+            )
+            nn.init.xavier_uniform_(initial_weights)
+        else:
+            initial_weights = weights
+        self.weights = nn.Parameter(initial_weights)
 
     def forward(self, x):
-        x = x.unsqueeze(1) - self.weight
+        x = x.unsqueeze(1) - self.weights
         x = torch.mul(x, x)
         x = torch.sum(x, dim=2)
         x = 1.0 + (x / self.alpha)
@@ -137,14 +143,6 @@ class ClusteringLayer(nn.Module):
         x = torch.t(x) / torch.sum(x, dim=1)
         x = torch.t(x)
         return x
-
-    def extra_repr(self):
-        return 'n_features={}, n_clusters={}, alpha={}'.format(
-            self.n_features, self.n_clusters, self.alpha
-        )
-
-    def set_weight(self, tensor):
-        self.weight = nn.Parameter(tensor)
 
 # class AEC(nn.Module):
 #     def __init__(self):
