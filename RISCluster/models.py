@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
@@ -96,7 +96,7 @@ def pretrain_DCM(
         savepath_run,
         show
     )
-    tb.add_figure('TrainingProgress', fig, global_step=epoch, close=True)
+    tb.add_figure('TrainingProgress', fig, global_step=0, close=True)
 
     if early_stopping:
         savepath_chkpnt = f'{savepath_run}/tmp/'
