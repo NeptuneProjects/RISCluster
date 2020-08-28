@@ -23,32 +23,41 @@ import processing as process
 from processing import workflow_wrapper
 from utils import notify
 
+debug = True
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description="Enter number of CPUs to be used."
-    )
-    parser.add_argument('num_workers', help="Enter number of workers.")
-    parser.add_argument(
-        'day_start',
-        help="Select range of experiment days to compute.\
-            \n Start day is midnight of the new day."
-    )
-    parser.add_argument(
-        'day_stop',
-        help="Select range of experiment days to compute.\
-            \n Stop day is midnight of the new day and does NOT include that \
-            day's data."
-    )
-    args = parser.parse_args()
+    if not debug:
+        parser = argparse.ArgumentParser(
+            description="Enter number of CPUs to be used."
+        )
+        parser.add_argument('num_workers', help="Enter number of workers.")
+        parser.add_argument(
+            'day_start',
+            help="Select range of experiment days to compute.\
+                \n Start day is midnight of the new day."
+        )
+        parser.add_argument(
+            'day_stop',
+            help="Select range of experiment days to compute.\
+                \n Stop day is midnight of the new day and does NOT include that \
+                day's data."
+        )
+        args = parser.parse_args()
     # ========================== Initialize Parameters ============================
     # v v v v Modify these parameters when switching to Velella! v v v v
-    # num_workers = 12
-    num_workers = int(args.num_workers)
-    # datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
-    datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
+        num_workers = int(args.num_workers)
+        datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
+        station_index = np.arange(0, 34)
+        day_start = int(args.day_start)
+        day_stop = int(args.day_stop)
     # ^ ^ ^ ^ Modify these parameters when switching to Velella! ^ ^ ^ ^
+    elif debug:
+        day_start = int(input('Start Day: '))
+        day_stop = int(input(' Stop Day: '))
+        num_workers = 12
+        datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+        station_index = np.arange(0, 3)
     network_index = 0
-    station_index = np.arange(0, 34)
     channel_index = 2
     T_seg = 4 # Duration of traces & spectrograms (sec)
     NFFT = 128
@@ -62,16 +71,14 @@ if __name__ == '__main__':
     trigger_on = 6.0 # STA/LTA trigger-on threshold
     trigger_off = 5.0 # STA/LTA trigger-off threshold
     data_savepath = '../../../Data/' # Location of .h5 file
-    group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
-    data_savename = f'DetectionData_{group_name}.h5' # File name
+    if not debug:
+        group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
+        data_savename = f'DetectionData_{group_name}.h5' # File name
+    elif debug:
+        group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
+        data_savename = f'DetectionData_{group_name}_debug.h5' # File name
     print('======================================================================')
-    # print('Select range of experiment days to compute. Stop day is midnight of the'
-          # '\nnew day and does NOT include that day\'s data.')
-    # day_start = int(input('Start Day: '))
-    day_start = int(args.day_start)
     print(f' - Day {day_start} selected for start.')
-    # day_stop = int(input('Stop Day:  '))
-    day_stop = int(args.day_stop)
     print(f' - Day {day_stop} selected for stop.')
     print(
         "NOTE: Stop day is midnight of the new day and does NOT\
@@ -108,7 +115,7 @@ if __name__ == '__main__':
             LTA=LTA,
             trigger_on=trigger_on,
             trigger_off=trigger_off,
-            debug=False
+            debug=debug
         ) for k in range(len(station_index))]
 
         with ProcessPoolExecutor(max_workers=num_workers) as exec:
@@ -187,6 +194,8 @@ if __name__ == '__main__':
     new Start Day.'''
     notify(subj,msg)
     print('======================================================================')
+
+S.shape
 
 # For debugging:
 # import importlib as imp
