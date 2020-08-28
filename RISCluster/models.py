@@ -89,6 +89,14 @@ def pretrain_DCM(
     disp = images[disp_idx]
 
     tb = SummaryWriter(log_dir=savepath_run)
+    fig = plotting.compare_images(
+        model,
+        disp.to(device),
+        0,
+        savepath_run,
+        show
+    )
+    tb.add_figure('TrainingProgress', fig, global_step=epoch, close=True)
 
     if early_stopping:
         savepath_chkpnt = f'{savepath_run}/tmp/'
@@ -153,7 +161,7 @@ def pretrain_DCM(
             tb.add_histogram(name, weight, epoch)
             tb.add_histogram(f'{name}.grad', weight.grad, epoch)
 
-        if epoch == 0 or (epoch % 5) == 0:
+        if (epoch % 5) == 0 and not (epoch == 0):
             fig = plotting.compare_images(
                 model,
                 disp.to(device),
