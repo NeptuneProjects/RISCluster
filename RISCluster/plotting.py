@@ -22,14 +22,13 @@ from networks import AEC, DCM
 
 def compare_images(
         model,
-        tra_loader,
         disp,
         epoch,
         savepath,
-        tb,
         show=True
     ):
-    disp_rec = model(disp)
+    model.eval()
+    disp_rec, _ = model(disp)
     figtitle = f'DCM Pre-training: Epoch {epoch}'
     n, o = list(disp.size()[2:])
     fig = view_specgram_training(
@@ -197,7 +196,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             DataSpec = '/4s/Spectrogram'
             dset = f[DataSpec]
             fvec = dset[1, 0:64, 0]
-            tvec = dset[1, 65, 1:129]
+            tvec = dset[1, 65, 12:-14]
 
         with h5py.File(fname_dataset, 'r') as f:
             M = len(image_index)
@@ -328,16 +327,16 @@ def view_detections(fname_dataset, image_index, figtitle,
         DataSpec = '/4s/Spectrogram'
         dset = f[DataSpec]
         fvec = dset[1, 0:64, 0]
-        tvec = dset[1, 65, 1:129]
+        tvec = dset[1, 65, 12:-14]
         m, _, _ = dset.shape
         m -= 1
-        n = 64
-        o = 128
+        n = 65
+        o = 175
         X = np.empty([M, n, o])
         dset_arr = np.empty([n, o])
 
         for i in range(M):
-            dset_arr = dset[image_index[i], 1:-1, 1:129]
+            dset_arr = dset[image_index[i], :-1, 12:-14]
             dset_arr /= dset_arr.max()
             X[i,:,:] = dset_arr
 
@@ -431,16 +430,16 @@ def view_learningcurve(training_history, validation_history, show=True):
         plt.close()
     return fig
 
-def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
+def view_specgram_training(x, x_r, n, o, figtitle,
                            figsize=(12,9), show=True):
-    X_T = fixed_images.detach().cpu().numpy()
-    X_V = reconstructed_images.detach().cpu().numpy()
+    X = x.detach().cpu().numpy()
+    X_r = x_r.detach().cpu().numpy()
     fig = plt.figure(figsize=figsize, dpi=300)
     gs = gridspec.GridSpec(nrows=2, ncols=4)
     counter = 0
-    for i in range(fixed_images.size()[0]):
+    for i in range(x.size()[0]):
         ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X_T[i,:,:,:], (n,o)), aspect='auto')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), aspect='auto')
         plt.gca().invert_yaxis()
         plt.xlabel('Time Bin')
         plt.ylabel('Frequency Bin')
@@ -449,7 +448,7 @@ def view_specgram_training(fixed_images, reconstructed_images, n, o, figtitle,
                         fontweight='bold')
 
         ax = fig.add_subplot(gs[1,counter])
-        plt.imshow(np.reshape(X_V[i,:,:,:], (n,o)), aspect='auto')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), aspect='auto')
         plt.gca().invert_yaxis()
         plt.xlabel('Time Bin')
         plt.ylabel('Frequency Bin')

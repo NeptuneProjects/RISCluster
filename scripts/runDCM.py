@@ -40,7 +40,7 @@ if __name__ == '__main__':
             send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
             early_stopping=config['PARAMETERS'].getboolean('early_stopping'),
-            patience=config['PARAMETERS']['patience']
+            patience=int(config['PARAMETERS']['patience'])
         )
         batch_size = config['HYPERPARAMETERS']['batch_size']
         lr = config['HYPERPARAMETERS']['lr']
@@ -99,10 +99,15 @@ if __name__ == '__main__':
     # =========================================================================
     if mode == 'predict':
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
+        M = config['PARAMETERS']['m'] # Select integer or 'all'
+        if M == 'all':
+            pass
+        else:
+            M = int(M)
         parameters = dict(
             fname_dataset=fname_dataset,
             device=utils.set_device(),
-            M = config['PARAMETERS']['m'], # Select integer or 'all'
+            M = M,
             indexpath=indexpath,
             exclude=config['PARAMETERS'].getboolean('exclude'),
             batch_size=int(config['PARAMETERS']['batch_size']),

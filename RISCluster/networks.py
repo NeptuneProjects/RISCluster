@@ -61,9 +61,9 @@ class AEC(nn.Module):
         self.decoder = Decoder()
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        z = self.encoder(x)
+        x = self.decoder(z)
+        return x, z
 
 def init_weights(m):
     if type(m) in [nn.Linear, nn.Conv2d, nn.ConvTranspose2d]:
@@ -162,17 +162,6 @@ class DCM(nn.Module):
 #         x = self.decoder(x)
 #         return x[:,:,1:,1:]
 #         # return x
-#
-# class AEC(nn.Module):
-#     def __init__(self):
-#         super(AEC, self).__init__()
-#         self.encoder = Encoder()
-#         self.decoder = Decoder()
-#
-#     def forward(self, x):
-#         z = self.encoder(x)
-#         x = self.decoder(z)
-#         return x, z
 
 # Old Method 1 ================================================================
 # Output_Padding in ConvTranspose2d requires CPU utilization, thus heavily
@@ -225,14 +214,3 @@ class DCM(nn.Module):
 #         x = self.decoder(x)
 #         return x[:,:,1:,1:]
 #         # return x
-#
-# class AEC(nn.Module):
-#     def __init__(self):
-#         super(AEC, self).__init__()
-#         self.encoder = Encoder()
-#         self.decoder = Decoder()
-#
-#     def forward(self, x):
-#         x = self.encoder(x)
-#         x = self.decoder(x)
-#         return x

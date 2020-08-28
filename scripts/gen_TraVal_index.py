@@ -17,6 +17,6 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     M = args.M
-    fname_dataset = '../../../Data/DetectionData_New.h5'
+    fname_dataset = '../../../Data/DetectionData_4s.h5'
     savepath = '../../../Data/'
     utils.save_TraVal_index(M, fname_dataset, savepath)

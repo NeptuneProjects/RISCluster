@@ -36,6 +36,21 @@ def pretrain_DCM(
         lr,
         parameters
     ):
+    '''
+    Function facilitates pre-training (i.e., training of AEC) of the DCM model.
+    # Arguments:
+        model: PyTorch model instance
+        dataloader: PyTorch dataloader instance
+        criteria: PyTorch loss function instances
+        optimizer: PyTorch optimizer instance
+        batch_size: Batch size used in calculations
+        lr: Learning rate
+        parameters: Additional variables
+    # Returns:
+        model: Trained model weights are saved to disk.
+        tb: Tensorboard file recording various parameters saved to disk.
+        disp: Input/output spectrograms are saved to disk.
+    '''
     tic = datetime.now()
     print('Commencing pre-training...')
 
@@ -60,8 +75,8 @@ def pretrain_DCM(
     criterion_mse = criteria[0]
     criterion_mae = criteria[1]
 
-    training_history = {'mse': [], 'mae': []}
-    validation_history = {'mse': [], 'mae': []}
+    # training_history = {'mse': [], 'mae': []}
+    # validation_history = {'mse': [], 'mae': []}
 
     tra_loader = dataloaders[0]
     val_loader = dataloaders[1]
@@ -69,14 +84,11 @@ def pretrain_DCM(
     M_val = len(val_loader.dataset)
 
     images = next(iter(tra_loader))
-    grid = torchvision.utils.make_grid(images)
 
     disp_idx = sorted(np.random.randint(0, images.size(0), 4))
     disp = images[disp_idx]
 
     tb = SummaryWriter(log_dir=savepath_run)
-    tb.add_image('images', grid)
-    # tb.add_graph(model, images)
 
     if early_stopping:
         savepath_chkpnt = f'{savepath_run}/tmp/'
@@ -117,7 +129,7 @@ def pretrain_DCM(
             with torch.set_grad_enabled(True):
                 x_rec, _ = model(x)
                 loss_mse = criterion_mse(x_rec, x)
-                loss_mae = criterion_mae(x_rec, x)
+                # loss_mae = criterion_mae(x_rec, x)
                 loss_mse.backward()
                 optimizer.step()
 
@@ -132,8 +144,8 @@ def pretrain_DCM(
 
         epoch_tra_mse = running_tra_mse / M_tra
         epoch_tra_mae = running_tra_mae / M_tra
-        training_history['mse'].append(epoch_tra_mse)
-        training_history['mae'].append(epoch_tra_mae)
+        # training_history['mse'].append(epoch_tra_mse)
+        # training_history['mae'].append(epoch_tra_mae)
         tb.add_scalar('Training MSE', epoch_tra_mse, epoch)
         tb.add_scalar('Training MAE', epoch_tra_mae, epoch)
 
@@ -144,7 +156,6 @@ def pretrain_DCM(
         if epoch == 0 or (epoch % 5) == 0:
             fig = plotting.compare_images(
                 model,
-                tra_loader,
                 disp.to(device),
                 epoch,
                 savepath_run,
@@ -189,8 +200,8 @@ def pretrain_DCM(
 
         epoch_val_mse = running_val_mse / M_val
         epoch_val_mae = running_val_mae / M_val
-        validation_history['mse'].append(epoch_val_mse)
-        validation_history['mae'].append(epoch_val_mae)
+        # validation_history['mse'].append(epoch_val_mse)
+        # validation_history['mae'].append(epoch_val_mae)
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
         tb.add_scalar('Validation MAE', epoch_val_mae, epoch)
 
@@ -226,12 +237,12 @@ def pretrain_DCM(
         torch.save(model.state_dict(), fname)
     print('AEC parameters saved.')
 
-    utils.save_history(
-        training_history,
-        validation_history,
-        savepath_run,
-        serial_run
-        )
+    # utils.save_history(
+    #     training_history,
+    #     validation_history,
+    #     savepath_run,
+    #     serial_run
+    #     )
 
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')

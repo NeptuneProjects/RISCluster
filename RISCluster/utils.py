@@ -106,13 +106,13 @@ def load_dataset(fname_dataset, index, send_message=False):
 
         np.seterr(all='raise')
         # X = np.empty([M, n-2, o-173, 1])
-        X = np.empty([M, 1, 64, 128])
+        X = np.empty([M, 1, 65, 175])
         idx_sample = np.empty([M,], dtype=np.int)
         dset_arr = np.empty([n, o])
         count = 0
         for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
             try:
-                dset_arr = dset[index[i], 1:-1, 1:129]
+                dset_arr = dset[index[i], :-1, 12:-14]
                 dset_arr /= dset_arr.max()
                 X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
                 idx_sample[count,] = int(index[i])
@@ -121,7 +121,7 @@ def load_dataset(fname_dataset, index, send_message=False):
                 print('Numpy "Divide-by-zero Warning" raised, '
                       'skipping spectrogram.')
                 print(f'Sample Index = {index[i]}')
-                print(dset[index[i], 1:-1, 1:129])
+                print(dset[index[i], :-1, 12:-14])
                 pass
 
         toc = datetime.now()
