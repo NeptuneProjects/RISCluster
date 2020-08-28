@@ -137,7 +137,7 @@ def pretrain_DCM(
             with torch.set_grad_enabled(True):
                 x_rec, _ = model(x)
                 loss_mse = criterion_mse(x_rec, x)
-                # loss_mae = criterion_mae(x_rec, x)
+                loss_mae = criterion_mae(x_rec, x)
                 loss_mse.backward()
                 optimizer.step()
 
