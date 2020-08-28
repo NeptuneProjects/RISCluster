@@ -376,7 +376,7 @@ def train_DCM(
             # Calculate losses and backpropagate
             with torch.set_grad_enabled(True):
                 q, x_rec, _ = model(x)
-                loss_rec = (1-gamma) * criterion_mse(x_rec, x)
+                loss_rec = criterion_mse(x_rec, x)
                 loss_clust = gamma * criterion_kld(torch.log(q), tar_dist) / x.size(0)
                 loss = loss_rec + loss_clust
                 loss.backward()
@@ -422,12 +422,6 @@ def train_DCM(
             for name, weight in model.named_parameters():
                 tb.add_histogram(name, weight, n_iter)
                 tb.add_histogram(f'{name}.grad', weight.grad, n_iter)
-
-            # print(
-                # f'Epoch [{epoch+1}/{n_epochs}] Batch [{batch_num}]| '
-                # f'Training: Loss = {accum_loss:.9f}, '
-                # f'MSE = {accum_loss_rec:.9f}, KLD = {accum_loss_clust:.9f}'
-            # )
 
             n_iter += 1
 
@@ -556,9 +550,6 @@ def kmeans(model, dataloader, device):
             z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
         else:
             z_array = z.cpu().detach().numpy()
-
-    row_max = z_array.max(axis=1)
-    z_array /= row_max[:, np.newaxis]
 
     # Perform K-means
     km.fit_predict(z_array)

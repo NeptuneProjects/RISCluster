@@ -95,7 +95,7 @@ def load_dataset(fname_dataset, index, send_message=False):
     M = len(index)
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
-        DataSpec = '/7sec/Spectrogram'
+        DataSpec = '/4s/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
         m -= 1
@@ -133,6 +133,17 @@ def load_dataset(fname_dataset, index, send_message=False):
             notify(msgsubj, msgcontent)
 
     return SeismoDataset(X)
+
+def load_labels(exppath):
+    csv_file = [f for f in os.listdir(exppath) if f.endswith('.csv')][0]
+    csv_file = f'{exppath}/{csv_file}'
+    data = np.genfromtxt(csv_file, delimiter=',')
+    data = np.delete(data,0,0)
+    data = data.astype('int')
+    label = data[:,0]
+    index = data[:,1]
+    label_list = np.unique(label)
+    return label, index, label_list
 
 def load_weights(model, fname, device):
     model.load_state_dict(torch.load(fname, map_location=device), strict=False)
@@ -309,7 +320,7 @@ def set_device():
 # =============================================================================
 def set_TraVal_index(M, fname_dataset, reserve=0.0):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/7sec/Spectrogram'
+        DataSpec = '/4s/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
         if M > m:
@@ -353,7 +364,7 @@ def load_TraVal_index(fname_dataset, loadpath):
 
 def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/7sec/Spectrogram'
+        DataSpec = '/4s/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
 
@@ -378,7 +389,7 @@ def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
 
 def set_M(fname_dataset, indexpath, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/7sec/Spectrogram'
+        DataSpec = '/4s/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
     print('Determining number of prediction samples...')

@@ -171,14 +171,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     saved_weights = config['PARAMETERS']['saved_weights']
     n_clusters = int(config['PARAMETERS']['n_clusters'])
 
-    csv_file = [f for f in os.listdir(exppath) if f.endswith('.csv')][0]
-    csv_file = f'{exppath}/{csv_file}'
-    data = np.genfromtxt(csv_file, delimiter=',')
-    data = np.delete(data,0,0)
-    data = data.astype('int')
-    label = data[:,0]
-    index = data[:,1]
-    label_list = np.unique(label)
+    label, index, label_list = load_labels(exppath)
 
     device = utils.set_device()
     aec = AEC()
@@ -201,14 +194,14 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
         with h5py.File(fname_dataset, 'r') as f:
             # M = len(image_index)
-            DataSpec = '/7sec/Spectrogram'
+            DataSpec = '/4s/Spectrogram'
             dset = f[DataSpec]
             fvec = dset[1, 0:64, 0]
             tvec = dset[1, 65, 1:129]
 
         with h5py.File(fname_dataset, 'r') as f:
             M = len(image_index)
-            DataSpec = '/7sec/Trace'
+            DataSpec = '/4s/Trace'
             dset = f[DataSpec]
             k = 635
 
@@ -284,6 +277,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             plt.show()
         else:
             plt.close()
+    return fig
 
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)
@@ -331,7 +325,7 @@ def view_detections(fname_dataset, image_index, figtitle,
 
     with h5py.File(fname_dataset, 'r') as f:
         M = len(image_index)
-        DataSpec = '/7sec/Spectrogram'
+        DataSpec = '/4s/Spectrogram'
         dset = f[DataSpec]
         fvec = dset[1, 0:64, 0]
         tvec = dset[1, 65, 1:129]
@@ -349,7 +343,7 @@ def view_detections(fname_dataset, image_index, figtitle,
 
     with h5py.File(fname_dataset, 'r') as f:
         M = len(image_index)
-        DataSpec = '/7sec/Trace'
+        DataSpec = '/4s/Trace'
         dset = f[DataSpec]
         k = 635
 

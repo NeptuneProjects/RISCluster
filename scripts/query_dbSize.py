@@ -5,7 +5,7 @@ import h5py
 def query_dbSize(path):
     with h5py.File(path, 'r') as f:
         #samples, frequency bins, time bins, amplitude
-        DataSpec = '/7sec/Spectrogram'
+        DataSpec = '/4s/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
         m -= 1
