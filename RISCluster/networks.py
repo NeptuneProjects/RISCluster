@@ -72,22 +72,22 @@ def init_weights(m):
 
 # Clustering Layer
 class ClusteringLayer(nn.Module):
-    def __init__(self, n_clusters, n_features=16, alpha=1.0, weight=None):
+    def __init__(self, n_clusters, n_features=16, alpha=1.0, weights=None):
         super(ClusteringLayer, self).__init__()
         self.n_features = n_features
         self.n_clusters = n_clusters
         self.alpha = alpha
-        if weight is None:
+        if weights is None:
             initial_weights = torch.zeros(
                 self.cluster_number, self.embedding_dimension, dtype=torch.float
             )
             nn.init.xavier_uniform_(initial_weights)
         else:
             initial_weights = weights
-        self.weight = nn.Parameter(initial_weights)
+        self.weights = nn.Parameter(initial_weights)
 
     def forward(self, x):
-        x = x.unsqueeze(1) - self.weight
+        x = x.unsqueeze(1) - self.weights
         x = torch.mul(x, x)
         x = torch.sum(x, dim=2)
         x = 1.0 + (x / self.alpha)

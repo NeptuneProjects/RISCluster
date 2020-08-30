@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
@@ -74,9 +74,6 @@ def pretrain_DCM(
 
     criterion_mse = criteria[0]
     criterion_mae = criteria[1]
-
-    # training_history = {'mse': [], 'mae': []}
-    # validation_history = {'mse': [], 'mae': []}
 
     tra_loader = dataloaders[0]
     val_loader = dataloaders[1]
@@ -152,8 +149,6 @@ def pretrain_DCM(
 
         epoch_tra_mse = running_tra_mse / M_tra
         epoch_tra_mae = running_tra_mae / M_tra
-        # training_history['mse'].append(epoch_tra_mse)
-        # training_history['mae'].append(epoch_tra_mae)
         tb.add_scalar('Training MSE', epoch_tra_mse, epoch)
         tb.add_scalar('Training MAE', epoch_tra_mae, epoch)
 
@@ -208,8 +203,6 @@ def pretrain_DCM(
 
         epoch_val_mse = running_val_mse / M_val
         epoch_val_mae = running_val_mae / M_val
-        # validation_history['mse'].append(epoch_val_mse)
-        # validation_history['mae'].append(epoch_val_mae)
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
         tb.add_scalar('Validation MAE', epoch_val_mae, epoch)
 
@@ -244,13 +237,6 @@ def pretrain_DCM(
         fname = f'{savepath_run}/AEC_Params_ {serial_run}.pt'
         torch.save(model.state_dict(), fname)
     print('AEC parameters saved.')
-
-    # utils.save_history(
-    #     training_history,
-    #     validation_history,
-    #     savepath_run,
-    #     serial_run
-    #     )
 
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
@@ -287,18 +273,11 @@ def train_DCM(
     # Unpack parameters:
     device = parameters['device']
     n_epochs = parameters['n_epochs']
-    # n_clusters = parameters['n_clusters']
     update_interval = parameters['update_interval']
     savepath_exp = parameters['savepath']
     show = parameters['show']
     mode = parameters['mode']
     loadpath = parameters['saved_weights']
-
-    model.load_state_dict(
-        torch.load(loadpath, map_location=device), strict=False
-    )
-    model.eval()
-
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
         mode,
@@ -311,29 +290,32 @@ def train_DCM(
         }
     )
 
+    model.load_state_dict(
+        torch.load(loadpath, map_location=device), strict=False
+    )
+    model.eval()
+
     criterion_mse = criteria[0]
     criterion_kld = criteria[1]
 
-    training_history = {'iter': [], 'mse': [], 'kld': [], 'loss': []}
-
     M = len(dataloader.dataset)
 
-    images = next(iter(dataloader))
-    grid = torchvision.utils.make_grid(images)
-
     tb = SummaryWriter(log_dir = savepath_run)
-    # tb.add_image('images', grid)
-    # tb.add_graph(model, images)
 
     # Initialize Clusters:
     print('Initiating clusters with k-means...')
-    labels = kmeans(model, copy.deepcopy(dataloader), device)
+    labels, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    cluster_centers = torch.from_numpy(centroids).to(device)
+    with torch.no_grad():
+        model.state_dict()["clustering.weights"].copy_(cluster_centers)
     print('Clusters initiated.')
     # Initialize Target Distribution:
     q, labels_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
-    pca(labels, model, dataloader, device, tb, 0)
+    fig1, fig2 = analyze_clustering(model, dataloader, labels_prev, device, epoch)
+    tb.add_figure('Centroids',fig1, global_step=0, close=True)
+    tb.add_figure('TSNE', fig2, global_step=0, close=True)
 
     n_iter = 1
     finished = False
@@ -347,7 +329,6 @@ def train_DCM(
             f'gamma = {gamma} | '
             f'tol = {tol}'
         )
-        # model.train(True)
 
         running_loss = 0.0
         running_loss_rec = 0.0
@@ -401,9 +382,6 @@ def train_DCM(
                 loss.backward()
                 optimizer.step()
 
-            # if batch_num % update_interval == 0:
-            #     pca(labels, model, dataloader, device, tb, n_iter)
-
             running_size += x.size(0)
             running_loss += loss.cpu().detach().numpy() * x.size(0)
             running_loss_rec += loss_rec.cpu().detach().numpy() * x.size(0)
@@ -419,11 +397,6 @@ def train_DCM(
                 Loss = f"{accum_loss:.4e}"
             )
 
-            training_history['iter'].append(batch_num)
-            training_history['loss'].append(accum_loss)
-            training_history['mse'].append(accum_loss_rec)
-            training_history['kld'].append(accum_loss_clust)
-
             tb.add_scalars(
                 'Losses',
                 {
@@ -433,18 +406,20 @@ def train_DCM(
                 },
                 n_iter
             )
-
             tb.add_scalar('Loss', accum_loss, n_iter)
             tb.add_scalar('MSE', accum_loss_rec, n_iter)
             tb.add_scalar('KLD', accum_loss_clust, n_iter)
-
             for name, weight in model.named_parameters():
                 tb.add_histogram(name, weight, n_iter)
                 tb.add_histogram(f'{name}.grad', weight.grad, n_iter)
 
-            n_iter += 1
+            if (batch_num % update_interval == 0) and not \
+                (batch_num == 0 and epoch == 0):
+                fig1, fig2 = analyze_clustering(model, dataloader, labels, device, epoch)
+                tb.add_figure('Centroids',fig1, global_step=n_iter, close=True)
+                tb.add_figure('TSNE', fig2, global_step=n_iter, close=True)
 
-        pca(labels, model, dataloader, device, tb, epoch+1)
+            n_iter += 1
 
         if finished:
             break
@@ -461,7 +436,6 @@ def train_DCM(
     fname = f'{savepath_run}/DCM_Params_{serial_run}.pt'
     torch.save(model.state_dict(), fname)
     print('DCM parameters saved.')
-    utils.save_history(training_history, None, savepath_run, serial_run)
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model
@@ -557,7 +531,8 @@ def kmeans(model, dataloader, device):
         n_clusters: Number of clusters, set during model construction.
         n_init: Number of iterations for initialization.
     # Returns:
-        weights: Assigned to model's clustering layer weights
+        labels: Sample-wise cluster assignment
+        centroids: Sample-wise cluster centroids
     '''
     km = KMeans(n_clusters=model.n_clusters, n_init=100)
     z_array = None
@@ -570,14 +545,25 @@ def kmeans(model, dataloader, device):
         else:
             z_array = z.cpu().detach().numpy()
 
-    # Perform K-means
     km.fit_predict(z_array)
-    # Update clustering layer weights
-    weights = torch.from_numpy(km.cluster_centers_)
-    model.clustering.set_weight(weights.to(device))
-    return km.labels_
+
+    labels = km.labels_
+    centroids = km.cluster_centers_
+    return labels, centroids
 
 def gmm(model, dataloader, device):
+    '''
+    Initiate clusters using GMM algorithm.
+    # Arguments:
+        model: PyTorch model instance
+        dataloader: PyTorch dataloader instance
+        device: PyTorch device object ('cpu' or 'gpu')
+    # Inputs:
+        n_clusters: Number of clusters, set during model construction.
+    # Returns:
+        labels: Sample-wise cluster assignment
+        centroids: Sample-wise cluster centroids
+    '''
     gmm = GaussianMixture(n_components=model.n_clusters)
     z_array = None
     model.eval()
@@ -589,26 +575,28 @@ def gmm(model, dataloader, device):
         else:
             z_array = z.cpu().detach().numpy()
 
-    gmm.fit(z_array)
+    labels = gmm.fit_predict(z_array)
+    centroids = gmm.means_
+    return labels, centroids
 
-def pca(labels, model, dataloader, device, tb, counter):
-    z_array = None
-    model.eval()
-    for batch in dataloader:
-        x = batch.to(device)
-        _, _, z = model(x)
-        if z_array is not None:
-            z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
-        else:
-            z_array = z.cpu().detach().numpy()
-
-    row_max = z_array.max(axis=1)
-    z_array /= row_max[:, np.newaxis]
-
-    pca2 = PCA(n_components=model.n_clusters).fit(z_array)
-    pca2d = pca2.transform(z_array)
-    fig = plotting.view_clusters(pca2d, labels)
-    tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
+# def pca(labels, model, dataloader, device, tb, counter):
+#     z_array = None
+#     model.eval()
+#     for batch in dataloader:
+#         x = batch.to(device)
+#         _, _, z = model(x)
+#         if z_array is not None:
+#             z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
+#         else:
+#             z_array = z.cpu().detach().numpy()
+#
+#     row_max = z_array.max(axis=1)
+#     z_array /= row_max[:, np.newaxis]
+#
+#     pca2 = PCA(n_components=model.n_clusters).fit(z_array)
+#     pca2d = pca2.transform(z_array)
+#     fig = plotting.view_clusters(pca2d, labels)
+#     tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
 
 
 def predict_labels(model, dataloader, device):
@@ -653,3 +641,26 @@ def target_distribution(q):
     p = q ** 2 / np.sum(q, axis=0)
     p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
     return np.round(p, 5)
+
+def analyze_clustering(model, dataloader, labels, device, epoch):
+    # Step 1: Show Centroid outputs
+    centroids = model.clustering.weights.cpu().detach().numpy()
+    X_r = model.decoder(centroids)
+    fig1 = plotting.view_centroid_output(centroids, X_r, f'Centroid Reconstructions - Epoch {epoch}')
+    # Step 2: Show t-SNE & labels
+    z_array = None
+    model.eval()
+    for batch in tqdm(dataloader):
+        x = batch.to(device)
+        _, z = model(x)
+        if z_array is not None:
+            z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
+        else:
+            z_array = z.cpu().detach().numpy
+    data = z_array.astype('float64')
+
+    results = TSNE(n_components=2, perplexity=50, learning_rate=200, n_jobs=16, verbose=0).fit_transform(data)
+    fig2 = plt.figure()
+    sns.scatterplot(results[:, 0], results[:, 1], hue=labels, palette='Set1', alpha=0.2)
+    plt.title(f'T-SNE Results - Epoch {epoch}')
+    return fig1, fig2

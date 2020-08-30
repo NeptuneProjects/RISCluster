@@ -7,7 +7,7 @@ sys.path.insert(0, '../RISCluster/')
 
 import h5py
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
