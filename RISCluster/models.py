@@ -655,7 +655,8 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         else:
             z_array = z.cpu().detach().numpy()
     data = z_array.astype('float64')
-    print('Running t-SNE...', end='')
+    print('Running t-SNE...', end="", flush=True)
+    np.seterr(under='warn')
     results = TSNE(n_components=2, perplexity=50, learning_rate=200, n_jobs=16, verbose=0).fit_transform(data)
     print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
