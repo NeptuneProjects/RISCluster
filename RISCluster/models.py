@@ -11,10 +11,12 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.manifold import TSNE
+if sys.platform == 'darwin':
+    from sklearn.cluster import KMeans
+    from sklearn.manifold import TSNE
+elif sys.platform == 'linux':
+    from cuml import KMeans, TSNE
 import torch
-# import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torchvision
@@ -302,12 +304,12 @@ def train_DCM(
     tb = SummaryWriter(log_dir = savepath_run)
 
     # Initialize Clusters:
-    print('Initiating clusters with k-means...')
+    print('Initiating clusters with k-means...', end="", flush=True)
     labels, centroids = kmeans(model, copy.deepcopy(dataloader), device)
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
-    print('Clusters initiated.')
+    print('complete.')
     # Initialize Target Distribution:
     q, labels_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
@@ -531,7 +533,7 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters, n_init=100)
+    km = KMeans(n_clusters=model.n_clusters)
     z_array = None
     model.eval()
     for batch in dataloader:
@@ -657,7 +659,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     data = z_array.astype('float64')
     print('Running t-SNE...', end="", flush=True)
     np.seterr(under='warn')
-    results = TSNE(n_components=2, perplexity=50, learning_rate=200, n_jobs=16, verbose=0).fit_transform(data)
+    results = TSNE(n_components=2, perplexity=50, learning_rate=200, verbose=0).fit_transform(data)
     print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
