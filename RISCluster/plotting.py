@@ -513,7 +513,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         plt.close()
     return fig
 
-def view_TSNE(results, title, show=False):
+def view_TSNE(results, labels, title, show=False):
     fig = plt.figure()
     sns.scatterplot(results[:, 0], results[:, 1], hue=labels, palette='Set1', alpha=0.2)
     plt.title(title)

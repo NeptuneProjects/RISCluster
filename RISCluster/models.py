@@ -660,6 +660,6 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
 
     results = TSNE(n_components=2, perplexity=50, learning_rate=200, n_jobs=16, verbose=0).fit_transform(data)
     title = f'T-SNE Results - Epoch {epoch}'
-    fig2 = plotting.view_TSNE(results, title, show=False)
+    fig2 = plotting.view_TSNE(results, labels, title, show=False)
 
     return fig1, fig2
