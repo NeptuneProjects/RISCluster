@@ -31,7 +31,8 @@ if __name__ == '__main__':
     fname_dataset = '../../../Data/DetectionData_4s.h5'
     savepath = '../../../Outputs/'
     indexpath = '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
-    M = 'all'
+    # M = 'all'
+    M = 10000
     exclude = False
     device = utils.set_device()
     # ==== Checks =============================================================
