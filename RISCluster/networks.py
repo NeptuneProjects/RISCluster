@@ -72,7 +72,7 @@ def init_weights(m):
 
 # Clustering Layer
 class ClusteringLayer(nn.Module):
-    def __init__(self, n_clusters, n_features=16, alpha=1.0, weights=None):
+    def __init__(self, n_clusters, n_features=10, alpha=1.0, weights=None):
         super(ClusteringLayer, self).__init__()
         self.n_features = n_features
         self.n_clusters = n_clusters
