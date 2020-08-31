@@ -7,7 +7,7 @@ sys.path.insert(0, '../RISCluster/')
 
 import h5py
 import matplotlib
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -134,12 +134,12 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
 
     for i in range(len(centroids)):
         ax = fig.add_subplot(gs[i,0])
-        plt.imshow(torch.reshape(X_r[i,:,:,:], (n,o)).detach().numpy(), aspect='auto')
+        plt.imshow(torch.reshape(X_r[i,:,:,:], (n,o)).cpu().detach().numpy(), aspect='auto')
         plt.gca().invert_yaxis()
         plt.title(f'Cluster {i}')
 
         ax = fig.add_subplot(gs[i,1])
-        plt.imshow(np.expand_dims(centroids[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
+        plt.imshow(np.expand_dims(centroids[i].cpu().detach().numpy(), 1), cmap='viridis', aspect='auto')
         plt.xticks([])
         plt.yticks([])
 

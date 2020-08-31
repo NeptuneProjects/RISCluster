@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
@@ -644,7 +644,7 @@ def target_distribution(q):
 
 def analyze_clustering(model, dataloader, labels, device, epoch):
     # Step 1: Show Centroid outputs
-    centroids = model.clustering.weights.cpu().detach().numpy()
+    centroids = model.clustering.weights
     X_r = model.decoder(centroids)
     fig1 = plotting.view_centroid_output(centroids, X_r, f'Centroid Reconstructions - Epoch {epoch}')
     # Step 2: Show t-SNE & labels
