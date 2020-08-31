@@ -652,11 +652,11 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     model.eval()
     for batch in tqdm(dataloader):
         x = batch.to(device)
-        _, z = model(x)
+        _, _, z = model(x)
         if z_array is not None:
             z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
         else:
-            z_array = z.cpu().detach().numpy
+            z_array = z.cpu().detach().numpy()
     data = z_array.astype('float64')
 
     results = TSNE(n_components=2, perplexity=50, learning_rate=200, n_jobs=16, verbose=0).fit_transform(data)
