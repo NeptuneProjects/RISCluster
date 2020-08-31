@@ -28,9 +28,9 @@ if __name__ == '__main__':
     # Universal Parameters
     # =========================================================================
     mode = 'predict'
-    fname_dataset = '../../../Data/DetectionData_New.h5'
+    fname_dataset = '../../../Data/DetectionData_4s.h5'
     savepath = '../../../Outputs/'
-    indexpath = '../../../Data/TraValIndex_M=100000_Res=0.0_20200812T063630.pkl'
+    indexpath = '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
     M = 'all'
     exclude = False
     device = utils.set_device()
