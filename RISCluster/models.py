@@ -12,8 +12,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.mixture import GaussianMixture
+from sklearn.manifold import TSNE
 import torch
 # import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -646,7 +645,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     # Step 1: Show Centroid outputs
     centroids = model.clustering.weights
     X_r = model.decoder(centroids)
-    fig1 = plotting.view_centroid_output(centroids, X_r, f'Centroid Reconstructions - Epoch {epoch}')
+    fig1 = plotting.view_centroid_output(centroids, X_r, f'Centroid Reconstructions - Epoch {epoch}', show=show)
     # Step 2: Show t-SNE & labels
     z_array = None
     model.eval()
@@ -660,7 +659,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     data = z_array.astype('float64')
 
     results = TSNE(n_components=2, perplexity=50, learning_rate=200, n_jobs=16, verbose=0).fit_transform(data)
-    fig2 = plt.figure()
-    sns.scatterplot(results[:, 0], results[:, 1], hue=labels, palette='Set1', alpha=0.2)
-    plt.title(f'T-SNE Results - Epoch {epoch}')
+    title = f'T-SNE Results - Epoch {epoch}'
+    fig2 = plotting.view_TSNE(results, title, show=show)
+
     return fig1, fig2

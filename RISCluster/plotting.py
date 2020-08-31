@@ -507,8 +507,18 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
     fig.suptitle(figtitle, size=18, weight='bold')
     fig.tight_layout()
     fig.subplots_adjust(top=0.85)
-    if show is False:
-        plt.close()
-    else:
+    if show:
         plt.show()
+    else:
+        plt.close()
+    return fig
+
+def view_TSNE(results, title, show=False):
+    fig = plt.figure()
+    sns.scatterplot(results[:, 0], results[:, 1], hue=labels, palette='Set1', alpha=0.2)
+    plt.title(title)
+    if show:
+        plt.show()
+    else:
+        plt.close()
     return fig
