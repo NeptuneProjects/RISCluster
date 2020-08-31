@@ -313,7 +313,7 @@ def train_DCM(
     q, labels_prev = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
-    fig1, fig2 = analyze_clustering(model, dataloader, labels_prev, device, epoch)
+    fig1, fig2 = analyze_clustering(model, dataloader, labels_prev, device, 0)
     tb.add_figure('Centroids',fig1, global_step=0, close=True)
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
 
