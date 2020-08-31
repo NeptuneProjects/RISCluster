@@ -189,9 +189,9 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
             config = configparser.ConfigParser()
             config['UNIVERSAL'] = {
                 'mode': 'predict',
-                'fname_dataset': '../../../Data/DetectionData_New.h5',
+                'fname_dataset': '../../../Data/DetectionData_4s.h5',
                 'savepath': '../../../Outputs/',
-                'indexpath': '../../../Data/TraValIndex_M=100000_Res=0.0_20200812T063630.pkl'
+                'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
             }
             saved_weights = [f for f in os.listdir(f'{loadpath}/{exper}/{run}') if f.endswith('.pt')][0]
             config['PARAMETERS'] = {
