@@ -412,13 +412,11 @@ def train_DCM(
                 tb.add_histogram(name, weight, n_iter)
                 tb.add_histogram(f'{name}.grad', weight.grad, n_iter)
 
-            if (batch_num % update_interval == 0) and not \
-                (batch_num == 0 and epoch == 0):
-                fig1, fig2 = analyze_clustering(model, dataloader, labels, device, epoch)
-                tb.add_figure('Centroids',fig1, global_step=n_iter, close=True)
-                tb.add_figure('TSNE', fig2, global_step=n_iter, close=True)
-
             n_iter += 1
+
+        fig1, fig2 = analyze_clustering(model, dataloader, labels, device, epoch+1)
+        tb.add_figure('Centroids',fig1, global_step=epoch+1, close=True)
+        tb.add_figure('TSNE', fig2, global_step=epoch+1, close=True)
 
         if finished:
             break
@@ -649,7 +647,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     # Step 2: Show t-SNE & labels
     z_array = None
     model.eval()
-    for batch in tqdm(dataloader):
+    for batch in dataloader:
         x = batch.to(device)
         _, _, z = model(x)
         if z_array is not None:
@@ -657,8 +655,9 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         else:
             z_array = z.cpu().detach().numpy()
     data = z_array.astype('float64')
-
+    print('Running t-SNE...', end='')
     results = TSNE(n_components=2, perplexity=50, learning_rate=200, n_jobs=16, verbose=0).fit_transform(data)
+    print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
 
