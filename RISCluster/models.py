@@ -430,7 +430,7 @@ def train_DCM(
             device,
             epoch+1
         )
-        tb.add_figure('Centroids',fig1, global_step=epoch+1, close=True)
+        tb.add_figure('Centroids', fig1, global_step=epoch+1, close=True)
         tb.add_figure('TSNE', fig2, global_step=epoch+1, close=True)
 
         if finished:
@@ -449,6 +449,9 @@ def train_DCM(
             'hp/Loss': accum_loss
         }
     )
+    fig3 = plotting.view_cluster_results(savepath_exp, show=False, save=False)
+    tb.add_figure('Cluster Results', fig3, close=True)
+
     tb.close()
     fname = f'{savepath_run}/DCM_Params_{serial_run}.pt'
     torch.save(model.state_dict(), fname)
