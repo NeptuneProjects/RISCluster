@@ -169,7 +169,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     fname_dataset = config['UNIVERSAL']['fname_dataset']
     AEC_weights = config['PARAMETERS']['saved_weights']
     n_clusters = int(config['PARAMETERS']['n_clusters'])
-    DCM_weights = f"{config['UNIVERSAL']['savepath']}DCM/{exppath.split('/')[-2]}/{exppath.split('/')[-1]}'"
+    DCM_weights = f"{config['UNIVERSAL']['savepath']}Models/DCM/{exppath.split('/')[-2]}/{exppath.split('/')[-1]}'"
     print(AEC_weights)
     print(DCM_weights)
 
