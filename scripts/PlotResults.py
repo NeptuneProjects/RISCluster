@@ -57,4 +57,4 @@ exppath = f'../../../Outputs/Trials/{expname}'
 runlist = [f for f in os.listdir(f'{exppath}') if "Run" in f]
 # savepath = '../../../Paper/Figures'
 for path in runlist:
-    plotting.view_cluster_results(path, show=True, save=False, savepath=path)
+    plotting.view_cluster_results(path, show=False, save=False, savepath=path)
