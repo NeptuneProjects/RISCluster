@@ -186,16 +186,12 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     for run in runlist:
         fname = f'{savepath}/init_pred_{run[4:]}.ini'
         if os.path.isfile(fname):
-            # print('File exists;', end='')
             if not overwrite:
                 count_sk += 1
-                # print(' skipping.')
                 continue
             elif overwrite:
-                # print(' overwriting.')
                 count_ow += 1
         else:
-            print('Creating new file.')
             count_wr += 1
 
         config = configparser.ConfigParser()
@@ -211,7 +207,7 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
             'exclude': 'False',
             'batch_size': '1024',
             'show': 'False',
-            'send_message': 'True',
+            'send_message': 'False',
             'max_workers': '14',
             'n_clusters': _parse_nclusters(run),
             'saved_weights': f'{loadpath}/{run}/{saved_weights}'
