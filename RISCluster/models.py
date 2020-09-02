@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 if sys.platform == 'darwin':
@@ -16,6 +16,7 @@ if sys.platform == 'darwin':
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
     from cuml import KMeans, TSNE
+from sklearn.mixture import GaussianMixture
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -165,7 +166,12 @@ def pretrain_DCM(
                 savepath_run,
                 show
             )
-            tb.add_figure('TrainingProgress', fig, global_step=epoch, close=True)
+            tb.add_figure(
+                'TrainingProgress',
+                fig,
+                global_step=epoch,
+                close=True
+            )
         # ==== Validation Loop: ===============================================
         model.train(False)
 
@@ -358,8 +364,8 @@ def train_DCM(
                 q, labels = predict_labels(model, dataloader, device)
                 p = target_distribution(q)
                 # check stop criterion
-                delta_label = np.sum(labels != labels_prev).astype(np.float32) \
-                              / labels.shape[0]
+                delta_label = np.sum(labels != labels_prev).astype(np.float32)\
+                    / labels.shape[0]
                 tb.add_scalar('delta', delta_label, n_iter)
                 labels_prev = np.copy(labels)
                 if delta_label < tol:
@@ -378,7 +384,8 @@ def train_DCM(
             with torch.set_grad_enabled(True):
                 q, x_rec, _ = model(x)
                 loss_rec = criterion_mse(x_rec, x)
-                loss_clust = gamma * criterion_kld(torch.log(q), tar_dist) / x.size(0)
+                loss_clust = gamma * criterion_kld(torch.log(q), tar_dist) \
+                    / x.size(0)
                 loss = loss_rec + loss_clust
                 loss.backward()
                 optimizer.step()
@@ -416,7 +423,13 @@ def train_DCM(
 
             n_iter += 1
 
-        fig1, fig2 = analyze_clustering(model, dataloader, labels, device, epoch+1)
+        fig1, fig2 = analyze_clustering(
+            model,
+            dataloader,
+            labels,
+            device,
+            epoch+1
+        )
         tb.add_figure('Centroids',fig1, global_step=epoch+1, close=True)
         tb.add_figure('TSNE', fig2, global_step=epoch+1, close=True)
 
@@ -424,7 +437,12 @@ def train_DCM(
             break
 
     tb.add_hparams(
-        {'Clusters': n_clusters, 'Batch Size': batch_size, 'LR': lr, 'gamma': gamma, 'tol': tol},
+        {
+            'Clusters': n_clusters,
+            'Batch Size': batch_size,
+            'LR': lr,
+            'gamma': gamma,
+            'tol': tol},
         {
             'hp/MSE': accum_loss_rec,
             'hp/KLD': accum_loss_clust,
@@ -480,7 +498,7 @@ def predict_DCM(model, dataloader, idx_smpl, parameters):
                     'label': label[i].cpu().detach().numpy(),
                     # 'x_rec': x_rec[i].cpu().detach().numpy(),
                     # 'z': z[i].cpu().detach().numpy(),
-                    'idx': idx_smpl[running_size:(running_size + x.size(0))][i],
+                    'idx': idx_smpl[running_size:(running_size + x.size(0))][i]
                     # 'savepath': savepath_run[int(label[i])]
                 } for i in range(x.size(0))]
         # print('--------------------------------------------------------------')
@@ -533,7 +551,7 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters)
+    km = KMeans(n_clusters=model.n_clusters, random_state=2009)
     z_array = None
     model.eval()
     for batch in dataloader:
@@ -550,7 +568,7 @@ def kmeans(model, dataloader, device):
     centroids = km.cluster_centers_
     return labels, centroids
 
-def gmm(model, dataloader, device):
+def gmm(model, dataloader, device, centroids):
     '''
     Initiate clusters using GMM algorithm.
     # Arguments:
@@ -563,7 +581,20 @@ def gmm(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    gmm = GaussianMixture(n_components=model.n_clusters)
+    M = len(dataloader.dataset)
+    labels, centroids = kmeans(model, dataloader, device)
+    labels, counts = np.unique(labels)
+    gmm_weights = np.empty(len(labels))
+    for i in range(len(labels)):
+        gmm_weights[i] = counts[i] / M
+
+    gmm = GaussianMixture(
+        n_components=model.n_clusters,
+        max_iter=500,
+        n_init=1,
+        weights_init=gmm_weights,
+        means_init=centroids
+    )
     z_array = None
     model.eval()
     for batch in dataloader:
@@ -574,6 +605,7 @@ def gmm(model, dataloader, device):
         else:
             z_array = z.cpu().detach().numpy()
 
+    np.seterr(under='warn')
     labels = gmm.fit_predict(z_array)
     centroids = gmm.means_
     return labels, centroids
@@ -642,10 +674,29 @@ def target_distribution(q):
     return np.round(p, 5)
 
 def analyze_clustering(model, dataloader, labels, device, epoch):
+    '''
+    Function displays reconstructions using the centroids of the latent feature
+    space.
+    # Arguments
+        model: PyTorch model instance
+        dataloader: PyTorch dataloader instance
+        labels: Vector of cluster assignments
+        device: PyTorch device object ('cpu' or 'gpu')
+        epoch: Training epoch, used for title.
+    # Input:
+        2D array of shape [n_samples, n_features]
+    # Output:
+        Figures displaying centroids and their associated reconstructions.
+    '''
     # Step 1: Show Centroid outputs
     centroids = model.clustering.weights
     X_r = model.decoder(centroids)
-    fig1 = plotting.view_centroid_output(centroids, X_r, f'Centroid Reconstructions - Epoch {epoch}', show=False)
+    fig1 = plotting.view_centroid_output(
+        centroids,
+        X_r,
+        f'Centroid Reconstructions - Epoch {epoch}',
+        show=False
+    )
     # Step 2: Show t-SNE & labels
     z_array = None
     model.eval()
@@ -659,7 +710,13 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     data = z_array.astype('float64')
     print('Running t-SNE...', end="", flush=True)
     np.seterr(under='warn')
-    results = TSNE(n_components=2, perplexity=50, learning_rate=200, verbose=0).fit_transform(data)
+    results = TSNE(
+        n_components=2,
+        perplexity=50,
+        learning_rate=200,
+        verbose=0,
+        random_state=2009
+    ).fit_transform(data)
     print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)

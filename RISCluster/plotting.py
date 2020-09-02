@@ -7,7 +7,7 @@ sys.path.insert(0, '../RISCluster/')
 
 import h5py
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -170,11 +170,11 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     saved_weights = config['PARAMETERS']['saved_weights']
     n_clusters = int(config['PARAMETERS']['n_clusters'])
 
-    label, index, label_list = load_labels(exppath)
+    label, index, label_list = utils.load_labels(exppath)
 
     device = utils.set_device()
     aec = AEC()
-    aec = utils.load_weights(aec, '../../../Outputs/Models/AEC/Exp20200822T211118/Run_BatchSz=256_LR=0.0001/AEC_Params_20200822T220623.pt', device)
+    aec = utils.load_weights(aec, '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/AEC/Exp20200828T014223/Run_BatchSz=1024_LR=0.001/AEC_Params_20200828T140437.pt', device)
 
     dcm = DCM(n_clusters=n_clusters).to(device)
     dcm = utils.load_weights(dcm, saved_weights, device)
@@ -197,18 +197,20 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             dset = f[DataSpec]
             fvec = dset[1, 0:64, 0]
             tvec = dset[1, 65, 12:-14]
+            # tvec = dset[1, 65, :]
 
         with h5py.File(fname_dataset, 'r') as f:
             M = len(image_index)
             DataSpec = '/4s/Trace'
             dset = f[DataSpec]
-            k = 635
+            print(dset.shape)
+            k = 351
 
             tr = np.empty([M, k])
             dset_arr = np.empty([k,])
 
             for i in range(M):
-                dset_arr = dset[image_index[i], 0:k]
+                dset_arr = dset[image_index[i], 25:-25]
                 tr[i,:] = dset_arr/1e-6
 
         extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
@@ -270,13 +272,13 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
         fig.suptitle(f'Label {label_list[l]}', size=14)
         fig.subplots_adjust(top=0.91)
-        if save:
-            fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
         if show:
             plt.show()
         else:
             plt.close()
-    return fig
+        if save:
+            fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
+        # return fig
 
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)

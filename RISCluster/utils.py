@@ -40,16 +40,23 @@ def calc_tuning_runs(hyperparameters):
 
     return(tuning_runs)
 
-def init_exp_env(mode, savepath):
-    serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
-    if mode == 'pretrain':
-        savepath_exp = f'{savepath}Models/AEC/Exp{serial_exp}/'
-    elif mode == 'train':
-        savepath_exp = f'{savepath}Models/DCM/Exp{serial_exp}/'
-    elif mode == 'predict':
-        savepath_exp = f'{savepath}Trials/Exp{serial_exp}/'
+def init_exp_env(mode, savepath, **kwargs):
+    if mode == 'batch_predict':
+        init_file = kwargs.get("init_file")
+        exper = init_file.split("/")[-2][10:]
+        serial_exp = exper[3:]
+        run = f'Run{init_file.split("/")[-1][9:-4]}'
+        savepath_exp = f'{savepath}Trials/{exper}/{run}/'
     else:
-        raise ValueError(
+        serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
+        if mode == 'pretrain':
+            savepath_exp = f'{savepath}Models/AEC/Exp{serial_exp}/'
+        elif mode == 'train':
+            savepath_exp = f'{savepath}Models/DCM/Exp{serial_exp}/'
+        elif mode == 'predict':
+            savepath_exp = f'{savepath}Trials/Exp{serial_exp}/'
+        else:
+            raise ValueError(
                 'Incorrect mode selected; choose "pretrain", "train", or "eval".'
             )
     if not os.path.exists(savepath_exp):
@@ -167,45 +174,54 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
             else:
                 raise Exception('Unable to parse filename for n_clusters.')
 
-    savepath = f"{savepath}/BatchEval{datetime.now().strftime('%m%dT%H%M')}"
+    exper = loadpath.split("/")[-1]
+    savepath = f"{savepath}/BatchEval_{exper}"
     if not os.path.exists(savepath):
         os.makedirs(savepath)
 
-    explist = [f for f in os.listdir(loadpath) if "Exp" in f]
-    for exper in explist:
-        runlist = [f for f in os.listdir(f'{loadpath}/{exper}') if "Run" in f]
-        for run in runlist:
-            fname = f'{savepath}/init_pred_{exper}_{run[4:]}.ini'
-            if os.path.isfile(fname):
-                print('File exists;', end='')
-                if not overwrite:
-                    print(' skipping.')
-                    continue
-                elif overwrite:
-                    print(' overwriting.')
-            else:
-                print('Creating new file.')
+    count_wr = 0
+    count_ow = 0
+    count_sk = 0
+    runlist = [f for f in os.listdir(f'{loadpath}') if "Run" in f]
+    for run in runlist:
+        fname = f'{savepath}/init_pred_{run[4:]}.ini'
+        if os.path.isfile(fname):
+            # print('File exists;', end='')
+            if not overwrite:
+                count_sk += 1
+                # print(' skipping.')
+                continue
+            elif overwrite:
+                # print(' overwriting.')
+                count_ow += 1
+        else:
+            print('Creating new file.')
+            count_wr += 1
 
-            config = configparser.ConfigParser()
-            config['UNIVERSAL'] = {
-                'mode': 'predict',
-                'fname_dataset': '../../../Data/DetectionData_4s.h5',
-                'savepath': '../../../Outputs/',
-                'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
-            }
-            saved_weights = [f for f in os.listdir(f'{loadpath}/{exper}/{run}') if f.endswith('.pt')][0]
-            config['PARAMETERS'] = {
-                'M': 'all',
-                'exclude': 'False',
-                'batch_size': '1024',
-                'show': 'False',
-                'send_message': 'True',
-                'max_workers': '14',
-                'n_clusters': _parse_nclusters(run),
-                'saved_weights': f'{loadpath}/{exper}/{run}/{saved_weights}'
-            }
-            with open(fname, 'w') as configfile:
-                config.write(configfile)
+        config = configparser.ConfigParser()
+        config['UNIVERSAL'] = {
+            'mode': 'predict',
+            'fname_dataset': '../../../Data/DetectionData_4s.h5',
+            'savepath': '../../../Outputs/',
+            'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
+        }
+        saved_weights = [f for f in os.listdir(f'{loadpath}/{run}') if f.endswith('.pt')][0]
+        config['PARAMETERS'] = {
+            'M': 'all',
+            'exclude': 'False',
+            'batch_size': '1024',
+            'show': 'False',
+            'send_message': 'True',
+            'max_workers': '14',
+            'n_clusters': _parse_nclusters(run),
+            'saved_weights': f'{loadpath}/{run}/{saved_weights}'
+        }
+        with open(fname, 'w') as configfile:
+            config.write(configfile)
+
+    print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
+
+    return savepath
 
 def notify(msgsubj, msgcontent):
     '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012

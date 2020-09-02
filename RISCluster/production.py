@@ -33,9 +33,9 @@ def DCM_pretrain(parameters, hyperparameters):
     savepath_exp = parameters['savepath']
     # ==== Checks =============================================================
     if not os.path.exists(fname_dataset):
-        raise ValueError('Dataset file not found.')
+        raise ValueError(f'Dataset file not found: {fname_dataset}')
     if not os.path.exists(indexpath):
-        raise ValueError('Index file not found.')
+        raise ValueError(f'Index file not found: {indexpath}')
     # ==== Load Data ==========================================================
     index_tra, index_val = utils.load_TraVal_index(fname_dataset, indexpath)
     M_tra = len(index_tra)
@@ -155,11 +155,11 @@ def DCM_train(parameters, hyperparameters):
     saved_weights = parameters['saved_weights']
     # ==== Checks =============================================================
     if not os.path.exists(saved_weights):
-        raise ValueError('Saved weights file not found.')
+        raise ValueError(f'Saved weights file not found: {saved_weights}')
     if not os.path.exists(fname_dataset):
-        raise ValueError('Dataset file not found.')
+        raise ValueError(f'Dataset file not found: {fname_dataset}')
     if not os.path.exists(indexpath):
-        raise ValueError('Index file not found.')
+        raise ValueError(f'Index file not found: {indexpath}')
     # ==== Load Data ==========================================================
     index_tra, _ = utils.load_TraVal_index(fname_dataset, indexpath)
     M_tra = len(index_tra)
@@ -243,11 +243,11 @@ def DCM_predict(parameters, index_tst=None, tst_dataset=None):
     loaded = parameters['loaded']
     # ==== Checks =============================================================
     if not os.path.exists(saved_weights):
-        raise ValueError('Saved weights file not found.')
+        raise ValueError(f'Saved weights file not found: {saved_weights}')
     if not os.path.exists(fname_dataset):
-        raise ValueError('Dataset file not found.')
+        raise ValueError(f'Dataset file not found: {fname_dataset}')
     if not os.path.exists(indexpath):
-        raise ValueError('Index file not found.')
+        raise ValueError(f'Index file not found: {indexpath}')
     # ==== Load Data ==========================================================
     if not loaded:
         if isinstance(M, str) and (M == 'all'):

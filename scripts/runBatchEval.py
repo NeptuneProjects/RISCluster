@@ -16,18 +16,17 @@ overwrite = False
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Enter model mode and configuration file."
+        description="Enter path to experiment with trained models."
     )
-    parser.add_argument('init_path', help="Enter path to folder containing init files.")
+    parser.add_argument('loadpath', help="Enter path to folder containing init files.")
     args = parser.parse_args()
-    init_path = args.init_path
-
-    # init_path = '../../ConfigFiles/BatchEval0824T2044'
-
+    loadpath = args.loadpath
     # =========================================================================
     # Universal Parameters
     # =========================================================================
     mode = 'predict'
+    configpath = '../../ConfigFiles'
+    init_path = utils.make_pred_configs_batch(loadpath, configpath, False)
     fname_dataset = '../../../Data/DetectionData_4s.h5'
     savepath = '../../../Outputs/'
     indexpath = '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
@@ -65,7 +64,11 @@ if __name__ == '__main__':
         print(f'Evaluating experiment {f+1}/{len(initlist)}...')
         config = configparser.ConfigParser()
         config.read(init_file)
-        savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
+        savepath_exp, serial_exp = utils.init_exp_env(
+            'batch_predict',
+            savepath,
+            **{'init_file': init_file}
+        )
         parameters = dict(
             fname_dataset=fname_dataset,
             device=device,
@@ -83,6 +86,7 @@ if __name__ == '__main__':
             max_workers=int(config['PARAMETERS']['max_workers']),
             loaded=True
         )
+        print(serial_exp)
         utils.save_exp_config(
             savepath_exp,
             serial_exp,
