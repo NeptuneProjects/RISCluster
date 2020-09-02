@@ -161,9 +161,9 @@ def view_clusters(pca2d, labels):
     return fig
 
 def view_cluster_results(exppath, show=True, save=True, savepath='.'):
-    print(exppath)
     init_file = [f for f in os.listdir(exppath) if f.endswith('.ini')][0]
     init_file = f'{exppath}/{init_file}'
+    print(init_file)
     config = configparser.ConfigParser()
     config.read(init_file)
     fname_dataset = config['UNIVERSAL']['fname_dataset']
