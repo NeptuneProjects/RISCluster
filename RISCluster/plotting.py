@@ -167,17 +167,20 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     config = configparser.ConfigParser()
     config.read(init_file)
     fname_dataset = config['UNIVERSAL']['fname_dataset']
-    saved_weights = config['PARAMETERS']['saved_weights']
+    AEC_weights = config['PARAMETERS']['saved_weights']
     n_clusters = int(config['PARAMETERS']['n_clusters'])
+    DCM_weights = f"{config['UNIVERSAL']['savepath']}/{path.split('/')[-2]}/{path.split('/')[-1]}'"
+    print(AEC_weights)
+    print(DCM_weights)
 
     label, index, label_list = utils.load_labels(exppath)
 
     device = utils.set_device()
     aec = AEC()
-    aec = utils.load_weights(aec, '/Users/williamjenkins/Research/Workflows/RIS_Clustering/Outputs/Models/AEC/Exp20200828T014223/Run_BatchSz=1024_LR=0.001/AEC_Params_20200828T140437.pt', device)
+    aec = utils.load_weights(aec, AEC_weights, device)
 
     dcm = DCM(n_clusters=n_clusters).to(device)
-    dcm = utils.load_weights(dcm, saved_weights, device)
+    dcm = utils.load_weights(dcm, DCM_weights, device)
 
     for l in range(len(label_list)):
         query = np.where(label == label_list[l])[0]
