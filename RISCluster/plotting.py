@@ -172,6 +172,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
     DCM_weights_path = f"{config['UNIVERSAL']['savepath']}Models/DCM/{exppath.split('/')[-2]}/{exppath.split('/')[-1]}"
     DCM_weights = [f for f in os.listdir(DCM_weights_path) if f.endswith('.pt')][0]
+    DCM_weights = f"{DCM_weights_path}/{DCM_weights}"
     print(AEC_weights)
     print(DCM_weights)
 
