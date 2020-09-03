@@ -377,7 +377,7 @@ def train_DCM(
                     break
 
             tar_dist = p[running_size:(running_size + x.size(0)), :]
-            tar_dist = torch.from_numpy(tar_dist).to(device)
+            # tar_dist = torch.from_numpy(tar_dist).to(device) # <--------------- Keep as torch tensor - should be able to delete this line.
 
             # zero the parameter gradients
             model.train()
@@ -394,9 +394,9 @@ def train_DCM(
                 optimizer.step()
 
             running_size += x.size(0)
-            running_loss += loss.cpu().detach().numpy() * x.size(0)
-            running_loss_rec += loss_rec.cpu().detach().numpy() * x.size(0)
-            running_loss_clust += loss_clust.cpu().detach().numpy() * x.size(0)
+            running_loss += loss.detach().cpu().numpy() * x.size(0)
+            running_loss_rec += loss_rec.detach().cpu().numpy() * x.size(0)
+            running_loss_clust += loss_clust.detach().cpu().numpy() * x.size(0)
 
             accum_loss = running_loss / running_size
             accum_loss_rec = running_loss_rec / running_size
@@ -562,11 +562,13 @@ def kmeans(model, dataloader, device):
         x = batch.to(device)
         _, _, z = model(x)
         if z_array is not None:
-            z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
+            z_array = torch.cat((z_array, z), dim=0)
+            # z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
         else:
-            z_array = z.cpu().detach().numpy()
+            z_array = z
+            # z_array = z.cpu().detach().numpy()
 
-    km.fit_predict(z_array)
+    km.fit_predict(z_array.detach().cpu().numpy())
 
     labels = km.labels_
     centroids = km.cluster_centers_
@@ -605,12 +607,14 @@ def gmm(model, dataloader, device, centroids):
         x = batch.to(device)
         _, _, z = model(x)
         if z_array is not None:
-            z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
+            z_array = torch.cat((z_array, z), dim=0)
+            # np.concatenate((z_array, z.cpu().detach().numpy()), 0)
         else:
-            z_array = z.cpu().detach().numpy()
+            z_array = z
+            # z_array = z.cpu().detach().numpy()
 
     np.seterr(under='warn')
-    labels = GMM.fit_predict(z_array)
+    labels = GMM.fit_predict(z_array.detach().cpu().numpy())
     centroids = GMM.means_
     return labels, centroids
 
@@ -646,18 +650,31 @@ def predict_labels(model, dataloader, device):
         q_array [n_samples, n_clusters]: Soft assigned label probabilities
         labels [n_samples,]: Hard assigned label based on max of q_array
     '''
+    # q_array = None
+    # model.eval()
+    # for batch in dataloader:
+    #     x = batch.to(device)
+    #     q, _, _ = model(x)
+    #     if q_array is not None:
+    #         q_array = np.concatenate((q_array, q.cpu().detach().numpy()), 0)\
+    #     else:
+    #         q_array = q.cpu().detach().numpy()
+    #
+    # labels = np.argmax(q_array.data, axis=1)
+    # return np.round(q_array, 5), labels
+
     q_array = None
     model.eval()
     for batch in dataloader:
         x = batch.to(device)
         q, _, _ = model(x)
         if q_array is not None:
-            q_array = np.concatenate((q_array, q.cpu().detach().numpy()), 0)
+            q_array = torch.cat((q_array, q), dim=0)
         else:
-            q_array = q.cpu().detach().numpy()
+            q_array = q
 
-    labels = np.argmax(q_array.data, axis=1)
-    return np.round(q_array, 5), labels
+    labels = torch.argmax(q_array, axis=1)
+    return (q_array * 10**5).round() / (10**5), labels.detach().cpu().numpy()
 
 def target_distribution(q):
     '''
@@ -673,9 +690,13 @@ def target_distribution(q):
     # Output:
         2D array of shape [n_samples, n_features].
     '''
-    p = q ** 2 / np.sum(q, axis=0)
-    p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
-    return np.round(p, 5)
+    # p = q ** 2 / np.sum(q, axis=0)
+    # p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
+    # return np.round(p, 5)
+
+    p = q ** 2 / torch.sum(q, dim=0)
+    p = torch.transpose(torch.transpose(p, 0, 1) / torch.sum(p, dim=1), 0, 1)
+    return (p * 10**5).round() / (10**5)
 
 def analyze_clustering(model, dataloader, labels, device, epoch):
     '''
@@ -708,10 +729,10 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         x = batch.to(device)
         _, _, z = model(x)
         if z_array is not None:
-            z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
+            z_array = torch.cat((z_array, z), dim=0)
         else:
-            z_array = z.cpu().detach().numpy()
-    data = z_array.astype('float64')
+            z_array = z
+    data = z_array.detach().cpu().numpy().astype('float64')
     print('Running t-SNE...', end="", flush=True)
     np.seterr(under='warn')
     results = TSNE(
