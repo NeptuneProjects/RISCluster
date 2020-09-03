@@ -60,7 +60,7 @@ runlist = [f for f in os.listdir(f'{exppath}') if "Run" in f]
 # savepath = '../../../Paper/Figures'
 A = [
         {
-            'path': f"{exppath}/{f}",
+            'exppath': f"{exppath}/{f}",
             'show': False,
             'save': True,
             'savepath': f"{exppath}/{f}"
