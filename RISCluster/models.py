@@ -555,7 +555,7 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters, max_iter=1000, n_init=300, random_state=2009)
+    km = KMeans(n_clusters=model.n_clusters, max_iter=1, n_init=3, random_state=2009)
     # z_array = np.empty(len(dataloader), 10)
     model.eval()
     # for b, batch in enumerate(dataloader):
@@ -691,7 +691,7 @@ def predict_labels(model, dataloader, device):
         q, _, _ = model(x)
         q_array[b * x.size(0):(b+1) * x.size(0), :] = q.detach().cpu().numpy()
 
-    labels = np.argmax(q_array.data, axis=1).astype('float64')
+    labels = np.argmax(q_array.data, axis=1)
     return np.round(q_array, 5), labels
 
 def target_distribution(q):
@@ -709,7 +709,7 @@ def target_distribution(q):
         2D array of shape [n_samples, n_features].
     '''
     p = q ** 2 / np.sum(q, axis=0)
-    p = np.transpose(np.transpose(p) / np.sum(p, axis=1)).astype('float64')
+    p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
     return np.round(p, 5)
 
     # p = q ** 2 / torch.sum(q, dim=0)
