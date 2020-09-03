@@ -433,7 +433,7 @@ def train_DCM(
                 dataloader,
                 labels,
                 device,
-                epoch+1
+                epoch
             )
             tb.add_figure('Centroids', fig1, global_step=epoch+1, close=True)
             tb.add_figure('TSNE', fig2, global_step=epoch+1, close=True)
