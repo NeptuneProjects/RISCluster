@@ -7,6 +7,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 import plotting
 importlib.reload(plotting)
