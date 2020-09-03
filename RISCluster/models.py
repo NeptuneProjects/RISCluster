@@ -311,8 +311,10 @@ def train_DCM(
 
     # Initialize Clusters:
     print('Initiating clusters with k-means...', end="", flush=True)
-    # labels, centroids = kmeans(model, copy.deepcopy(dataloader), device)
-    labels, centroids = gmm(model, copy.deepcopy(dataloader), device)
+    _, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    print('complete.')
+    print('Initiating clusters with GMM...', end="", flush=True)
+    labels, centroids = gmm(model, copy.deepcopy(dataloader), device, centroids)
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -553,7 +555,7 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters, random_state=2009)
+    km = KMeans(n_clusters=model.n_clusters, max_iter=1000, n_init=300, random_state=2009)
     z_array = None
     model.eval()
     for batch in dataloader:
@@ -590,9 +592,9 @@ def gmm(model, dataloader, device, centroids):
     for i in range(len(labels)):
         gmm_weights[i] = counts[i] / M
 
-    gmm = GaussianMixture(
+    GMM = GaussianMixture(
         n_components=model.n_clusters,
-        max_iter=500,
+        max_iter=1000,
         n_init=1,
         weights_init=gmm_weights,
         means_init=centroids
@@ -608,8 +610,8 @@ def gmm(model, dataloader, device, centroids):
             z_array = z.cpu().detach().numpy()
 
     np.seterr(under='warn')
-    labels = gmm.fit_predict(z_array)
-    centroids = gmm.means_
+    labels = GMM.fit_predict(z_array)
+    centroids = GMM.means_
     return labels, centroids
 
 # def pca(labels, model, dataloader, device, tb, counter):
@@ -716,6 +718,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         n_components=2,
         perplexity=50,
         learning_rate=200,
+        n_iter=5000,
         verbose=0,
         random_state=2009
     ).fit_transform(data)
