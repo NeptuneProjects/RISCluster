@@ -249,27 +249,27 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             plt.title(f'Station {station}; Index: {image_index[i]}\nTrigger: {time_on}', fontsize=8)
 
             ax = fig.add_subplot(gs_sub[1,0])
-            plt.imshow(torch.squeeze(X[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.imshow(torch.squeeze(X[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
             plt.xticks([])
             plt.ylabel('Original', size=7)
 
             ax = fig.add_subplot(gs_sub[2,0])
-            plt.imshow(torch.squeeze(x_r_pretrain[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.imshow(torch.squeeze(x_r_pretrain[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
             plt.ylabel('Pre-trained', size=7)
 
             ax = fig.add_subplot(gs_sub[3,0])
-            plt.imshow(torch.squeeze(x_r_train[i]).detach().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.imshow(torch.squeeze(x_r_train[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
             plt.ylabel('Trained', size=7)
 
             ax = fig.add_subplot(gs_sub[1:,1])
-            plt.imshow(np.expand_dims(z_pretrain[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
+            plt.imshow(np.expand_dims(z_pretrain[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
             plt.xticks([])
             plt.yticks([])
             ax.xaxis.set_label_position('top')
             ax.set_xlabel('Pre-trained', size=5, rotation=90)
 
             ax = fig.add_subplot(gs_sub[1:,2])
-            plt.imshow(np.expand_dims(z_train[i].detach().numpy(), 1), cmap='viridis', aspect='auto')
+            plt.imshow(np.expand_dims(z_train[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
             plt.xticks([])
             plt.yticks([])
             ax.xaxis.set_label_position('top')
