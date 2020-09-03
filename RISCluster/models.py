@@ -691,10 +691,14 @@ def predict_labels(model, dataloader, device):
         x = batch.to(device)
         q, _, _ = model(x)
         print(q)
+        print(q.size())
         q_array[b * x.size(0):(b+1) * x.size(0), :] = q.detach().cpu().numpy()
+        print(q_array)
+        print(q_array.shape)
+        input('Press enter to continue...')
 
-    print(q_array)
     labels = np.argmax(q_array.data, axis=1)
+    input('Press enter to continue...')
     return np.round(q_array, 5), labels
 
 def target_distribution(q):
