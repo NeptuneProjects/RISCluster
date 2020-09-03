@@ -690,14 +690,15 @@ def predict_labels(model, dataloader, device):
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         q, _, _ = model(x)
-        print(q)
-        print(q.size())
+        # print(q)
+        # print(q.size())
         q_array[b * x.size(0):(b+1) * x.size(0), :] = q.detach().cpu().numpy()
-        print(q_array[b * x.size(0):(b+1) * x.size(0), :])
-        print(q_array[b * x.size(0):(b+1) * x.size(0), :].shape)
+        # print(q_array[b * x.size(0):(b+1) * x.size(0), :])
+        # print(q_array[b * x.size(0):(b+1) * x.size(0), :].shape)
         input('Press enter to continue...')
 
     labels = np.argmax(q_array.data, axis=1)
+    print(q_array)
     input('Press enter to continue...')
     return np.round(q_array, 5), labels
 
