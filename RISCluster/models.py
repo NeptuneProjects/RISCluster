@@ -757,7 +757,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         n_components=2,
         perplexity=75,
         learning_rate=200,
-        n_iter=2000,
+        # n_iter=2000,
         verbose=0,
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
