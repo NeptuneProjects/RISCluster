@@ -737,7 +737,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     np.seterr(under='warn')
     results = TSNE(
         n_components=2,
-        perplexity=50,
+        perplexity=75,
         learning_rate=200,
         n_iter=5000,
         verbose=0,
