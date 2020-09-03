@@ -311,7 +311,8 @@ def train_DCM(
 
     # Initialize Clusters:
     print('Initiating clusters with k-means...', end="", flush=True)
-    labels, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    # labels, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    labels, centroids = gmm(model, copy.deepcopy(dataloader), device)
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -449,8 +450,6 @@ def train_DCM(
             'hp/Loss': accum_loss
         }
     )
-    fig3 = plotting.view_cluster_results(savepath_exp, show=False, save=False)
-    tb.add_figure('Cluster Results', fig3, close=True)
 
     tb.close()
     fname = f'{savepath_run}/DCM_Params_{serial_run}.pt'
