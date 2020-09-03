@@ -63,12 +63,13 @@ A = [
             'save': True,
             'savepath': f"{exppath}/{f}"
         } for f in os.listdir(f'{exppath}') if "Run" in f]
-
-with ProcessPoolExecutor(max_workers=16) as exec:
-    futures = [exec.submit(plotting.view_cluster_results, **a) for a in A]
-    for future in as_completed(futures):
-        future.result()
-
+print(f"Writing {len(A)} images to disk...", flush=True, end="")
+with utils.SuppressStdout():
+    with ProcessPoolExecutor(max_workers=16) as exec:
+        futures = [exec.submit(plotting.view_cluster_results, **a) for a in A]
+        for future in as_completed(futures):
+            future.result()
+print("complete.")
 # folder = 'Run_Clusters=5_BatchSz=512_LR=0.001_gamma=0.1_tol=0.001'
 # # for folder in runlist:
 # path = f"{exppath}/{folder}"

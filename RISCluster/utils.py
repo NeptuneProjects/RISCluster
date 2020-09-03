@@ -18,20 +18,37 @@ from tqdm import tqdm
 from twilio.rest import Client
 
 class SeismoDataset(Dataset):
+
     def __init__(self, data, transform=None):
         self.data = torch.from_numpy(data).float()
         self.transform = transform
 
     def __getitem__(self, index):
         x = self.data[index]
-
         if self.transform:
             x = self.transform(x)
-
         return x
 
     def __len__(self):
         return len(self.data)
+
+class SuppressStdout(object):
+
+    def __init__(self, suppress=True):
+        self.suppress = suppress
+        self.sys_stdout_ref = None
+
+    def __enter__(self):
+        self.sys_stdout_ref = sys.stdout
+        if self.suppress:
+            sys.stdout = self
+        return sys.stdout
+
+    def __exit__(self, type, value, traceback):
+        sys.stdout = self.sys_stdout_ref
+
+    def write(self):
+        pass
 
 def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
