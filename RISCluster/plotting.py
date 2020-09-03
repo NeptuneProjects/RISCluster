@@ -179,9 +179,8 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     label, index, label_list = utils.load_labels(exppath)
 
     device = utils.set_device()
-    aec = AEC()
+    aec = AEC().to(device)
     aec = utils.load_weights(aec, AEC_weights, device)
-
     dcm = DCM(n_clusters=n_clusters).to(device)
     dcm = utils.load_weights(dcm, DCM_weights, device)
 
