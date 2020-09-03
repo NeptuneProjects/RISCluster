@@ -278,7 +278,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         if save:
             print(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
             fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
-        return fig
+        # return fig
 
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)
