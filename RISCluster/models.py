@@ -426,15 +426,16 @@ def train_DCM(
 
             n_iter += 1
 
-        fig1, fig2 = analyze_clustering(
-            model,
-            dataloader,
-            labels,
-            device,
-            epoch+1
-        )
-        tb.add_figure('Centroids', fig1, global_step=epoch+1, close=True)
-        tb.add_figure('TSNE', fig2, global_step=epoch+1, close=True)
+        if ((epoch % 2 == 0) and not (epoch == 0)) or finished:
+            fig1, fig2 = analyze_clustering(
+                model,
+                dataloader,
+                labels,
+                device,
+                epoch+1
+            )
+            tb.add_figure('Centroids', fig1, global_step=epoch+1, close=True)
+            tb.add_figure('TSNE', fig2, global_step=epoch+1, close=True)
 
         if finished:
             break
@@ -756,7 +757,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         n_components=2,
         perplexity=75,
         learning_rate=200,
-        n_iter=5000,
+        n_iter=2000,
         verbose=0,
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
