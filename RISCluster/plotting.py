@@ -163,21 +163,15 @@ def view_clusters(pca2d, labels):
 def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     init_file = [f for f in os.listdir(exppath) if f.endswith('.ini')][0]
     init_file = f'{exppath}/{init_file}'
-    print(init_file)
     config = configparser.ConfigParser()
     config.read(init_file)
     fname_dataset = config['UNIVERSAL']['fname_dataset']
     AEC_weights = config['PARAMETERS']['saved_weights']
     n_clusters = int(config['PARAMETERS']['n_clusters'])
-
     DCM_weights_path = f"{config['UNIVERSAL']['savepath']}Models/DCM/{exppath.split('/')[-2]}/{exppath.split('/')[-1]}"
     DCM_weights = [f for f in os.listdir(DCM_weights_path) if f.endswith('.pt')][0]
     DCM_weights = f"{DCM_weights_path}/{DCM_weights}"
-    print(AEC_weights)
-    print(DCM_weights)
-
     label, index, label_list = utils.load_labels(exppath)
-
     # device = utils.set_device()
     device = 'cpu'
     aec = AEC().to(device)
@@ -209,7 +203,6 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             M = len(image_index)
             DataSpec = '/4s/Trace'
             dset = f[DataSpec]
-            print(dset.shape)
             k = 351
 
             tr = np.empty([M, k])

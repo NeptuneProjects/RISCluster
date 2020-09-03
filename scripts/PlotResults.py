@@ -7,7 +7,6 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 
 import plotting
 importlib.reload(plotting)
@@ -68,13 +67,7 @@ A = [
 
 with ProcessPoolExecutor(max_workers=16) as exec:
     futures = [exec.submit(plotting.view_cluster_results, **a) for a in A]
-    kwargs = {
-        'total': len(futures),
-        'unit': 'images',
-        'leave': True,
-        'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}'
-    }
-    for future in tqdm(as_completed(futures), **kwargs):
+    for future in as_completed(futures):
         future.result()
 
 # for folder in runlist:
