@@ -587,7 +587,7 @@ def gmm(model, dataloader, device, centroids):
     '''
     M = len(dataloader.dataset)
     labels, centroids = kmeans(model, dataloader, device)
-    labels, counts = np.unique(labels)
+    labels, counts = np.unique(labels, return_counts=True)
     gmm_weights = np.empty(len(labels))
     for i in range(len(labels)):
         gmm_weights[i] = counts[i] / M
