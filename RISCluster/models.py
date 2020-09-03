@@ -569,7 +569,7 @@ def kmeans(model, dataloader, device):
     #         # z_array = z
     #         z_array = z.cpu().detach().numpy()
 
-    z_array = np.empty((len(dataloader.dataset), 10))
+    z_array = np.empty((len(dataloader.dataset), 10), dtype=np.float32)
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         _, _, z = model(x)
@@ -619,7 +619,7 @@ def gmm(model, dataloader, device):
     #     else:
     #         z_array = z
             # z_array = z.cpu().detach().numpy()
-    z_array = np.empty((len(dataloader.dataset), 10))
+    z_array = np.empty((len(dataloader.dataset), 10), dtype=np.float32)
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         _, _, z = model(x)
@@ -686,7 +686,7 @@ def predict_labels(model, dataloader, device):
     #     else:
     #         q_array = q
 
-    q_array = np.empty((len(dataloader.dataset), model.n_clusters))
+    q_array = np.empty((len(dataloader.dataset), model.n_clusters), dtype=np.float32)
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         q, _, _ = model(x)
@@ -744,7 +744,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     # Step 2: Show t-SNE & labels
     # z_array = None
     model.eval()
-    z_array = np.empty((len(dataloader.dataset), 10))
+    z_array = np.empty((len(dataloader.dataset), 10), dtype=np.float32)
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         _, _, z = model(x)
