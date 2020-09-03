@@ -572,10 +572,11 @@ def kmeans(model, dataloader, device):
     #         z_array = z.cpu().detach().numpy()
 
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         _, _, z = model(x)
-        z_array[b * x.size(0):(b+1) * x.size(0), :] = z.detach().cpu().numpy()
+        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
 
     km.fit_predict(z_array)
 
@@ -622,10 +623,11 @@ def gmm(model, dataloader, device):
     #         z_array = z
             # z_array = z.cpu().detach().numpy()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         _, _, z = model(x)
-        z_array[b * x.size(0):(b+1) * x.size(0), :] = z.detach().cpu().numpy()
+        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
     np.seterr(under='ignore')
     labels = GMM.fit_predict(z_array)
     centroids = GMM.means_
@@ -687,12 +689,13 @@ def predict_labels(model, dataloader, device):
     #         q_array = q
 
     q_array = np.zeros((len(dataloader.dataset), model.n_clusters), dtype=np.float32)
+    bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         q, _, _ = model(x)
         # print(q)
         # print(q.size())
-        q_array[b * x.size(0):(b+1) * x.size(0), :] = q.detach().cpu().numpy()
+        q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
         # print(q_array[b * x.size(0):(b+1) * x.size(0), :])
         # print(q_array[b * x.size(0):(b+1) * x.size(0), :].shape)
 
@@ -753,10 +756,11 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     # z_array = None
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         _, _, z = model(x)
-        z_array[b * x.size(0):(b+1) * x.size(0), :] = z.detach().cpu().numpy()
+        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
 
     print('Running t-SNE...', end="", flush=True)
     np.seterr(under='warn')
