@@ -56,7 +56,6 @@ importlib.reload(plotting)
 expname = 'Exp20200830T232512'
 exppath = f'../../../Outputs/Trials/{expname}'
 runlist = [f for f in os.listdir(f'{exppath}') if "Run" in f]
-# savepath = '../../../Paper/Figures'
 A = [
         {
             'exppath': f"{exppath}/{f}",
@@ -65,12 +64,12 @@ A = [
             'savepath': f"{exppath}/{f}"
         } for f in os.listdir(f'{exppath}') if "Run" in f]
 
-# with ProcessPoolExecutor(max_workers=16) as exec:
-    # futures = [exec.submit(plotting.view_cluster_results, **a) for a in A]
-    # for future in as_completed(futures):
-        # future.result()
+with ProcessPoolExecutor(max_workers=16) as exec:
+    futures = [exec.submit(plotting.view_cluster_results, **a) for a in A]
+    for future in as_completed(futures):
+        future.result()
 
-folder = 'Run_Clusters=5_BatchSz=512_LR=0.001_gamma=0.1_tol=0.001'
-# for folder in runlist:
-path = f"{exppath}/{folder}"
-plotting.view_cluster_results(path, show=False, save=True, savepath=path)
+# folder = 'Run_Clusters=5_BatchSz=512_LR=0.001_gamma=0.1_tol=0.001'
+# # for folder in runlist:
+# path = f"{exppath}/{folder}"
+# plotting.view_cluster_results(path, show=False, save=True, savepath=path)
