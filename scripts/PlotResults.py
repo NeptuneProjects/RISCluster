@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 import plotting
 importlib.reload(plotting)
+import utils
 
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(
