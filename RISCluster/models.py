@@ -695,9 +695,11 @@ def predict_labels(model, dataloader, device):
         q_array[b * x.size(0):(b+1) * x.size(0), :] = q.detach().cpu().numpy()
         # print(q_array[b * x.size(0):(b+1) * x.size(0), :])
         # print(q_array[b * x.size(0):(b+1) * x.size(0), :].shape)
-        
+
     labels = np.argmax(q_array.data, axis=1)
     print(q_array)
+    print(q_array.shape)
+    print(len(dataloader.dataset))
     input('Press enter to continue...')
     return np.round(q_array, 5), labels
 
