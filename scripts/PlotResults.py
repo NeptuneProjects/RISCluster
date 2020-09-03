@@ -73,4 +73,4 @@ A = [
 folder = 'Run_Clusters=5_BatchSz=512_LR=0.001_gamma=0.1_tol=0.001'
 # for folder in runlist:
 path = f"{exppath}/{folder}"
-plotting.view_cluster_results(path, show=False, save=False, savepath=path)
+plotting.view_cluster_results(path, show=False, save=True, savepath=path)
