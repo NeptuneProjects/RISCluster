@@ -624,7 +624,8 @@ def gmm(model, dataloader, device):
         x = batch.to(device)
         _, _, z = model(x)
         z_array[b * x.size(0):(b+1) * x.size(0), :] = z.detach().cpu().numpy()
-
+    print(np.any(np.isnan(z_array)))
+    print(np.all(np.isfinite(z_array)))
     np.seterr(under='warn')
     labels = GMM.fit_predict(z_array)
     centroids = GMM.means_
