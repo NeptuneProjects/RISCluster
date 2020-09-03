@@ -179,6 +179,8 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     dcm = DCM(n_clusters=n_clusters).to(device)
     dcm = utils.load_weights(dcm, DCM_weights, device)
 
+    print(label_list)
+
     for l in range(len(label_list)):
         query = np.where(label == label_list[l])[0]
         N = 9
