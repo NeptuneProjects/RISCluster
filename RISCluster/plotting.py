@@ -7,7 +7,7 @@ sys.path.insert(0, '../RISCluster/')
 
 import h5py
 import matplotlib
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -178,7 +178,8 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
     label, index, label_list = utils.load_labels(exppath)
 
-    device = utils.set_device()
+    # device = utils.set_device()
+    device = 'cpu'
     aec = AEC().to(device)
     aec = utils.load_weights(aec, AEC_weights, device)
     dcm = DCM(n_clusters=n_clusters).to(device)

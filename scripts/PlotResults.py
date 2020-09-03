@@ -1,4 +1,5 @@
 import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 import importlib
 import os
@@ -56,6 +57,25 @@ expname = 'Exp20200830T232512'
 exppath = f'../../../Outputs/Trials/{expname}'
 runlist = [f for f in os.listdir(f'{exppath}') if "Run" in f]
 # savepath = '../../../Paper/Figures'
-for folder in runlist:
-    path = f"{exppath}/{folder}"
-    plotting.view_cluster_results(path, show=False, save=False, savepath=path)
+A = [
+        {
+            'path': f"{exppath}/{f}",
+            'show': False,
+            'save': True,
+            'savepath': f"{exppath}/{f}"
+        } for f in os.listdir(f'{exppath}') if "Run" in f]
+
+with ProcessPoolExecutor(max_workers=16) as exec:
+    futures = [exec.submit(plotting.view_cluster_results, **a) for a in A]
+    kwargs = {
+        'total': len(futures),
+        'unit': 'images',
+        'leave': True,
+        'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    }
+    for future in tqdm(as_completed(futures), **kwargs):
+        future.result()
+
+# for folder in runlist:
+#     path = f"{exppath}/{folder}"
+#     plotting.view_cluster_results(path, show=False, save=False, savepath=path)
