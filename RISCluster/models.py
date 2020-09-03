@@ -557,29 +557,15 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters, max_iter=1, n_init=3, random_state=2009)
-    # z_array = np.empty(len(dataloader), 10)
+    km = KMeans(n_clusters=model.n_clusters, max_iter=500, n_init=50, random_state=2009)
     model.eval()
-    # for b, batch in enumerate(dataloader):
-    #     x = batch.to(device)
-    #     _, _, z = model(x)
-    #     z_array[b:(b+1) * x.size(0)] = z
-    #     if z_array is not None:
-    #         # z_array = torch.cat((z_array, z), dim=0)
-    #         z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
-    #     else:
-    #         # z_array = z
-    #         z_array = z.cpu().detach().numpy()
-
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
-
     km.fit_predict(z_array)
-
     labels = km.labels_
     centroids = km.cluster_centers_
     return labels, centroids
@@ -611,17 +597,7 @@ def gmm(model, dataloader, device):
         weights_init=gmm_weights,
         means_init=centroids
     )
-    # z_array = None
     model.eval()
-    # for batch in dataloader:
-    #     x = batch.to(device)
-    #     _, _, z = model(x)
-    #     if z_array is not None:
-    #         z_array = torch.cat((z_array, z), dim=0)
-    #         # np.concatenate((z_array, z.cpu().detach().numpy()), 0)
-    #     else:
-    #         z_array = z
-            # z_array = z.cpu().detach().numpy()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
@@ -665,45 +641,14 @@ def predict_labels(model, dataloader, device):
         q_array [n_samples, n_clusters]: Soft assigned label probabilities
         labels [n_samples,]: Hard assigned label based on max of q_array
     '''
-    # q_array = None
-    # model.eval()
-    # for batch in dataloader:
-    #     x = batch.to(device)
-    #     q, _, _ = model(x)
-    #     if q_array is not None:
-    #         q_array = np.concatenate((q_array, q.cpu().detach().numpy()), 0)\
-    #     else:
-    #         q_array = q.cpu().detach().numpy()
-    #
-    # labels = np.argmax(q_array.data, axis=1)
-    # return np.round(q_array, 5), labels
-
-    # q_array = None
     model.eval()
-    # for batch in dataloader:
-    #     x = batch.to(device)
-    #     q, _, _ = model(x)
-    #     if q_array is not None:
-    #         q_array = torch.cat((q_array, q), dim=0)
-    #     else:
-    #         q_array = q
-
     q_array = np.zeros((len(dataloader.dataset), model.n_clusters), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
         x = batch.to(device)
         q, _, _ = model(x)
-        # print(q)
-        # print(q.size())
         q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
-        # print(q_array[b * x.size(0):(b+1) * x.size(0), :])
-        # print(q_array[b * x.size(0):(b+1) * x.size(0), :].shape)
-
     labels = np.argmax(q_array.data, axis=1)
-    print(q_array)
-    print(q_array.shape)
-    print(len(dataloader.dataset))
-    input('Press enter to continue...')
     return np.round(q_array, 5), labels
 
 def target_distribution(q):
@@ -723,10 +668,6 @@ def target_distribution(q):
     p = q ** 2 / np.sum(q, axis=0)
     p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
     return np.round(p, 5)
-
-    # p = q ** 2 / torch.sum(q, dim=0)
-    # p = torch.transpose(torch.transpose(p, 0, 1) / torch.sum(p, dim=1), 0, 1)
-    # return (p * 10**5).round() / (10**5)
 
 def analyze_clustering(model, dataloader, labels, device, epoch):
     '''
@@ -753,7 +694,6 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         show=False
     )
     # Step 2: Show t-SNE & labels
-    # z_array = None
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
@@ -768,12 +708,11 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         n_components=2,
         perplexity=75,
         learning_rate=200,
-        # n_iter=2000,
+        n_iter=2000,
         verbose=0,
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
     print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
-
     return fig1, fig2
