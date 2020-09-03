@@ -310,11 +310,11 @@ def train_DCM(
     tb = SummaryWriter(log_dir = savepath_run)
 
     # Initialize Clusters:
-    print('Initiating clusters with k-means...', end="", flush=True)
-    _, centroids = kmeans(model, copy.deepcopy(dataloader), device)
-    print('complete.')
+    # print('Initiating clusters with k-means...', end="", flush=True)
+    # _, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    # print('complete.')
     print('Initiating clusters with GMM...', end="", flush=True)
-    labels, centroids = gmm(model, copy.deepcopy(dataloader), device, centroids)
+    labels, centroids = gmm(model, copy.deepcopy(dataloader), device)
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -581,7 +581,7 @@ def kmeans(model, dataloader, device):
     centroids = km.cluster_centers_
     return labels, centroids
 
-def gmm(model, dataloader, device, centroids):
+def gmm(model, dataloader, device):
     '''
     Initiate clusters using GMM algorithm.
     # Arguments:
