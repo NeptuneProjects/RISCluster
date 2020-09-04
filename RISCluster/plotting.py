@@ -278,7 +278,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         if save:
             print(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
             fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
-        
+
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)
     gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
@@ -515,9 +515,33 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
     return fig
 
 def view_TSNE(results, labels, title, show=False):
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6,9))
+    gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[4, 3])
+
+    ax = fig.add_subplot(gs[0])
     sns.scatterplot(results[:, 0], results[:, 1], hue=labels, palette='Set1', alpha=0.2)
-    plt.title(title)
+    plt.axis('off')
+    plt.title('T-SNE Results for GMM Centroids')
+
+    ax = fig.add_subplot(gs[1])
+    plt.hist(labels, bins=np.arange(0, max(labels)+2, 1), histtype='bar', align='left', rwidth=0.8)
+    plt.grid(axis='y', linestyle='--')
+    plt.xlabel('Cluster Label')
+    plt.ylabel('Number of Detections')
+    plt.title('Histogram of Cluster Assignments')
+
+    _, counts = np.unique(labels, return_counts=True)
+    N = counts.sum()
+
+    def CtP(x):
+        return 100 * x / N
+
+    def PtC(x):
+        return x * N / 100
+
+    ax2 = ax.secondary_yaxis('right', functions=(CtP, PtC))
+    ax2.set_ylabel('Percentage of Detections')
+
     if show:
         plt.show()
     else:
