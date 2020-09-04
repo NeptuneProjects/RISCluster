@@ -707,7 +707,7 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
     results = TSNE(
         n_components=2,
         perplexity=1000,
-        learning_rate=200,
+        learning_rate=5000,
         n_iter=2000,
         verbose=0,
         random_state=2009

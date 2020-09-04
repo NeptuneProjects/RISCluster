@@ -541,6 +541,8 @@ def view_TSNE(results, labels, title, show=False):
 
     ax2 = ax.secondary_yaxis('right', functions=(CtP, PtC))
     ax2.set_ylabel('Percentage of Detections')
+    for i in range(len(np.unique(labels))):
+        plt.text(arr[1][i], arr[0][i]+10, str(int(arr[0][i])), ha='center')
 
     if show:
         plt.show()
