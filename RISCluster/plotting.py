@@ -524,7 +524,7 @@ def view_TSNE(results, labels, title, show=False):
     plt.title('T-SNE Results for GMM Centroids')
 
     ax = fig.add_subplot(gs[1])
-    plt.hist(labels, bins=np.arange(0, max(labels)+2, 1), histtype='bar', align='left', rwidth=0.8)
+    arr = plt.hist(labels, bins=np.arange(0, max(labels)+2, 1), histtype='bar', align='left', rwidth=0.8)
     plt.grid(axis='y', linestyle='--')
     plt.xlabel('Cluster Label')
     plt.ylabel('Number of Detections')
