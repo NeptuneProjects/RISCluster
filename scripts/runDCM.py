@@ -9,7 +9,7 @@ import utils
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Enter model mode and configuration file."
+        description="Enter path to configuration file."
     )
     parser.add_argument('init_file', help="Enter path to init file.")
     args = parser.parse_args()
