@@ -219,75 +219,77 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         _, x_r_train, z_train = dcm(X)
 
         fig = plt.figure(figsize=(12,9), dpi=300)
-        gs_sup = gridspec.GridSpec(nrows=int(np.sqrt(N+1)), ncols=int(np.sqrt(N+1)), hspace=0.3, wspace=0.3)
+        gs_sup_sup = gridspec.GridSpec(nrows=1, ncols=2, hspace=0.3, wspace=0.3)
 
+
+        widths = [4, 0.2]
+        gs_sup = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=gs_sup_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
+
+        ax = fig.add_subplot(gs_sup[0,0])
+        plt.imshow(torch.squeeze(X_c[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
+        plt.xticks([])
+        plt.xlabel('Time (s)', size=7)
+        plt.ylabel('Frequency (Hz)', size=7)
+        plt.title('Centroid Reconstruction')
+
+        ax = fig.add_subplot(gs_sup[0,1])
+        plt.imshow(np.expand_dims(centroids[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
+        plt.xticks([])
+        plt.yticks([])
+        ax.xaxis.set_label_position('top')
+        ax.set_xlabel('Centroid', size=5, rotation=90)
+
+
+        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N+1)), ncols=int(np.sqrt(N+1)), subplot_spec=gs_sup_sup[1], hspace=0.3, wspace=0.3)
         for i in range(N):
-            if i == 0:
-                widths = [4, 0.2]
-                gs_sub = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, width_ratios=widths)
+            gs_loc = i + 1
+            station = metadata[i]['Station']
+            try:
+                time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                            '%Y-%m-%dT%H:%M:%S.%f').strftime(
+                                            '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+            except:
+                time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                            '%Y-%m-%dT%H:%M:%S').strftime(
+                                            '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
-                ax = fig.add_subplot(gs_sub[0,0])
-                plt.imshow(torch.squeeze(X_c[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
-                plt.xticks([])
-                plt.xlabel('Time (s)', size=7)
-                plt.ylabel('Frequency (Hz)', size=7)
-                plt.title('Centroid Reconstruction')
+            heights = [1, 3, 3, 3]
+            widths = [4, 0.2, 0.2]
+            gs_sub = gridspec.GridSpecFromSubplotSpec(4, 3, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
 
-                ax = fig.add_subplot(gs_sub[0,1])
-                plt.imshow(np.expand_dims(centroids[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
-                plt.xticks([])
-                plt.yticks([])
-                ax.xaxis.set_label_position('top')
-                ax.set_xlabel('Centroid', size=5, rotation=90)
+            tvec = np.linspace(extent[0], extent[1], tr.shape[1])
+            ax = fig.add_subplot(gs_sub[0,0])
+            plt.plot(tvec, tr[i,:])
+            plt.xticks([])
+            plt.yticks([])
+            plt.title(f'Station {station}; Index: {image_index[i]}\nTrigger: {time_on}', fontsize=8)
 
-            else:
-                station = metadata[i]['Station']
-                try:
-                    time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
-                                                '%Y-%m-%dT%H:%M:%S.%f').strftime(
-                                                '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-                except:
-                    time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
-                                                '%Y-%m-%dT%H:%M:%S').strftime(
-                                                '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+            ax = fig.add_subplot(gs_sub[1,0])
+            plt.imshow(torch.squeeze(X[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.xticks([])
+            plt.ylabel('Original', size=7)
 
-                heights = [1, 3, 3, 3]
-                widths = [4, 0.2, 0.2]
-                gs_sub = gridspec.GridSpecFromSubplotSpec(4, 3, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
+            ax = fig.add_subplot(gs_sub[2,0])
+            plt.imshow(torch.squeeze(x_r_pretrain[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.ylabel('Pre-trained', size=7)
 
-                tvec = np.linspace(extent[0], extent[1], tr.shape[1])
-                ax = fig.add_subplot(gs_sub[0,0])
-                plt.plot(tvec, tr[i,:])
-                plt.xticks([])
-                plt.yticks([])
-                plt.title(f'Station {station}; Index: {image_index[i]}\nTrigger: {time_on}', fontsize=8)
+            ax = fig.add_subplot(gs_sub[3,0])
+            plt.imshow(torch.squeeze(x_r_train[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
+            plt.ylabel('Trained', size=7)
 
-                ax = fig.add_subplot(gs_sub[1,0])
-                plt.imshow(torch.squeeze(X[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
-                plt.xticks([])
-                plt.ylabel('Original', size=7)
+            ax = fig.add_subplot(gs_sub[1:,1])
+            plt.imshow(np.expand_dims(z_pretrain[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
+            plt.xticks([])
+            plt.yticks([])
+            ax.xaxis.set_label_position('top')
+            ax.set_xlabel('Pre-trained', size=5, rotation=90)
 
-                ax = fig.add_subplot(gs_sub[2,0])
-                plt.imshow(torch.squeeze(x_r_pretrain[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
-                plt.ylabel('Pre-trained', size=7)
-
-                ax = fig.add_subplot(gs_sub[3,0])
-                plt.imshow(torch.squeeze(x_r_train[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
-                plt.ylabel('Trained', size=7)
-
-                ax = fig.add_subplot(gs_sub[1:,1])
-                plt.imshow(np.expand_dims(z_pretrain[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
-                plt.xticks([])
-                plt.yticks([])
-                ax.xaxis.set_label_position('top')
-                ax.set_xlabel('Pre-trained', size=5, rotation=90)
-
-                ax = fig.add_subplot(gs_sub[1:,2])
-                plt.imshow(np.expand_dims(z_train[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
-                plt.xticks([])
-                plt.yticks([])
-                ax.xaxis.set_label_position('top')
-                ax.set_xlabel('Trained', size=5, rotation=90)
+            ax = fig.add_subplot(gs_sub[1:,2])
+            plt.imshow(np.expand_dims(z_train[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
+            plt.xticks([])
+            plt.yticks([])
+            ax.xaxis.set_label_position('top')
+            ax.set_xlabel('Trained', size=5, rotation=90)
 
         fig.suptitle(f'Label {label_list[l]}', size=14)
         fig.subplots_adjust(top=0.91)
