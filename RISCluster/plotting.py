@@ -113,7 +113,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
     for l in range(len(label_list)):
         query = np.where(label == label_list[l])[0]
-        N = 9
+        N = 8
         image_index = np.random.choice(query, N)
         metadata = get_metadata(range(N), image_index, fname_dataset)
 
@@ -149,19 +149,19 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         _, x_r_train, z_train = dcm(X)
 
         fig = plt.figure(figsize=(12,9), dpi=300)
-        gs_sup_sup = gridspec.GridSpec(nrows=1, ncols=2, hspace=0.3, wspace=0.3, width_ratios=[1, int(np.sqrt(N))])
+        gs_sup = gridspec.GridSpec(nrows=int(np.sqrt(N)+1), ncols=int(np.sqrt(N)+1), hspace=0.3, wspace=0.3)
 
         widths = [4, 0.2]
-        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N)), ncols=2, subplot_spec=gs_sup_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
+        gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=gs_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
 
-        ax = fig.add_subplot(gs_sup[0,0])
+        ax = fig.add_subplot(gs_sub[0])
         plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
         plt.xticks([])
         plt.xlabel('Time (s)', size=7)
         plt.ylabel('Frequency (Hz)', size=7)
         plt.title('Centroid Reconstruction', fontsize=8)
 
-        ax = fig.add_subplot(gs_sup[0,1])
+        ax = fig.add_subplot(gs_sub[1])
         plt.imshow(np.expand_dims(centroids[l].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
         plt.xticks([])
         plt.yticks([])
@@ -169,7 +169,6 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         ax.set_xlabel('Centroid', size=5, rotation=90)
 
 
-        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N)), ncols=int(np.sqrt(N)), subplot_spec=gs_sup_sup[1], hspace=0.3, wspace=0.3)
         for i in range(N):
             station = metadata[i]['Station']
             try:
@@ -183,7 +182,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
             heights = [1, 3, 3, 3]
             widths = [4, 0.2, 0.2]
-            gs_sub = gridspec.GridSpecFromSubplotSpec(4, 3, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
+            gs_sub = gridspec.GridSpecFromSubplotSpec(4, 3, subplot_spec=gs_sup[i+1], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
 
             tvec = np.linspace(extent[0], extent[1], tr.shape[1])
             ax = fig.add_subplot(gs_sub[0,0])
