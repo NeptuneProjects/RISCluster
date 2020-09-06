@@ -226,14 +226,14 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         gs_sup = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=gs_sup_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
 
         ax = fig.add_subplot(gs_sup[0,0])
-        plt.imshow(torch.squeeze(X_c[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
+        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
         plt.xticks([])
         plt.xlabel('Time (s)', size=7)
         plt.ylabel('Frequency (Hz)', size=7)
         plt.title('Centroid Reconstruction')
 
         ax = fig.add_subplot(gs_sup[0,1])
-        plt.imshow(np.expand_dims(centroids[i].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
+        plt.imshow(np.expand_dims(centroids[l].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
@@ -242,7 +242,6 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
         gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N+1)), ncols=int(np.sqrt(N+1)), subplot_spec=gs_sup_sup[1], hspace=0.3, wspace=0.3)
         for i in range(N):
-            gs_loc = i + 1
             station = metadata[i]['Station']
             try:
                 time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
