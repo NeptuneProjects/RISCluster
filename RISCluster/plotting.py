@@ -223,9 +223,8 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
         for i in range(N):
             if i == 0:
-                heights = [4, 4]
                 widths = [4, 0.2]
-                gs_sub = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, height_ratios=heights, width_ratios=widths)
+                gs_sub = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=gs_sup[i], hspace=0, wspace=0.1, width_ratios=widths)
 
                 ax = fig.add_subplot(gs_sub[0,0])
                 plt.imshow(torch.squeeze(X_c[i]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
