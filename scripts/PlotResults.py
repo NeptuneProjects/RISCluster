@@ -60,8 +60,8 @@ runlist = [f for f in os.listdir(f'{exppath}') if "Run" in f]
 A = [
         {
             'exppath': f"{exppath}/{f}",
-            'show': True,
-            'save': False,
+            'show': False,
+            'save': True,
             'savepath': f"{exppath}/{f}"
         } for f in os.listdir(f'{exppath}') if "Run" in f]
 print(f"Writing {len(A)} images to disk...", flush=True, end="")
