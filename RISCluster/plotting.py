@@ -159,7 +159,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         plt.xticks([])
         plt.xlabel('Time (s)', size=7)
         plt.ylabel('Frequency (Hz)', size=7)
-        plt.title('Centroid Reconstruction')
+        plt.title('Centroid Reconstruction', fontsize=8)
 
         ax = fig.add_subplot(gs_sup[0,1])
         plt.imshow(np.expand_dims(centroids[l].detach().cpu().numpy(), 1), cmap='viridis', aspect='auto')
