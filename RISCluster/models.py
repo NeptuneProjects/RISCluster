@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 np.set_printoptions(threshold=sys.maxsize)
@@ -378,7 +378,7 @@ def train_DCM(
                     break
 
             tar_dist = p[running_size:(running_size + x.size(0)), :]
-            tar_dist = torch.from_numpy(tar_dist).to(device) # <--------------- Keep as torch tensor - should be able to delete this line.
+            tar_dist = torch.from_numpy(tar_dist).to(device)
 
             # zero the parameter gradients
             model.train()
@@ -507,39 +507,13 @@ def predict_DCM(model, dataloader, idx_smpl, parameters):
                     'idx': idx_smpl[running_size:(running_size + x.size(0))][i]
                     # 'savepath': savepath_run[int(label[i])]
                 } for i in range(x.size(0))]
-        # print('--------------------------------------------------------------')
-        # print(f'Saving outputs for Batch {batch_num}:')
+
         utils.save_labels(
             [{k: v for k, v in d.items() if \
                 (k == 'idx' or k == 'label')} for d in A],
             savepath_exp,
             serial_exp
-        )
-        # print('Saving spectrograms to file...')
-        # # Parallel Implementation
-        # with ProcessPoolExecutor(max_workers=max_workers) as exec:
-        #     futures = [exec.submit(plotting.save_DCM_output, **a) for a in A]
-        #     kwargs = {
-        #         'total': len(futures),
-        #         'unit': 'it',
-        #         'unit_scale': True,
-        #         'leave': True,
-        #         'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}'
-        #     }
-        #     for future in tqdm(as_completed(futures), **kwargs):
-        #         future.result()
 
-        # Serial Implementation:
-        # for i in tqdm(range(x.size(0))):
-        #     plotting.save_DCM_output(
-        #         A[i]['x'],
-        #         A[i]['label'],
-        #         A[i]['x_rec'],
-        #         A[i]['z'],
-        #         A[i]['idx'],
-        #         A[i]['savepath'],
-        #     )
-        # - Save stats for histograms
         running_size += x.size(0)
 
 # K-means clusters initialisation
