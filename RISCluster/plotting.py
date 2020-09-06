@@ -53,76 +53,6 @@ def save_DCM_output(x, label, x_rec, z, idx, savepath):
     fig.savefig(f'{savepath}/{idx:07d}.png')
     return None
 
-# def view_all_clusters(data, n, o, labels, n_clusters, sample_index, n_examples=6, show=True):
-#     """
-#     Shows six examples of spectrograms assigned to each cluster.
-#     # Example
-#     ```
-#         print_all_clusters(data=X_train, labels=kmeans_labels, num_clusters=10)
-#     ```
-#     # Arguments
-#         data: data set (4th rank tensor) that was used as the input for the clustering algorithm used.
-#         labels: 1D array  of clustering assignments. The value of each label corresponds to the cluster
-#                 that the samples in 'data' (with the same index) was assigned to. Array must be the same length as
-#                 data.shape[0].
-#         num_clusters: The number of clusters that the data was seperated in to.
-#     # Input shape
-#         2D tensor with shape: `(n_samples, n_features)`.
-#     # Output shape
-#         2D tensor with shape: `(n_samples, n_clusters)`.
-#     """
-#     n_rows = n_clusters
-#     for k in range(0, n_clusters):
-#         label_idx = np.where(labels==k)[0]
-#         if len(label_idx) == 0:
-#             n_rows -= 1
-#
-#     fig = plt.figure(figsize=(2*n_examples,2*n_rows), dpi=300)
-#     gs = GridSpec(nrows=n_rows, ncols=n_examples)
-#     cnt_row = 0
-#     for i in range(0, n_clusters):
-#         label_idx = np.where(labels==i)[0]
-#         if len(label_idx) == 0:
-#             pass
-#         elif len(label_idx) < n_examples:
-#             for j in range(0, len(label_idx)):
-#                 ax = fig.add_subplot(gs[cnt_row,j])
-#                 plt.imshow(np.reshape(data[label_idx[j],:,:,:], (n,o)), aspect='auto')
-#                 plt.gca().invert_yaxis()
-#                 if j == 0 and cnt_row == 0:
-#                     plt.xlabel('Time Bins')
-#                     plt.ylabel('Frequency Bins')
-#                     plt.text(-0.1,1.3, f'Label {i}', weight='bold',transform=ax.transAxes)
-#                 elif j == 0 and cnt_row != 0:
-#                     plt.text(-0.1,1.3, f'Label {i}', weight='bold',transform=ax.transAxes)
-#                 # print(j, type(j))
-#                 # print(label_idx[j], type(label_idx[j])))
-#                 plt.title(f'Index = {sample_index[label_idx[j]]}')
-#             cnt_row += 1
-#         else:
-#             for j in range(0, n_examples):
-#                 ax = fig.add_subplot(gs[cnt_row,j])
-#                 plt.imshow(np.reshape(data[label_idx[j],:,:,:], (n,o)), aspect='auto')
-#                 plt.gca().invert_yaxis()
-#                 if j == 0 and cnt_row == 0:
-#                     plt.xlabel('Time Bins')
-#                     plt.ylabel('Frequency Bins')
-#                     plt.text(-0.1,1.3, f'Label {i}', weight='bold',transform=ax.transAxes)
-#                 elif j == 0 and cnt_row != 0:
-#                     plt.text(-0.1,1.3, f'Label {i}', weight='bold',transform=ax.transAxes)
-#                 plt.title(f'Index = {sample_index[label_idx[j]]}')
-#             cnt_row += 1
-#     fig.suptitle('Label Assignments', size=18,
-#                  weight='bold')
-#     # fig.set_size_inches(2*n_examples, 2*cnt_row)
-#     fig.tight_layout()
-#     fig.subplots_adjust(top=0.92)
-#     if show is False:
-#         plt.close()
-#     else:
-#         plt.show()
-#     return fig
-
 def view_centroid_output(centroids, X_r, figtitle, show=True):
     '''Reconstructs spectrograms from cluster centroids.'''
     n, o = list(X_r.size())[2:]
@@ -183,7 +113,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
     for l in range(len(label_list)):
         query = np.where(label == label_list[l])[0]
-        N = 8 # Select integer such that sqrt(N+1) is rational.
+        N = 9
         image_index = np.random.choice(query, N)
         metadata = get_metadata(range(N), image_index, fname_dataset)
 
@@ -219,11 +149,10 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         _, x_r_train, z_train = dcm(X)
 
         fig = plt.figure(figsize=(12,9), dpi=300)
-        gs_sup_sup = gridspec.GridSpec(nrows=1, ncols=2, hspace=0.3, wspace=0.3)
-
+        gs_sup_sup = gridspec.GridSpec(nrows=1, ncols=2, hspace=0.3, wspace=0.3, width_ratios=[1, int(np.sqrt(N))])
 
         widths = [4, 0.2]
-        gs_sup = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=gs_sup_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
+        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N)), 2, subplot_spec=gs_sup_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
 
         ax = fig.add_subplot(gs_sup[0,0])
         plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
@@ -240,7 +169,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         ax.set_xlabel('Centroid', size=5, rotation=90)
 
 
-        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N+1)), ncols=int(np.sqrt(N+1)), subplot_spec=gs_sup_sup[1], hspace=0.3, wspace=0.3)
+        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N)), ncols=int(np.sqrt(N)), subplot_spec=gs_sup_sup[1], hspace=0.3, wspace=0.3)
         for i in range(N):
             station = metadata[i]['Station']
             try:
