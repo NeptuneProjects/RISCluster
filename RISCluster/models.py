@@ -513,6 +513,7 @@ def predict_DCM(model, dataloader, idx_smpl, parameters):
                 (k == 'idx' or k == 'label')} for d in A],
             savepath_exp,
             serial_exp
+        )
 
         running_size += x.size(0)
 
