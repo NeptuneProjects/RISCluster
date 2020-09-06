@@ -152,7 +152,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         gs_sup_sup = gridspec.GridSpec(nrows=1, ncols=2, hspace=0.3, wspace=0.3, width_ratios=[1, int(np.sqrt(N))])
 
         widths = [4, 0.2]
-        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N)), 2, subplot_spec=gs_sup_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
+        gs_sup = gridspec.GridSpecFromSubplotSpec(nrows=int(np.sqrt(N)), ncols=2, subplot_spec=gs_sup_sup[0], hspace=0, wspace=0.1, width_ratios=widths)
 
         ax = fig.add_subplot(gs_sup[0,0])
         plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), extent=extent, aspect='auto', origin='lower')
