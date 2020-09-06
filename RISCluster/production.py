@@ -13,10 +13,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 import importlib as imp
 import models
-imp.reload(models)
 from networks import AEC, DCM, init_weights
 import utils
-imp.reload(utils)
 
 def DCM_pretrain(parameters, hyperparameters):
     print('==============================================================')
