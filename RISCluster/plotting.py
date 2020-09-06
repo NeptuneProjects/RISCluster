@@ -113,7 +113,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
 
     for l in range(len(label_list)):
         query = np.where(label == label_list[l])[0]
-        N = 9
+        N = 16
         image_index = np.random.choice(query, N)
         metadata = get_metadata(range(N), image_index, fname_dataset)
 
