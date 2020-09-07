@@ -152,6 +152,7 @@ def load_dataset(fname_dataset, index, send_message=False):
                 print(f'Sample Index = {index[i]}')
                 # print(dset[index[i], :-1, 12:-14])
                 # pass
+                break
 
         toc = datetime.now()
         msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
