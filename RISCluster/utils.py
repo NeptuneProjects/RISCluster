@@ -138,7 +138,8 @@ def load_dataset(fname_dataset, index, send_message=False):
         for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
             # try:
             dset_arr = dset[index[i], :-1, 12:-14]
-            dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std()
+            # dset_arr /= np.abs(dset_arr).max() # <---- This one works
+            # dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std() # <---- This one throws NaNs for loss in pre-training
             X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
             idx_sample[count,] = int(index[i])
             count += 1
