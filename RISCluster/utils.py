@@ -139,14 +139,14 @@ def load_dataset(fname_dataset, index, send_message=False):
             try:
                 dset_arr = dset[index[i], :-1, 12:-14]
                 # dset_arr /= dset_arr.max()
-                print(dset_arr)
-                print(dset_arr.mean(axis=(1,2)))
-                print(dset_arr.std(axis=(1,2)))
-                dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std()
+                dset_arr = (dset_arr - dset_arr.mean(axis=(1,2))) / dset_arr.std(axis=(1,2))
                 X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
                 idx_sample[count,] = int(index[i])
                 count += 1
             except:
+                print(dset_arr)
+                print(dset_arr.mean(axis=(1,2)))
+                print(dset_arr.std(axis=(1,2)))
                 print('Numpy "Divide-by-zero Warning" raised, '
                       'skipping spectrogram.')
                 print(f'Sample Index = {index[i]}')
