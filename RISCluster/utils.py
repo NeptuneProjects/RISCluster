@@ -129,31 +129,29 @@ def load_dataset(fname_dataset, index, send_message=False):
         print(f'Loading {M} samples...')
         tic = datetime.now()
 
-        np.seterr(all='raise')
+        np.seterr(all='ignore')
         # X = np.empty([M, n-2, o-173, 1])
-        X = np.empty([M, 1, 65, 175])
+        X = np.zeros([M, 1, 65, 175])
         idx_sample = np.empty([M,], dtype=np.int)
-        dset_arr = np.empty([n, o])
+        dset_arr = np.zeros([n, o])
         count = 0
         for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
-            try:
-                dset_arr = dset[index[i], :-1, 12:-14]
-                # dset_arr /= dset_arr.max()
-                print(dset_arr.shape)
-                dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std()
-                X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
-                idx_sample[count,] = int(index[i])
-                count += 1
-            except:
-                print(dset_arr)
-                print(dset_arr.mean(axis=(0,1)))
-                print(dset_arr.std(axis=(0,1)))
-                print('Numpy "Divide-by-zero Warning" raised, '
-                      'skipping spectrogram.')
-                print(f'Sample Index = {index[i]}')
+            # try:
+            dset_arr = dset[index[i], :-1, 12:-14]
+            dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std()
+            X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
+            idx_sample[count,] = int(index[i])
+            count += 1
+            # except:
+                # print(dset_arr)
+                # print(dset_arr.mean())
+                # print(dset_arr.std())
+                # print('Numpy "Divide-by-zero Warning" raised, '
+                      # 'skipping spectrogram.')
+                # print(f'Failed: Sample Index = {index[i]}')
                 # print(dset[index[i], :-1, 12:-14])
                 # pass
-                raise Exception()
+                # raise Exception()
                 # break
 
         toc = datetime.now()
