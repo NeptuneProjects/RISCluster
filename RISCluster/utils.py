@@ -138,9 +138,9 @@ def load_dataset(fname_dataset, index, send_message=False):
         for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
             try:
                 dset_arr = dset[index[i], :-1, 12:-14]
-                dset_arr /= dset_arr.max()
+                # dset_arr /= dset_arr.max()
                 print(dset_arr.shape)
-                # dset_arr = (dset_arr - dset_arr.mean(axis=(0,1))) / dset_arr.std(axis=(0,1))
+                dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std()
                 X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
                 idx_sample[count,] = int(index[i])
                 count += 1
