@@ -10,6 +10,7 @@ import numpy.ma as ma
 from obspy import read, read_inventory, Stream, UTCDateTime
 from obspy.clients.fdsn.mass_downloader import MassDownloader, \
     RectangularDomain, Restrictions
+from obspy.signal.tf_misfit import cwt
 from obspy.signal.trigger import classic_sta_lta, recursive_sta_lta, \
     trigger_onset
 import pandas as pd
@@ -64,6 +65,7 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
     network = signal_args.network
     station = signal_args.station
     channel = signal_args.channel
+    cutoff = signal_args.cutoff
 
     if detector_type == 'classic':
         cft = classic_sta_lta(tr.data, STA, LTA)
@@ -89,6 +91,8 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
     tr_out = np.empty((len(on), int(fs*T_seg + 1)))
     S_out = np.empty((len(on), int(NFFT/2 + 1) + 1,
                      int(T_seg//(tpersnap*(1 - overlap)) + 1)))
+    C_out = np.empty((len(on), int(NFFT/2 + 1),
+                     int(T_seg//(tpersnap*(1 - overlap)))))
     catdict = [{"Network": None,
                 "Station": None,
                 "Channel": None,
@@ -109,16 +113,21 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
         # i0 = int(on[i])
         # Index2 is T_seg sec after i0:
         i1 = int(i0 + T_seg*fs)
-        # Calculate spectrogram and save to file:
+        # Trim and normalize trace:
+        tr_sample = tr.copy().trim(starttime=UTCDateTime(dtvec[i0]),
+                       endtime=UTCDateTime(dtvec[i1]))
+        # Normalize trace to [-1, 1]:
+        tr_data = tr_sample.data
+        tr_data /= np.abs(tr_data).max()
+        tr_out[i, :] = tr_data
+        # Calculate spectrogram:
         t_spec, f_spec, S = get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap)
         t_spec = np.insert(t_spec, 0, np.NAN)
         S = np.hstack((f_spec[:, None], S))
         S_out[i, :, :] = np.vstack((S, t_spec))
-        # Trim trace and save to file:
-        tr_sample = tr.copy().trim(starttime=UTCDateTime(dtvec[i0]),
-                       endtime=UTCDateTime(dtvec[i1]))
-        tr_out[i, :] = tr_sample.data
-        # Save metadata into dictionary and save to file:
+        # Calculate CWT:
+        C_out[i, :, :] = get_cwt(tr_data, fs, cutoff)
+        # Save metadata into dictionary:
         catdict[i] = {
                    "Network": network,
                    "Station": station,
@@ -134,7 +143,7 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
                    "TriggerOffTime": dtvec[off[i]].isoformat()
                    }
 
-    return tr_out, S_out, catdict
+    return tr_out, S_out, C_out, catdict
 
 def get_channel(channel_index):
     '''Input: Integer channel index (0-2).
@@ -162,18 +171,26 @@ def get_datasets(T_seg, NFFT, tpersnap, fs, group_name, overlap):
                                           maxshape=(None, n, o),
                                           chunks=(50, n, o), dtype='f')
     dset_spec.attrs['TimeUnits'] = 's'
-    dset_spec.attrs['TimeVecXCoord'] = np.array([1,300])
+    dset_spec.attrs['TimeVecXCoord'] = np.array([1,200])
     dset_spec.attrs['TimeVecYCoord'] = 65
     dset_spec.attrs['FreqUnits'] = 'Hz'
     dset_spec.attrs['FreqVecXCoord'] = 0
     dset_spec.attrs['FreqVecYCoord'] = np.array([0,64])
     dset_spec.attrs['AmplUnits'] = '(m/s)^2/Hz'
+    # Set up dataset for scalograms:
+    m = 1
+    n = int(NFFT/2 + 1)
+    o = int(T_seg/(tpersnap*(1 - overlap)))
+    dset_scal = group_name.create_dataset('Scalogram', (m, n, o),
+                                          maxshape=(None, n, o),
+                                          chunks=(50, n, o), dtype='f')
+
     # Set up dataset for catalogue:
     m = 1
     dtvl = h5py.string_dtype(encoding='utf-8')
     dset_cat = group_name.create_dataset('Catalogue', (m,), maxshape=(None,),
                                          dtype=dtvl)
-    return dset_tr, dset_spec, dset_cat
+    return dset_tr, dset_spec, dset_scal, dset_cat
 
 def get_datetime(datetime_index):
     '''Input: Integer datetime index for any day between ti and tf.
@@ -204,6 +221,11 @@ def get_network(network_index):
     network_name = network_list[network_index]
     return network_name
 
+
+def get_cwt(tr, fs, cutoff):
+    scalogram = cwt(tr, 1 / fs, 8, cutoff, 50, 65)
+    return np.abs(scalogram[:,0:-1:2])
+
 def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
     npersnap = fs*tpersnap # Points per snapshot.
     # if npersnap % 2: # If the index is odd, change to an even index.
@@ -211,6 +233,7 @@ def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
     i0 = int(i0 - npersnap/2)
     i1 = int(i1 + npersnap/2 - 1)
     tr = tr[i0:i1]
+    tr /= np.abs(tr).max()
     window = np.kaiser(npersnap, beta=5.7)
     f, t, S = signal.spectrogram(tr, fs, window, nperseg=npersnap,
                                  noverlap = overlap*npersnap, nfft = NFFT)
@@ -423,15 +446,15 @@ def workflow_wrapper(
         tr, signal_args = readStream_addBuffer(signal_args)
         inv = read_stationXML(signal_args)
         tr, signal_args = trace_processor(tr, inv, signal_args)
-        tr_out, S_out, catdict = detector(tr, signal_args, detector_args, 'classic')
-        return tr_out, S_out, catdict
+        tr_out, S_out, C_out, catdict = detector(tr, signal_args, detector_args, 'classic')
+        return tr_out, S_out, C_out, catdict
     else:
         try:
             tr, signal_args = readStream_addBuffer(signal_args)
             inv = read_stationXML(signal_args)
             tr, signal_args = trace_processor(tr, inv, signal_args)
-            tr_out, S_out, catdict = detector(tr, signal_args, detector_args, 'classic')
-            return tr_out, S_out, catdict
+            tr_out, S_out, C_out, catdict = detector(tr, signal_args, detector_args, 'classic')
+            return tr_out, S_out, C_out, catdict
         except:
             # print(f'\n    Station {get_station(station_index)} skipped.')
             return None, None, None

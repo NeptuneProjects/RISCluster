@@ -143,11 +143,13 @@ if __name__ == '__main__':
             elif j == 0:
                 tr = output[0]
                 S = output[1]
-                metadata = output[2]
+                C = output[2]
+                metadata = output[3]
             else:
                 tr = np.append(tr, output[0], axis=0)
                 S = np.append(S, output[1], axis=0)
-                metadata.extend(output[2])
+                C = np.append(C, output[2], axis=0)
+                metadata.extend(output[3])
             j += 1
 
         print('    Saving results...')
@@ -158,19 +160,22 @@ if __name__ == '__main__':
                 h5group_name = f.create_group(group_name)
                 h5group_name.attrs['T_seg (s)'] = T_seg
                 h5group_name.attrs['NFFT'] = NFFT
-                dset_tr, dset_spec, dset_cat = \
+                dset_tr, dset_spec, dset_scal, dset_cat = \
                                     process.get_datasets(T_seg, NFFT, tpersnap, 100,
                                                          h5group_name, overlap)
 
             m = tr.shape[0]
             print(f'    {m} detections found.')
-            dset_tr = f['/' + group_name + '/Trace']
+            dset_tr = f[f'/{group_name}/Trace']
             dset_tr.resize(dset_tr.shape[0]+m, axis=0)
             dset_tr[-m:,:] = tr
-            dset_spec = f['/' + group_name + '/Spectrogram']
+            dset_spec = f[f'/{group_name}/Spectrogram']
             dset_spec.resize(dset_spec.shape[0]+m, axis=0)
             dset_spec[-m:,:,:] = S
-            dset_cat = f['/' + group_name + '/Catalogue']
+            dset_scal = f[f'/{group_name}/Scalogram']
+            dset_scal.resize(dset_spec.shape[0]+m, axis=0)
+            dset_scal[-m:,:,:] = C
+            dset_cat = f[f'/{group_name}/Catalogue']
             dset_cat.resize(dset_cat.shape[0]+m, axis=0)
 
             for j in np.arange(0,m):
@@ -194,8 +199,6 @@ if __name__ == '__main__':
     new Start Day.'''
     notify(subj,msg)
     print('======================================================================')
-
-S.shape
 
 # For debugging:
 # import importlib as imp
