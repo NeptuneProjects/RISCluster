@@ -88,11 +88,13 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
         raise Exception('Unable to process station.')
         # return None, None, None
     # Analyze and save data from each detection:
-    tr_out = np.empty((len(on), int(fs*T_seg + 1)))
-    S_out = np.empty((len(on), int(NFFT/2 + 1) + 1,
-                     int(T_seg//(tpersnap*(1 - overlap)) + 1)))
-    C_out = np.empty((len(on), int(NFFT/2 + 1),
-                     int(T_seg//(tpersnap*(1 - overlap)))))
+    tr_out = np.zeros((len(on), int(fs*T_seg + 1)))
+    S_out = np.zeros((len(on), 70, int(T_seg//(tpersnap*(1 - overlap)) + 1)))
+    # S_out = np.empty((len(on), int(NFFT/2 + 1) + 1,
+    #                  int(T_seg//(tpersnap*(1 - overlap)) + 1)))
+    C_out = np.zeros((len(on), 69, int(T_seg//(tpersnap*(1 - overlap)))))
+    # C_out = np.empty((len(on), int(NFFT/2 + 1),
+                     # int(T_seg//(tpersnap*(1 - overlap)))))
     catdict = [{"Network": None,
                 "Station": None,
                 "Channel": None,
@@ -152,6 +154,10 @@ def get_channel(channel_index):
     channel_name = channel_list[channel_index]
     return channel_name
 
+def get_cwt(tr, fs, cutoff):
+    scalogram = cwt(tr, 1 / fs, 8, cutoff, 30, 69)
+    return np.abs(scalogram[:,0:-1:2])
+
 def get_datasets(T_seg, NFFT, tpersnap, fs, group_name, overlap):
     '''Defines the structure of the .h5 database; h5py package required.
     Of note, pay special attention to the dimensions of the chunked data. By
@@ -161,29 +167,31 @@ def get_datasets(T_seg, NFFT, tpersnap, fs, group_name, overlap):
     m = 1
     n = fs*T_seg + 1
     dset_tr = group_name.create_dataset('Trace', (m, n), maxshape=(None,n),
-                                        chunks=(200, n), dtype='f')
+                                        chunks=(20, n), dtype='f')
     dset_tr.attrs['AmplUnits'] = 'Velocity (m/s)'
     # Set up dataset for spectrograms:
     m = 1
-    n = int(NFFT/2 + 1) + 1
+    # n = int(NFFT/2 + 1) + 1
+    n = 70
     o = int(T_seg/(tpersnap*(1 - overlap)) + 1)
     dset_spec = group_name.create_dataset('Spectrogram', (m, n, o),
                                           maxshape=(None, n, o),
-                                          chunks=(50, n, o), dtype='f')
+                                          chunks=(20, n, o), dtype='f')
     dset_spec.attrs['TimeUnits'] = 's'
     dset_spec.attrs['TimeVecXCoord'] = np.array([1,200])
-    dset_spec.attrs['TimeVecYCoord'] = 65
+    dset_spec.attrs['TimeVecYCoord'] = 70
     dset_spec.attrs['FreqUnits'] = 'Hz'
     dset_spec.attrs['FreqVecXCoord'] = 0
-    dset_spec.attrs['FreqVecYCoord'] = np.array([0,64])
+    dset_spec.attrs['FreqVecYCoord'] = np.array([0,68])
     dset_spec.attrs['AmplUnits'] = '(m/s)^2/Hz'
     # Set up dataset for scalograms:
     m = 1
-    n = int(NFFT/2 + 1)
+    # n = int(NFFT/2 + 1)
+    n = 69
     o = int(T_seg/(tpersnap*(1 - overlap)))
     dset_scal = group_name.create_dataset('Scalogram', (m, n, o),
                                           maxshape=(None, n, o),
-                                          chunks=(50, n, o), dtype='f')
+                                          chunks=(20, n, o), dtype='f')
 
     # Set up dataset for catalogue:
     m = 1
@@ -221,11 +229,6 @@ def get_network(network_index):
     network_name = network_list[network_index]
     return network_name
 
-
-def get_cwt(tr, fs, cutoff):
-    scalogram = cwt(tr, 1 / fs, 8, cutoff, 50, 65)
-    return np.abs(scalogram[:,0:-1:2])
-
 def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
     npersnap = fs*tpersnap # Points per snapshot.
     # if npersnap % 2: # If the index is odd, change to an even index.
@@ -238,6 +241,9 @@ def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
     f, t, S = signal.spectrogram(tr, fs, window, nperseg=npersnap,
                                  noverlap = overlap*npersnap, nfft = NFFT)
     t = t - min(t)
+    mask = (f >= 3) & (f <= 30)
+    S = S[mask, : ]
+    f = f[mask]
     return t, f, S
 
 def get_station(station_index):
@@ -413,7 +419,8 @@ def trace_processor(tr, inv, signal_args):
     tr.remove_response(inventory=inv, water_level=14, output='VEL',
                        pre_filt=pre_filt, plot=False)
     # Filter the trace:
-    tr.filter('highpass', freq=cutoff, corners=2, zerophase=True)
+    # tr.filter('highpass', freq=cutoff, corners=2, zerophase=True)
+    tr.filter('bandpass', freqmin=cutoff, freqmax=30, corners=4, zerophase=True)
     # signal_args.tvec = tvec
     signal_args.dtvec = dtvec
     signal_args.fs = fs
@@ -457,4 +464,4 @@ def workflow_wrapper(
             return tr_out, S_out, C_out, catdict
         except:
             # print(f'\n    Station {get_station(station_index)} skipped.')
-            return None, None, None
+            return None, None, None, None

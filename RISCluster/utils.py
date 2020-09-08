@@ -18,6 +18,17 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 from twilio.rest import Client
 
+class testDataset(Dataset):
+
+    def __init__(self, fname_dataset, M, transform=None):
+        self.transform = transform
+
+    def __getitem__():
+        pass
+
+    def __len__():
+        pass
+
 class SeismoDataset(Dataset):
 
     def __init__(self, data, transform=None):

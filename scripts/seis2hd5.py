@@ -23,7 +23,7 @@ import processing as process
 from processing import workflow_wrapper
 from utils import notify
 
-debug = True
+debug = False
 
 if __name__ == '__main__':
     if not debug:
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     network_index = 0
     channel_index = 2
     T_seg = 4 # Duration of traces & spectrograms (sec)
-    NFFT = 128
+    NFFT = 256
     tpersnap = 1 / 4
     overlap = 0.92 # Fraction of overlap for spectrograms
     taper_trace = 10 # Taper (min)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     data_savepath = '../../../Data/' # Location of .h5 file
     if not debug:
         group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
-        data_savename = f'DetectionData_{group_name}.h5' # File name
+        data_savename = f'DetectionData_{group_name}_BPFilt.h5' # File name
     elif debug:
         group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
         data_savename = f'DetectionData_{group_name}_debug.h5' # File name
@@ -173,7 +173,7 @@ if __name__ == '__main__':
             dset_spec.resize(dset_spec.shape[0]+m, axis=0)
             dset_spec[-m:,:,:] = S
             dset_scal = f[f'/{group_name}/Scalogram']
-            dset_scal.resize(dset_spec.shape[0]+m, axis=0)
+            dset_scal.resize(dset_scal.shape[0]+m, axis=0)
             dset_scal[-m:,:,:] = C
             dset_cat = f[f'/{group_name}/Catalogue']
             dset_cat.resize(dset_cat.shape[0]+m, axis=0)
