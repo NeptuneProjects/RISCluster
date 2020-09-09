@@ -8,9 +8,7 @@ def query_dbSize(path):
         DataSpec = '/4s/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
-        m -= 1
-
-    print(f' >> h5 dataset contains {m} samples with dimensions [{n},{o}]. <<')
+        return m-1, n, o
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Enter path to .h5 file.')
@@ -20,4 +18,5 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     path = args.path
-    query_dbSize(path)
+    m, n, o = query_dbSize(path)
+    print(f" >> h5 dataset contains {m} samples with dimensions [{n},{o}]. <<")
