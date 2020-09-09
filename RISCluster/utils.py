@@ -142,7 +142,8 @@ def load_dataset(fname_dataset, index, send_message=False):
 
         np.seterr(all='ignore')
         # X = np.empty([M, n-2, o-173, 1])
-        X = np.zeros([M, 1, 65, 175])
+        # X = np.zeros([M, 1, 65, 175])
+        X = np.zeros([M, 69, 175])
         idx_sample = np.empty([M,], dtype=np.int)
         dset_arr = np.zeros([n, o])
         count = 0
@@ -150,9 +151,10 @@ def load_dataset(fname_dataset, index, send_message=False):
             # try:
             dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
             # dset_arr /= np.abs(dset_arr).max() # <---- This one works
-            dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max()
+            # dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max() # <---- This one works
             # dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std() # <---- This one throws NaNs for loss in pre-training
-            X[count,:,:,:] = np.expand_dims(dset_arr,axis=0)
+            X[count,:,:] = dset_arr
+            # X[count,:,:,:] = np.expand_dims(dset_arr, axis=0)
             idx_sample[count,] = int(index[i])
             count += 1
             # except:
@@ -166,6 +168,9 @@ def load_dataset(fname_dataset, index, send_message=False):
                 # pass
                 # raise Exception()
                 # break
+
+        X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
+        X = np.expand_dims(X, axis=1)
 
         toc = datetime.now()
         msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
