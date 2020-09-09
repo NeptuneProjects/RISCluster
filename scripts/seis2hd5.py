@@ -46,8 +46,10 @@ if __name__ == '__main__':
     # ========================== Initialize Parameters ============================
     # v v v v Modify these parameters when switching to Velella! v v v v
         num_workers = int(args.num_workers)
-        datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
-        station_index = np.arange(0, 34)
+        # datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
+        datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+        # station_index = np.arange(0, 34)
+        station_index = np.array([24, 32])
         day_start = int(args.day_start)
         day_stop = int(args.day_stop)
     # ^ ^ ^ ^ Modify these parameters when switching to Velella! ^ ^ ^ ^
@@ -145,41 +147,46 @@ if __name__ == '__main__':
                 S = output[1]
                 C = output[2]
                 metadata = output[3]
+                j += 1
             else:
                 tr = np.append(tr, output[0], axis=0)
                 S = np.append(S, output[1], axis=0)
                 C = np.append(C, output[2], axis=0)
                 metadata.extend(output[3])
-            j += 1
+                j += 1
 
-        print('    Saving results...')
-        with h5py.File(data_savepath+data_savename, 'a') as f:
-            if ('/' + group_name) not in f:
-                print(f'    No h5 group found, creating group "{group_name}" '
-                      'and datasets.')
-                h5group_name = f.create_group(group_name)
-                h5group_name.attrs['T_seg (s)'] = T_seg
-                h5group_name.attrs['NFFT'] = NFFT
-                dset_tr, dset_spec, dset_scal, dset_cat = \
-                                    process.get_datasets(T_seg, NFFT, tpersnap, 100,
-                                                         h5group_name, overlap)
+        if j == 0:
+            print('    No detections found.')
+            pass
+        else:
+            print('    Saving results...')
+            with h5py.File(data_savepath+data_savename, 'a') as f:
+                if ('/' + group_name) not in f:
+                    print(f'    No h5 group found, creating group "{group_name}" '
+                          'and datasets.')
+                    h5group_name = f.create_group(group_name)
+                    h5group_name.attrs['T_seg (s)'] = T_seg
+                    h5group_name.attrs['NFFT'] = NFFT
+                    dset_tr, dset_spec, dset_scal, dset_cat = \
+                                        process.get_datasets(T_seg, NFFT, tpersnap, 100,
+                                                             h5group_name, overlap)
 
-            m = tr.shape[0]
-            print(f'    {m} detections found.')
-            dset_tr = f[f'/{group_name}/Trace']
-            dset_tr.resize(dset_tr.shape[0]+m, axis=0)
-            dset_tr[-m:,:] = tr
-            dset_spec = f[f'/{group_name}/Spectrogram']
-            dset_spec.resize(dset_spec.shape[0]+m, axis=0)
-            dset_spec[-m:,:,:] = S
-            dset_scal = f[f'/{group_name}/Scalogram']
-            dset_scal.resize(dset_scal.shape[0]+m, axis=0)
-            dset_scal[-m:,:,:] = C
-            dset_cat = f[f'/{group_name}/Catalogue']
-            dset_cat.resize(dset_cat.shape[0]+m, axis=0)
+                m = tr.shape[0]
+                print(f'    {m} detections found.')
+                dset_tr = f[f'/{group_name}/Trace']
+                dset_tr.resize(dset_tr.shape[0]+m, axis=0)
+                dset_tr[-m:,:] = tr
+                dset_spec = f[f'/{group_name}/Spectrogram']
+                dset_spec.resize(dset_spec.shape[0]+m, axis=0)
+                dset_spec[-m:,:,:] = S
+                dset_scal = f[f'/{group_name}/Scalogram']
+                dset_scal.resize(dset_scal.shape[0]+m, axis=0)
+                dset_scal[-m:,:,:] = C
+                dset_cat = f[f'/{group_name}/Catalogue']
+                dset_cat.resize(dset_cat.shape[0]+m, axis=0)
 
-            for j in np.arange(0,m):
-                dset_cat[-m+j,] = json.dumps(metadata[j])
+                for j in np.arange(0,m):
+                    dset_cat[-m+j,] = json.dumps(metadata[j])
 
     toc_run = datetime.now() - tic_run
     print('----------------------------------------------------------------------')
