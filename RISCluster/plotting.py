@@ -7,7 +7,7 @@ sys.path.insert(0, '../RISCluster/')
 
 import h5py
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -127,8 +127,10 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             # M = len(image_index)
             DataSpec = '/4s/Spectrogram'
             dset = f[DataSpec]
-            fvec = dset[1, 0:64, 0]
-            tvec = dset[1, 65, 12:-14]
+            # fvec = dset[1, 0:64, 0]
+            fvec = dset[1, 0:68, 0]
+            # tvec = dset[1, 65, 12:-14]
+            tvec = dset[1, 69, 12:-14]
             # tvec = dset[1, 65, :]
 
         with h5py.File(fname_dataset, 'r') as f:
@@ -276,11 +278,14 @@ def view_detections(fname_dataset, image_index, figtitle,
         M = len(image_index)
         DataSpec = '/4s/Spectrogram'
         dset = f[DataSpec]
-        fvec = dset[1, 0:64, 0]
-        tvec = dset[1, 65, 12:-14]
+        # fvec = dset[1, 0:64, 0]
+        fvec = dset[1, 0:68, 0]
+        # tvec = dset[1, 65, 12:-14]
+        tvec = dset[1, 69, 12:-14]
         m, _, _ = dset.shape
         m -= 1
-        n = 65
+        # n = 65
+        n = 69
         o = 175
         X = np.empty([M, n, o])
         dset_arr = np.empty([n, o])

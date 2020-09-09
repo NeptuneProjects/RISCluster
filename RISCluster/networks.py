@@ -9,7 +9,7 @@ class Encoder(nn.Module):
         self.encoder = nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
             nn.ReLU(True),
-            nn.Conv2d(8, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.Conv2d(8, 16, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
             nn.ReLU(True),
             nn.Conv2d(16, 32, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
             nn.ReLU(True),
@@ -36,22 +36,22 @@ class Decoder(nn.Module):
             nn.ReLU(True)
         )
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(2,2), padding=(0,0)),
-            nn.ReLU(True),
+            nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(2,2), padding=(0,0)), # <---- Experimental
+            nn.ReLU(True),  # <---- Experimental
             nn.ConvTranspose2d(64, 32, kernel_size=(3,3), stride=(2,2), padding=(1,0)),
             nn.ReLU(True),
             nn.ConvTranspose2d(32, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
             nn.ReLU(True),
-            nn.ConvTranspose2d(16, 8, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.ConvTranspose2d(16, 8, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
             nn.ReLU(True),
-            nn.ConvTranspose2d(8, 1, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.ConvTranspose2d(8, 1, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
         )
 
     def forward(self, x):
         x = self.latent2dec(x)
         x = x.view(-1, 128, 2, 5)
         x = self.decoder(x)
-        return x[:,:,:,1:-1]
+        return x[:,:,1:-1,1:-1]
         # return x
 
 class AEC(nn.Module):
@@ -110,6 +110,59 @@ class DCM(nn.Module):
         x = self.decoder(z)
         q = self.clustering(z)
         return q, x, z
+
+# Old Method 3 ==============================================================
+# This network is best for data of dimension 65x175 (3.5 s)
+# class Encoder(nn.Module):
+#     def __init__(self):
+#         super(Encoder, self).__init__()
+#         self.encoder = nn.Sequential(
+#             nn.Conv2d(1, 8, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
+#             nn.ReLU(True),
+#             nn.Conv2d(8, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+#             nn.ReLU(True),
+#             nn.Conv2d(16, 32, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+#             nn.ReLU(True),
+#             nn.Conv2d(32, 64, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+#             nn.ReLU(True),
+#             nn.Conv2d(64, 128, kernel_size=(3,3), stride=(2,2), padding=(1,0)),
+#             nn.ReLU(True),
+#
+#             nn.Flatten(),
+#             nn.Linear(1280, 10),
+#             nn.ReLU(True)
+#         )
+#
+#     def forward(self, x):
+#         x = self.encoder(x)
+#         return x
+#
+# # Decoder Layers
+# class Decoder(nn.Module):
+#     def __init__(self):
+#         super(Decoder, self).__init__()
+#         self.latent2dec = nn.Sequential(
+#             nn.Linear(10, 1280),
+#             nn.ReLU(True)
+#         )
+#         self.decoder = nn.Sequential(
+#             nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(2,2), padding=(0,0)),
+#             nn.ReLU(True),
+#             nn.ConvTranspose2d(64, 32, kernel_size=(3,3), stride=(2,2), padding=(1,0)),
+#             nn.ReLU(True),
+#             nn.ConvTranspose2d(32, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+#             nn.ReLU(True),
+#             nn.ConvTranspose2d(16, 8, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+#             nn.ReLU(True),
+#             nn.ConvTranspose2d(8, 1, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+#         )
+#
+#     def forward(self, x):
+#         x = self.latent2dec(x)
+#         x = x.view(-1, 128, 2, 5)
+#         x = self.decoder(x)
+#         return x[:,:,:,1:-1]
+#         # return x
 
 # Old Method 2 ================================================================
 # This network is bets for data of dimension 64x128
