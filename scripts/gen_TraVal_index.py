@@ -15,8 +15,13 @@ if __name__ == '__main__':
         type=int,
         help='Enter number of spectrograms to be used for training/validation.'
     )
+    parser.add_argument(
+        'path',
+        metavar='path',
+        help='Enter path to h5 dataset.'
+    )
     args = parser.parse_args()
     M = args.M
-    fname_dataset = '../../../Data/DetectionData_4s.h5'
+    fname_dataset = args.path
     savepath = '../../../Data/'
     utils.save_TraVal_index(M, fname_dataset, savepath)
