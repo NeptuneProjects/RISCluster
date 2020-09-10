@@ -96,6 +96,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     config = configparser.ConfigParser()
     config.read(init_file)
     fname_dataset = config['UNIVERSAL']['fname_dataset']
+    transform = config['PARAMETERS']['transform']
     AEC_weights = config['PARAMETERS']['saved_weights']
     n_clusters = int(config['PARAMETERS']['n_clusters'])
     DCM_weights_path = f"{config['UNIVERSAL']['savepath']}Models/DCM/{exppath.split('/')[-2]}/{exppath.split('/')[-1]}"
@@ -117,7 +118,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         image_index = np.random.choice(query, N)
         metadata = get_metadata(range(N), image_index, fname_dataset)
 
-        dataset = utils.load_dataset(fname_dataset, image_index, send_message=False)
+        dataset = utils.load_dataset(fname_dataset, image_index, send_message=False, transform=transform)
         dataloader = DataLoader(dataset, batch_size=N)
         X = []
         for batch in dataloader:
