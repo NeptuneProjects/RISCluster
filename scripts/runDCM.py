@@ -20,8 +20,12 @@ if __name__ == '__main__':
     config.read(init_file)
 
     if args.cuda_device is not None:
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_device
+        device = utils.set_device(args.cuda_device)
+    else:
+        device = utils.set_device()
+
+        # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        # os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_device
 
     # =========================================================================
     # Universal Parameters
@@ -37,7 +41,7 @@ if __name__ == '__main__':
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
-            device=utils.set_device(),
+            device=device,
             indexpath=indexpath,
             n_epochs=int(config['PARAMETERS']['n_epochs']),
             savepath=savepath_exp,
@@ -70,7 +74,7 @@ if __name__ == '__main__':
         savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
-            device=utils.set_device(),
+            device=device,
             indexpath=indexpath,
             n_epochs=int(config['PARAMETERS']['n_epochs']),
             update_interval=int(config['PARAMETERS']['update_interval']),
@@ -114,7 +118,7 @@ if __name__ == '__main__':
             M = int(M)
         parameters = dict(
             fname_dataset=fname_dataset,
-            device=utils.set_device(),
+            device=device,
             M = M,
             indexpath=indexpath,
             exclude=config['PARAMETERS'].getboolean('exclude'),
