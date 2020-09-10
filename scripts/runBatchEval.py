@@ -27,7 +27,7 @@ if __name__ == '__main__':
     mode = 'predict'
     configpath = '../../ConfigFiles'
     init_path = utils.make_pred_configs_batch(loadpath, configpath, False)
-    fname_dataset = '../../../Data/DetectionData_4s.h5'
+    fname_dataset = '../../../Data/DetectionData_4s_BPFilt.h5'
     savepath = '../../../Outputs/'
     indexpath = '../../../Data/TraValIndex_M=125000_Res=0.0_20200909T111848.pkl'
     # M = 'all'
