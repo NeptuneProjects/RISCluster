@@ -567,7 +567,7 @@ def gmm(model, dataloader, device):
 
     GMM = GaussianMixture(
         n_components=model.n_clusters,
-        max_iter=1000,
+        max_iter=10000,
         n_init=1,
         weights_init=gmm_weights,
         means_init=centroids
