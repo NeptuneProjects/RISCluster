@@ -225,7 +225,7 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
 
     config_ = configparser.ConfigParser()
     tmp = [f for f in os.listdir(loadpath) if f.endswith('.ini')][0]
-    config_.read(tmp)
+    config_.read(f"{loadpath}/{tmp}")
     print(tmp)
     transform = config_['PARAMETERS']['transform']
 
