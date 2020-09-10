@@ -316,7 +316,7 @@ def train_DCM(
     labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
     # print('complete.')
     # print('Initiating clusters with GMM...', end="", flush=True)
-    # labels, centroids = gmm(model, copy.deepcopy(dataloader), device)
+    # labels_prev, centroids = gmm(model, copy.deepcopy(dataloader), device)
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -543,7 +543,7 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters, max_iter=10000, n_init=250, random_state=2009)
+    km = KMeans(n_clusters=model.n_clusters, max_iter=10000, n_init=500, random_state=2009)
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
