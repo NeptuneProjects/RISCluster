@@ -54,7 +54,7 @@ import utils
 
 # ==== Show examples of clustering performance ============================
 # expname = input('Experiment Serial: ')
-expname = 'Exp20200905T202531'
+expname = 'Exp20200909T125823'
 exppath = f'../../../Outputs/Trials/{expname}'
 runlist = [f for f in os.listdir(f'{exppath}') if "Run" in f]
 A = [
