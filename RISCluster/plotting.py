@@ -1,6 +1,7 @@
 import configparser
 import csv
 from datetime import datetime
+import io
 import os
 import sys
 sys.path.insert(0, '../RISCluster/')
@@ -19,6 +20,89 @@ from torch.utils.data import DataLoader
 from processing import get_metadata
 import utils
 from networks import AEC, DCM
+
+def cluster_gallery(model, labels, fname_dataset, centroids=None, show=False):
+    text_trap = io.StringIO()
+    sys.stdout = text_trap
+    model.eval()
+    device = 'cpu'
+    label_list, counts = np.unique(labels, return_counts=True)
+    if centroids is not None:
+        print(torch.from_numpy(centroids).dtype)
+        X_c = model.decoder(torch.from_numpy(centroids).float().to(device))
+    else:
+        centroids = model.clustering.weights
+        X_c = model.decoder(centroids)
+        centroids = centroids.detach().cpu().numpy()
+
+    fig = plt.figure(figsize=(len(label_list),12), dpi=100)
+    gs_sup = gridspec.GridSpec(nrows=9, ncols=len(label_list), hspace=0.05, wspace=0.05)
+    heights = [1, 4, 0.2]
+    for l, label in enumerate(label_list):
+        query = np.where(labels == label_list[l])[0]
+        N = 8
+        image_index = np.random.choice(query, N, replace=False)
+
+        transform = 'sample_norm_cent'
+        dataset = utils.load_dataset(fname_dataset, image_index, send_message=False, transform=transform, **{"notqdm": True})
+        dataloader = DataLoader(dataset, batch_size=N)
+        X = []
+        for batch in dataloader:
+            X = batch.to(device)
+
+        Z = model.encoder(X)
+
+        with h5py.File(fname_dataset, 'r') as f:
+            M = len(image_index)
+            DataSpec = '/4s/Trace'
+            dset = f[DataSpec]
+            k = 351
+
+            tr = np.empty([M, k])
+            dset_arr = np.empty([k,])
+
+            for i in range(M):
+                dset_arr = dset[image_index[i], 25:-25]
+                tr[i,:] = dset_arr
+
+        gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[0,l], hspace=0, wspace=0, height_ratios=heights)
+        ax = fig.add_subplot(gs_sub[0])
+        plt.axis('off')
+        ax = fig.add_subplot(gs_sub[1])
+        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), aspect='auto', origin='lower')
+        plt.xticks([])
+        plt.yticks([])
+        ax.xaxis.set_label_position('top')
+        ax.set_xlabel(f"Cluster {label}", size=5)
+        if l == 0:
+            plt.ylabel("Centroids", size=5)
+
+        ax = fig.add_subplot(gs_sub[2])
+        plt.imshow(np.expand_dims(centroids[l], 0), cmap='viridis', aspect='auto')
+        plt.xticks([])
+        plt.yticks([])
+
+        for i in range(N):
+            gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[i+1,l], hspace=0, wspace=0, height_ratios=heights)
+            ax = fig.add_subplot(gs_sub[0])
+            plt.plot(tr[i])
+            plt.xticks([])
+            plt.yticks([])
+            ax = fig.add_subplot(gs_sub[1])
+            plt.imshow(np.squeeze(X[i,:,:]), aspect='auto', origin='lower')
+            plt.xticks([])
+            plt.yticks([])
+            ax = fig.add_subplot(gs_sub[2])
+            plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap='viridis', aspect='auto')
+            plt.xticks([])
+            plt.yticks([])
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    sys.stdout = sys.__stdout__
+    return fig
 
 def compare_images(
         model,

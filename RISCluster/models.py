@@ -286,6 +286,7 @@ def train_DCM(
     show = parameters['show']
     mode = parameters['mode']
     loadpath = parameters['saved_weights']
+    fname_dataset = parameters['fname_dataset']
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
         mode,
@@ -324,9 +325,17 @@ def train_DCM(
     q, _ = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
-    fig1, fig2 = analyze_clustering(model, dataloader, labels_prev, device, 0)
+    fig1, fig2, fig3 = analyze_clustering(
+        model,
+        dataloader,
+        labels_prev,
+        device,
+        0,
+        fname_dataset
+    )
     tb.add_figure('Centroids',fig1, global_step=0, close=True)
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
+    tb.add_figure('Results', fig3, gloabl_step=0, close=True)
 
     n_iter = 1
     finished = False
@@ -427,16 +436,18 @@ def train_DCM(
 
             n_iter += 1
 
-        if ((epoch % 2 == 0) and not (epoch == 0)) or finished:
-            fig1, fig2 = analyze_clustering(
+        if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
+            fig1, fig2, fig3 = analyze_clustering(
                 model,
                 dataloader,
                 labels,
                 device,
-                epoch
+                epoch,
+                fname_dataset
             )
-            tb.add_figure('Centroids', fig1, global_step=epoch+1, close=True)
-            tb.add_figure('TSNE', fig2, global_step=epoch+1, close=True)
+            tb.add_figure('Centroids', fig1, global_step=epoch, close=True)
+            tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
+            tb.add_figure('Results', fig3, gloabl_step=epoch, close=True)
 
         if finished:
             break
@@ -645,7 +656,14 @@ def target_distribution(q):
     p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
     return np.round(p, 5)
 
-def analyze_clustering(model, dataloader, labels, device, epoch):
+def analyze_clustering(
+        model,
+        dataloader,
+        labels,
+        device,
+        epoch,
+        fname_dataset
+    ):
     '''
     Function displays reconstructions using the centroids of the latent feature
     space.
@@ -684,11 +702,13 @@ def analyze_clustering(model, dataloader, labels, device, epoch):
         n_components=2,
         perplexity=1000,
         learning_rate=8000,
-        n_iter=10000,
+        n_iter=1000,
         verbose=0,
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
     print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
-    return fig1, fig2
+
+    fig3 = plotting.cluster_gallery(model, labels, fname_dataset, centroids=centroids)
+    return fig1, fig2, fig3

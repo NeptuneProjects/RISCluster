@@ -44,24 +44,6 @@ class SeismoDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-class SuppressStdout(object):
-
-    def __init__(self, suppress=True):
-        self.suppress = suppress
-        self.sys_stdout_ref = None
-
-    def __enter__(self):
-        self.sys_stdout_ref = sys.stdout
-        if self.suppress:
-            sys.stdout = self
-        return sys.stdout
-
-    def __exit__(self, type, value, traceback):
-        sys.stdout = self.sys_stdout_ref
-
-    def write(self):
-        pass
-
 def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
     for key in hyperparameters:
@@ -127,7 +109,7 @@ def init_output_env(savepath, mode, **kwargs):
 
     return savepath_run, serial_run
 
-def load_dataset(fname_dataset, index, send_message=False, transform=None):
+def load_dataset(fname_dataset, index, send_message=False, transform=None, **kwargs):
     '''
     Arguments:
       fname_dataset: Path to h5 dataset
@@ -136,6 +118,11 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None):
       transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
     '''
     M = len(index)
+    if 'notqdm' in kwargs:
+        notqdm = kwargs.get("notqdm")
+    else:
+        notqdm = False
+
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
         DataSpec = '/4s/Spectrogram'
@@ -154,7 +141,7 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None):
         idx_sample = np.empty([M,], dtype=np.int)
         dset_arr = np.zeros([n, o])
         count = 0
-        for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
+        for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}', disable=notqdm):
             dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
             if transform == "sample_norm":
                 dset_arr /= np.abs(dset_arr).max() # <---- This one works
