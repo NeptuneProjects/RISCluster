@@ -21,11 +21,10 @@ from processing import get_metadata
 import utils
 from networks import AEC, DCM
 
-def cluster_gallery(model, labels, fname_dataset, centroids=None, show=False):
+def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=False):
     text_trap = io.StringIO()
     sys.stdout = text_trap
     model.eval()
-    device = 'cpu'
     label_list, counts = np.unique(labels, return_counts=True)
     if centroids is not None:
         print(torch.from_numpy(centroids).dtype)
