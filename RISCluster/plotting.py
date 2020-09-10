@@ -28,12 +28,12 @@ def compare_images(
         show=True
     ):
     model.eval()
-    disp_rec, _ = model(disp)
+    x_r, z = model(disp)
     figtitle = f'DCM Pre-training: Epoch {epoch}'
     n, o = list(disp.size()[2:])
     fig = view_specgram_training(
         disp,
-        disp_rec,
+        x_r, z,
         n, o,
         figtitle,
         figsize=(12,9),
@@ -115,7 +115,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     for l in range(len(label_list)):
         query = np.where(label == label_list[l])[0]
         N = 8
-        image_index = np.random.choice(query, N)
+        image_index = np.random.choice(query, N, replace=False)
         metadata = get_metadata(range(N), image_index, fname_dataset)
 
         dataset = utils.load_dataset(fname_dataset, image_index, send_message=False, transform=transform)
@@ -386,12 +386,13 @@ def view_learningcurve(training_history, validation_history, show=True):
         plt.close()
     return fig
 
-def view_specgram_training(x, x_r, n, o, figtitle,
+def view_specgram_training(x, x_r, z, n, o, figtitle,
                            figsize=(12,9), show=True):
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
+    z = z.detach().cpu().numpy()
     fig = plt.figure(figsize=figsize, dpi=300)
-    gs = gridspec.GridSpec(nrows=2, ncols=4)
+    gs = gridspec.GridSpec(nrows=3, ncols=4)
     counter = 0
     for i in range(x.size()[0]):
         ax = fig.add_subplot(gs[0,counter])
@@ -404,6 +405,9 @@ def view_specgram_training(x, x_r, n, o, figtitle,
                         fontweight='bold')
 
         ax = fig.add_subplot(gs[1,counter])
+        plt.imshow(np.expand_dims(z[i], 1), aspect='auto')
+
+        ax = fig.add_subplot(gs[2,counter])
         plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), aspect='auto')
         plt.gca().invert_yaxis()
         plt.xlabel('Time Bin')
