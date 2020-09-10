@@ -50,6 +50,7 @@ def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=F
             X = batch.to(device)
 
         Z = model.encoder(X)
+        X.detach().cpu().numpy()
 
         with h5py.File(fname_dataset, 'r') as f:
             M = len(image_index)
