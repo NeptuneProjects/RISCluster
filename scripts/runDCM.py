@@ -23,10 +23,6 @@ if __name__ == '__main__':
         device = utils.set_device(args.cuda_device)
     else:
         device = utils.set_device()
-
-        # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        # os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_device
-
     # =========================================================================
     # Universal Parameters
     # =========================================================================
