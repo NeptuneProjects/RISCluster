@@ -532,7 +532,7 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters, max_iter=500, n_init=100, random_state=2009)
+    km = KMeans(n_clusters=model.n_clusters, max_iter=10000, n_init=250, random_state=2009)
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
