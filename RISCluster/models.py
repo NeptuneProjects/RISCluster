@@ -335,7 +335,7 @@ def train_DCM(
     )
     tb.add_figure('Centroids',fig1, global_step=0, close=True)
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
-    tb.add_figure('Results', fig3, gloabl_step=0, close=True)
+    tb.add_figure('Results', fig3, global_step=0, close=True)
 
     n_iter = 1
     finished = False
@@ -447,7 +447,7 @@ def train_DCM(
             )
             tb.add_figure('Centroids', fig1, global_step=epoch, close=True)
             tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
-            tb.add_figure('Results', fig3, gloabl_step=epoch, close=True)
+            tb.add_figure('Results', fig3, global_step=epoch, close=True)
 
         if finished:
             break
