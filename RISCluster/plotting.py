@@ -50,7 +50,6 @@ def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=F
             X = batch.to(device)
 
         Z = model.encoder(X)
-        X.detach().cpu().numpy()
 
         with h5py.File(fname_dataset, 'r') as f:
             M = len(image_index)
@@ -89,7 +88,7 @@ def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=F
             plt.xticks([])
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[1])
-            plt.imshow(np.squeeze(X[i,:,:]), aspect='auto', origin='lower')
+            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), aspect='auto', origin='lower')
             plt.xticks([])
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[2])
