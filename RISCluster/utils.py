@@ -133,7 +133,7 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None):
       fname_dataset: Path to h5 dataset
       index: List of indices to load
       send_message: Boolean
-      transform: Data transformation (default: None, )
+      transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
     '''
     M = len(index)
     with h5py.File(fname_dataset, 'r') as f:
