@@ -155,10 +155,8 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None):
         dset_arr = np.zeros([n, o])
         count = 0
         for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
-            # try:
-            if transform == (None or "pixelwise"):
-                dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
-            elif transform == "sample_norm":
+            dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
+            if transform == "sample_norm":
                 dset_arr /= np.abs(dset_arr).max() # <---- This one works
             elif transform == "sample_norm_cent":
                 dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max() # <---- This one works
