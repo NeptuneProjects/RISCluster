@@ -11,8 +11,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Script pretrains or trains DCM."
     )
-    parser.add_argument('init_file', required=True, help="Enter path to init file.")
-    parser.add_argument('cuda_device', help="Select CUDA device.")
+    parser.add_argument('init_file', help="Enter path to init file.")
+    parser.add_argument('--cuda_device', help="Select CUDA device.")
     args = parser.parse_args()
     init_file = args.init_file
     config = configparser.ConfigParser()
