@@ -84,7 +84,8 @@ if __name__ == '__main__':
             mode=mode,
             saved_weights=config['PARAMETERS']['saved_weights'],
             max_workers=int(config['PARAMETERS']['max_workers']),
-            loaded=True
+            loaded=True,
+            transform=config['PARAMETERS']['transform']
         )
         print(serial_exp)
         utils.save_exp_config(

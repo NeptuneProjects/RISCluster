@@ -40,7 +40,8 @@ if __name__ == '__main__':
             send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
             early_stopping=config['PARAMETERS'].getboolean('early_stopping'),
-            patience=int(config['PARAMETERS']['patience'])
+            patience=int(config['PARAMETERS']['patience']),
+            transform=config['PARAMETERS']['transform']
         )
         batch_size = config['HYPERPARAMETERS']['batch_size']
         lr = config['HYPERPARAMETERS']['lr']
@@ -73,6 +74,7 @@ if __name__ == '__main__':
             send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
             saved_weights=config['PARAMETERS']['saved_weights'],
+            transform=config['PARAMETERS']['transform']
         )
         n_clusters = config['HYPERPARAMETERS']['n_clusters']
         batch_size = config['HYPERPARAMETERS']['batch_size']
@@ -119,7 +121,8 @@ if __name__ == '__main__':
             mode=mode,
             saved_weights=config['PARAMETERS']['saved_weights'],
             max_workers=int(config['PARAMETERS']['max_workers']),
-            loaded=False
+            loaded=False,
+            transform=config['PARAMETERS']['transform']
         )
         utils.save_exp_config(
             savepath_exp,

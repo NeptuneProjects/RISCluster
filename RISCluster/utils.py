@@ -127,7 +127,14 @@ def init_output_env(savepath, mode, **kwargs):
 
     return savepath_run, serial_run
 
-def load_dataset(fname_dataset, index, send_message=False):
+def load_dataset(fname_dataset, index, send_message=False, transform=None):
+    '''
+    Arguments:
+      fname_dataset: Path to h5 dataset
+      index: List of indices to load
+      send_message: Boolean
+      transform: Data transformation (default: None, )
+    '''
     M = len(index)
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
@@ -149,27 +156,23 @@ def load_dataset(fname_dataset, index, send_message=False):
         count = 0
         for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'):
             # try:
-            dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
-            # dset_arr /= np.abs(dset_arr).max() # <---- This one works
-            # dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max() # <---- This one works
-            # dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std() # <---- This one throws NaNs for loss in pre-training
+            if transform == (None or "pixelwise"):
+                dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
+            elif transform == "sample_norm":
+                dset_arr /= np.abs(dset_arr).max() # <---- This one works
+            elif transform == "sample_norm_cent":
+                dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max() # <---- This one works
+            elif transform == "sample_std":
+                dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std() # <---- This one throws NaNs for loss in pre-training
+
             X[count,:,:] = dset_arr
             # X[count,:,:,:] = np.expand_dims(dset_arr, axis=0)
             idx_sample[count,] = int(index[i])
             count += 1
-            # except:
-                # print(dset_arr)
-                # print(dset_arr.mean())
-                # print(dset_arr.std())
-                # print('Numpy "Divide-by-zero Warning" raised, '
-                      # 'skipping spectrogram.')
-                # print(f'Failed: Sample Index = {index[i]}')
-                # print(dset[index[i], :-1, 12:-14])
-                # pass
-                # raise Exception()
-                # break
 
-        X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
+        if transform == "pixelwise":
+            X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
+
         X = np.expand_dims(X, axis=1)
 
         toc = datetime.now()
@@ -220,6 +223,10 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     if not os.path.exists(savepath):
         os.makedirs(savepath)
 
+    config_ = configparser.ConfigParser()
+    config_.read(f"{loadpath}/*.ini")
+    transform = config_['PARAMETERS']['transform']
+
     count_wr = 0
     count_ow = 0
     count_sk = 0
@@ -251,7 +258,8 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
             'send_message': 'False',
             'max_workers': '14',
             'n_clusters': _parse_nclusters(run),
-            'saved_weights': f'{loadpath}/{run}/{saved_weights}'
+            'saved_weights': f'{loadpath}/{run}/{saved_weights}',
+            'transform': transform
         }
         with open(fname, 'w') as configfile:
             config.write(configfile)
