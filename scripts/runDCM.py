@@ -9,14 +9,20 @@ import utils
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Enter path to configuration file."
+        description="Script pretrains or trains DCM."
     )
-    parser.add_argument('init_file', help="Enter path to init file.")
+    parser.add_argument('init_file', required=True, help="Enter path to init file.")
+    parser.add_argument('cuda_device', help="Select CUDA device.")
     args = parser.parse_args()
     init_file = args.init_file
     config = configparser.ConfigParser()
     # init_file = '../init_predict.ini'
     config.read(init_file)
+
+    if args.cuda_device is not None:
+        os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"]=args.cuda_device
+
     # =========================================================================
     # Universal Parameters
     # =========================================================================
