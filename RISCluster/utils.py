@@ -51,6 +51,15 @@ def calc_tuning_runs(hyperparameters):
 
     return(tuning_runs)
 
+def distance_matrix(x, y, f):
+    assert len(x) == len(y)
+    M = len(x)
+    dist = np.zeros((M, M))
+    for i in tqdm(range(M)):
+        for j in range(M):
+            dist[i, j] = fractional_distance(x[np.newaxis,i], y[np.newaxis,j], f)
+    return dist
+
 def fractional_distance(x, y, f):
     diff = np.fabs(x - y) ** f
     dist = np.sum(diff, axis=1) ** (1 / f)
@@ -134,9 +143,10 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None, **kwa
         dset = f[DataSpec]
         m, n, o = dset.shape
         m -= 1
-        print('--------------------------------------------------------------')
-        print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
-        print(f'Loading {M} samples...')
+        if not notqdm:
+            print('--------------------------------------------------------------')
+            print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
+            print(f'Loading {M} samples...')
         tic = datetime.now()
 
         np.seterr(all='ignore')
@@ -168,7 +178,8 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None, **kwa
         toc = datetime.now()
         msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
                      f'\nTime Elapsed = {(toc-tic)}'
-        print(msgcontent)
+        if not notqdm:
+            print(msgcontent)
         if send_message:
             msgsubj = 'Data Loaded'
             notify(msgsubj, msgcontent)
