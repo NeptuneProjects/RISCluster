@@ -1,7 +1,6 @@
 import configparser
 import csv
 from datetime import datetime
-import io
 import os
 import sys
 sys.path.insert(0, '../RISCluster/')
@@ -22,12 +21,9 @@ import utils
 from networks import AEC, DCM
 
 def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=None, p=1, show=False):
-    text_trap = io.StringIO()
-    # sys.stdout = text_trap
     model.eval()
     label_list, counts = np.unique(labels, return_counts=True)
     if centroids is not None:
-        print(torch.from_numpy(centroids).dtype)
         X_c = model.decoder(torch.from_numpy(centroids).float().to(device))
     else:
         centroids = model.clustering.weights
@@ -108,7 +104,6 @@ def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=Non
         plt.show()
     else:
         plt.close()
-    # sys.stdout = sys.__stdout__
     return fig
 
 def compare_images(
