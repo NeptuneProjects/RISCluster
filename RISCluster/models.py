@@ -18,6 +18,7 @@ if sys.platform == 'darwin':
 elif sys.platform == 'linux':
     from cuml import KMeans, TSNE
 from sklearn.mixture import GaussianMixture
+from sklearn_extra.cluster import KMedoids
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -312,11 +313,16 @@ def train_DCM(
     tb = SummaryWriter(log_dir = savepath_run)
 
     # Initialize Clusters:
-    print('Initiating clusters with k-means...', end="", flush=True)
-    labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
-    # print('complete.')
+    # -- K-Means Initialization:
+    # print('Initiating clusters with k-means...', end="", flush=True)
+    # labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    # -- GMM Initialization:
     # print('Initiating clusters with GMM...', end="", flush=True)
     # labels_prev, centroids = gmm(model, copy.deepcopy(dataloader), device)
+    # -- K-Medoids Initialization:
+    print('Initiating clusters with k-medoids...', end="", flush=True)
+    labels_prev, centroids = kmeds(model, copy.deepcopy(dataloader), device)
+
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -556,6 +562,34 @@ def kmeans(model, dataloader, device):
     centroids = km.cluster_centers_
     return labels, centroids
 
+def kmeds(model, dataloader, device):
+    '''
+    Initiate clusters using K-Medoids algorithm.
+    # Arguments:
+        model: PyTorch model instance
+        dataloader: PyTorch dataloader instance
+        device: PyTorch device object ('cpu' or 'gpu')
+    # Inputs:
+        n_clusters: Number of clusters, set during model construction.
+        metric: l1 (choose from sk-learn metrics)
+        max_iter: Max number of iterations for algorithm.
+    # Returns:
+        labels: Sample-wise cluster assignment
+        centroids: Sample-wise cluster centroids
+    '''
+    kmed = KMedoids(n_clusters=model.n_clusters, metric='l1', init='heuristic', max_iter=10000, random_state=2009)
+    model.eval()
+    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    bsz = dataloader.batch_size
+    for b, batch in enumerate(dataloader):
+        x = batch.to(device)
+        _, _, z = model(x)
+        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    kmed.fit_predict(z_array)
+    labels = kmed.labels_
+    centroids = kmed.cluster_centers_
+    return labels, centroids
+
 def gmm(model, dataloader, device):
     '''
     Initiate clusters using GMM algorithm.
@@ -595,25 +629,21 @@ def gmm(model, dataloader, device):
     centroids = GMM.means_
     return labels, centroids
 
-# def pca(labels, model, dataloader, device, tb, counter):
-#     z_array = None
-#     model.eval()
-#     for batch in dataloader:
-#         x = batch.to(device)
-#         _, _, z = model(x)
-#         if z_array is not None:
-#             z_array = np.concatenate((z_array, z.cpu().detach().numpy()), 0)
-#         else:
-#             z_array = z.cpu().detach().numpy()
-#
-#     row_max = z_array.max(axis=1)
-#     z_array /= row_max[:, np.newaxis]
-#
-#     pca2 = PCA(n_components=model.n_clusters).fit(z_array)
-#     pca2d = pca2.transform(z_array)
-#     fig = plotting.view_clusters(pca2d, labels)
-#     tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
+def pca(labels, model, dataloader, device, tb, counter):
+    model.eval()
+    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    bsz = dataloader.batch_size
+    for b, batch in enumerate(dataloader):
+        x = batch.to(device)
+        _, _, z = model(x)
+        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    row_max = z_array.max(axis=1)
+    z_array /= row_max[:, np.newaxis]
 
+    pca2 = PCA(n_components=model.n_clusters).fit(z_array)
+    pca2d = pca2.transform(z_array)
+    fig = plotting.view_clusters(pca2d, labels)
+    tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
 
 def predict_labels(model, dataloader, device):
     '''
@@ -701,8 +731,10 @@ def analyze_clustering(
     results = TSNE(
         n_components=2,
         perplexity=1000,
-        learning_rate=8000,
+        early_exaggeration=20,
+        learning_rate=6000,
         n_iter=1000,
+        metric='l1',
         verbose=0,
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
