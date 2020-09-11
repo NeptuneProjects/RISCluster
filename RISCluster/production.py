@@ -40,13 +40,13 @@ def DCM_pretrain(parameters, hyperparameters):
     M_tra = len(index_tra)
     M_val = len(index_val)
 
-    tra_dataset = utils.batch_load(
+    tra_dataset = utils.multi_load(
         fname_dataset,
         index_tra,
         send_message=send_message,
         transform=transform
     )
-    val_dataset = utils.batch_load(
+    val_dataset = utils.multi_load(
         fname_dataset,
         index_val,
         send_message=send_message,
@@ -165,7 +165,7 @@ def DCM_train(parameters, hyperparameters):
     # ==== Load Data ==========================================================
     index_tra, _ = utils.load_TraVal_index(fname_dataset, indexpath)
     M_tra = len(index_tra)
-    tra_dataset = utils.batch_load(
+    tra_dataset = utils.multi_load(
         fname_dataset,
         index_tra,
         send_message=send_message,
@@ -262,7 +262,7 @@ def DCM_predict(parameters, index_tst=None, tst_dataset=None):
             indexpath,
             exclude=exclude
         )
-        tst_dataset = utils.batch_load(
+        tst_dataset = utils.multi_load(
             fname_dataset,
             index_tst,
             send_message,

@@ -58,7 +58,7 @@ if __name__ == '__main__':
                 indexpath,
                 exclude=exclude
             )
-            tst_dataset = utils.batch_load(
+            tst_dataset = utils.multi_load(
                 fname_dataset,
                 index_tst,
                 send_message=send_message,

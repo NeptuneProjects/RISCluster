@@ -45,7 +45,7 @@ class SeismoDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def batch_load(path, index, send_message=False, transform=None, **kwargs):
+def multi_load(path, index, send_message=False, transform=None, **kwargs):
     '''
     Arguments:
       fname_dataset: Path to h5 dataset
@@ -69,7 +69,7 @@ def batch_load(path, index, send_message=False, transform=None, **kwargs):
                 'index': index[i],
             } for i in range(M)]
     X = np.zeros((M, 70, 201))
-    with ProcessPoolExecutor(max_workers=14) as exec:
+    with ProcessPoolExecutor(max_workers=16) as exec:
         futures = [exec.submit(read_h5, **a) for a in A]
         kwargs = {
             'total': int(len(futures)),
