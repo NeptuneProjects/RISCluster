@@ -472,49 +472,6 @@ def view_learningcurve(training_history, validation_history, show=True):
         plt.close()
     return fig
 
-def view_specgram_training(x, x_r, z, n, o, figtitle,
-                           figsize=(12,9), show=True):
-    X = x.detach().cpu().numpy()
-    X_r = x_r.detach().cpu().numpy()
-    z = z.detach().cpu().numpy()
-    fig = plt.figure(figsize=figsize, dpi=300)
-    heights = [4, 0.2, 4]
-    gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights)
-    counter = 0
-    for i in range(x.size()[0]):
-        ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), aspect='auto')
-        plt.gca().invert_yaxis()
-        plt.xlabel('Time Bin')
-        plt.ylabel('Frequency Bin')
-        if counter == 0:
-            plt.figtext(-0.01, 0.62, 'Original Spectrograms', rotation='vertical',
-                        fontweight='bold')
-
-        ax = fig.add_subplot(gs[1,counter])
-        plt.imshow(np.expand_dims(z[i], 1), aspect='auto')
-        plt.xticks([])
-        plt.yticks([])
-
-        ax = fig.add_subplot(gs[2,counter])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), aspect='auto')
-        plt.gca().invert_yaxis()
-        plt.xlabel('Time Bin')
-        plt.ylabel('Frequency Bin')
-        if counter == 0:
-            plt.figtext(-0.01, 0.15, 'Reconstructed Spectrograms',
-                        rotation='vertical', fontweight='bold')
-        counter += 1
-
-    fig.suptitle(figtitle, size=18, weight='bold')
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.92, left=0.1)
-    if show:
-        plt.show()
-    else:
-        plt.close()
-    return fig
-
 def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
                   nrows=2, ncols=2, figsize=(12,9), show=True):
     '''Plots selected spectrograms from input data.'''
@@ -556,6 +513,49 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
     fig.suptitle(figtitle, size=18, weight='bold')
     fig.tight_layout()
     fig.subplots_adjust(top=0.85)
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+def view_specgram_training(x, x_r, z, n, o, figtitle,
+                           figsize=(12,9), show=True):
+    X = x.detach().cpu().numpy()
+    X_r = x_r.detach().cpu().numpy()
+    z = z.detach().cpu().numpy()
+    fig = plt.figure(figsize=figsize, dpi=300)
+    heights = [4, 0.2, 4]
+    gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights)
+    counter = 0
+    for i in range(x.size()[0]):
+        ax = fig.add_subplot(gs[0,counter])
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), aspect='auto')
+        plt.gca().invert_yaxis()
+        plt.xlabel('Time Bin')
+        plt.ylabel('Frequency Bin')
+        if counter == 0:
+            plt.figtext(-0.01, 0.62, 'Original Spectrograms', rotation='vertical',
+                        fontweight='bold')
+
+        ax = fig.add_subplot(gs[1,counter])
+        plt.imshow(np.expand_dims(z[i], 0), aspect='auto')
+        plt.xticks([])
+        plt.yticks([])
+
+        ax = fig.add_subplot(gs[2,counter])
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), aspect='auto')
+        plt.gca().invert_yaxis()
+        plt.xlabel('Time Bin')
+        plt.ylabel('Frequency Bin')
+        if counter == 0:
+            plt.figtext(-0.01, 0.15, 'Reconstructed Spectrograms',
+                        rotation='vertical', fontweight='bold')
+        counter += 1
+
+    fig.suptitle(figtitle, size=18, weight='bold')
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.92, left=0.1)
     if show:
         plt.show()
     else:
