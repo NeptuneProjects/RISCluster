@@ -478,7 +478,8 @@ def view_specgram_training(x, x_r, z, n, o, figtitle,
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
     fig = plt.figure(figsize=figsize, dpi=300)
-    gs = gridspec.GridSpec(nrows=3, ncols=4)
+    heights = [4, 0.2, 4]
+    gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights)
     counter = 0
     for i in range(x.size()[0]):
         ax = fig.add_subplot(gs[0,counter])
@@ -492,6 +493,8 @@ def view_specgram_training(x, x_r, z, n, o, figtitle,
 
         ax = fig.add_subplot(gs[1,counter])
         plt.imshow(np.expand_dims(z[i], 1), aspect='auto')
+        plt.xticks([])
+        plt.yticks([])
 
         ax = fig.add_subplot(gs[2,counter])
         plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), aspect='auto')
@@ -505,7 +508,7 @@ def view_specgram_training(x, x_r, z, n, o, figtitle,
 
     fig.suptitle(figtitle, size=18, weight='bold')
     fig.tight_layout()
-    fig.subplots_adjust(top=0.92)
+    fig.subplots_adjust(top=0.92, left=0.1)
     if show:
         plt.show()
     else:
