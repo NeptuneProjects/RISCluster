@@ -2,13 +2,7 @@ import argparse
 
 import h5py
 
-def query_dbSize(path):
-    with h5py.File(path, 'r') as f:
-        #samples, frequency bins, time bins, amplitude
-        DataSpec = '/4s/Spectrogram'
-        dset = f[DataSpec]
-        m, n, o = dset.shape
-        return m-1, n, o
+from utils import query_dbSize
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Enter path to .h5 file.')

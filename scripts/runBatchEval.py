@@ -40,30 +40,33 @@ if __name__ == '__main__':
     if not os.path.exists(indexpath):
         raise ValueError('Index file not found.')
     # =========================================================================
-    # Load Data
-    # =========================================================================
-    if isinstance(M, str) and (M == 'all'):
-        M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
-    index_tst = utils.set_Tst_index(
-        M,
-        fname_dataset,
-        indexpath,
-        exclude=exclude
-    )
-    tst_dataset = utils.load_dataset(
-        fname_dataset,
-        index_tst,
-        'True'
-    )
-    # =========================================================================
     # Prediction Routine
     # =========================================================================
     initlist = [f'{init_path}/{l}' for l in os.listdir(init_path) if ".ini" in l]
     for f, init_file in enumerate(initlist):
-        print('**************************************************************')
-        print(f'Evaluating experiment {f+1}/{len(initlist)}...')
+        # ==== Load Data ======================================================
         config = configparser.ConfigParser()
         config.read(init_file)
+        transform = config['PARAMETERS']['transform']
+        send_message = config['PARAMETERS'].getboolean('send_message')
+        if f == 0:
+            if isinstance(M, str) and (M == 'all'):
+                M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
+            index_tst = utils.set_Tst_index(
+                M,
+                fname_dataset,
+                indexpath,
+                exclude=exclude
+            )
+            tst_dataset = utils.batch_load(
+                fname_dataset,
+                index_tst,
+                send_message=send_message,
+                transform=transform
+            )
+        print('**************************************************************')
+        print(f'Evaluating experiment {f+1}/{len(initlist)}...')
+
         savepath_exp, serial_exp = utils.init_exp_env(
             'batch_predict',
             savepath,
@@ -80,12 +83,12 @@ if __name__ == '__main__':
             savepath=savepath_exp,
             serial=serial_exp,
             show=config['PARAMETERS'].getboolean('show'),
-            send_message=config['PARAMETERS'].getboolean('send_message'),
+            send_message=send_message,
             mode=mode,
             saved_weights=config['PARAMETERS']['saved_weights'],
             max_workers=int(config['PARAMETERS']['max_workers']),
             loaded=True,
-            transform=config['PARAMETERS']['transform']
+            transform=transform
         )
         print(serial_exp)
         utils.save_exp_config(

@@ -29,6 +29,7 @@ def DCM_pretrain(parameters, hyperparameters):
     device = parameters['device']
     indexpath = parameters['indexpath']
     savepath_exp = parameters['savepath']
+    transform = parameters['transform']
     # ==== Checks =============================================================
     if not os.path.exists(fname_dataset):
         raise ValueError(f'Dataset file not found: {fname_dataset}')
@@ -39,15 +40,17 @@ def DCM_pretrain(parameters, hyperparameters):
     M_tra = len(index_tra)
     M_val = len(index_val)
 
-    tra_dataset = utils.load_dataset(
+    tra_dataset = utils.batch_load(
         fname_dataset,
         index_tra,
-        send_message
+        send_message=send_message,
+        transform=transform
     )
-    val_dataset = utils.load_dataset(
+    val_dataset = utils.batch_load(
         fname_dataset,
         index_val,
-        send_message
+        send_message=send_message,
+        transform=transform
     )
     # ==== Commence Pre-training ==============================================
     hyperparam_values = [v for v in hyperparameters.values()]
@@ -151,6 +154,7 @@ def DCM_train(parameters, hyperparameters):
     savepath_exp = parameters['savepath']
     indexpath = parameters['indexpath']
     saved_weights = parameters['saved_weights']
+    transform = parameters['transform']
     # ==== Checks =============================================================
     if not os.path.exists(saved_weights):
         raise ValueError(f'Saved weights file not found: {saved_weights}')
@@ -161,10 +165,11 @@ def DCM_train(parameters, hyperparameters):
     # ==== Load Data ==========================================================
     index_tra, _ = utils.load_TraVal_index(fname_dataset, indexpath)
     M_tra = len(index_tra)
-    tra_dataset = utils.load_dataset(
+    tra_dataset = utils.batch_load(
         fname_dataset,
         index_tra,
-        send_message
+        send_message=send_message,
+        transform=transform
     )
     # ==== Commence Training ==================================================
     hyperparam_values = [v for v in hyperparameters.values()]
@@ -239,6 +244,7 @@ def DCM_predict(parameters, index_tst=None, tst_dataset=None):
     indexpath = parameters['indexpath']
     exclude = parameters['exclude']
     loaded = parameters['loaded']
+    transform = parameters['transform']
     # ==== Checks =============================================================
     if not os.path.exists(saved_weights):
         raise ValueError(f'Saved weights file not found: {saved_weights}')
@@ -256,10 +262,11 @@ def DCM_predict(parameters, index_tst=None, tst_dataset=None):
             indexpath,
             exclude=exclude
         )
-        tst_dataset = utils.load_dataset(
+        tst_dataset = utils.batch_load(
             fname_dataset,
             index_tst,
-            send_message
+            send_message,
+            transform=transform
         )
 
     dataloader = DataLoader(tst_dataset, batch_size=batch_size)
