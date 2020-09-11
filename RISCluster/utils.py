@@ -51,6 +51,11 @@ def calc_tuning_runs(hyperparameters):
 
     return(tuning_runs)
 
+def fractional_distance(x, y, f):
+    diff = np.fabs(x - y) ** f
+    dist = np.sum(diff, axis=1) ** (1 / f)
+    return dist
+
 def init_exp_env(mode, savepath, **kwargs):
     if mode == 'batch_predict':
         init_file = kwargs.get("init_file")

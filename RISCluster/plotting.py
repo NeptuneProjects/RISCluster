@@ -21,9 +21,9 @@ from processing import get_metadata
 import utils
 from networks import AEC, DCM
 
-def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=False):
+def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=None, p=1, show=False):
     text_trap = io.StringIO()
-    sys.stdout = text_trap
+    # sys.stdout = text_trap
     model.eval()
     label_list, counts = np.unique(labels, return_counts=True)
     if centroids is not None:
@@ -37,10 +37,17 @@ def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=F
     fig = plt.figure(figsize=(len(label_list),12), dpi=100)
     gs_sup = gridspec.GridSpec(nrows=9, ncols=len(label_list), hspace=0.05, wspace=0.05)
     heights = [1, 4, 0.2]
+    font = {'family': 'serif',
+        'color':  'white',
+        'weight': 'normal',
+        'size': 6,
+        }
     for l, label in enumerate(label_list):
         query = np.where(labels == label_list[l])[0]
         N = 8
-        image_index = np.random.choice(query, N, replace=False)
+        distance = utils.fractional_distance(centroids[l,:], z_array[query,:], p)
+        # distance = np.linalg.norm(centroids[l,:] - z_array[query,:], ord=p, axis=1)
+        image_index = np.argsort(distance)[0:N]
 
         transform = 'sample_norm_cent'
         dataset = utils.load_dataset(fname_dataset, image_index, send_message=False, transform=transform, **{"notqdm": True})
@@ -89,6 +96,7 @@ def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=F
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[1])
             plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), aspect='auto', origin='lower')
+            plt.text(0, 60, f"{image_index[i]}", fontdict=font)
             plt.xticks([])
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[2])
@@ -100,7 +108,7 @@ def cluster_gallery(model, labels, fname_dataset, device, centroids=None, show=F
         plt.show()
     else:
         plt.close()
-    sys.stdout = sys.__stdout__
+    # sys.stdout = sys.__stdout__
     return fig
 
 def compare_images(

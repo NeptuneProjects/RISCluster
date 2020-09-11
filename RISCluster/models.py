@@ -710,5 +710,5 @@ def analyze_clustering(
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
 
-    fig3 = plotting.cluster_gallery(model, labels, fname_dataset, device)
+    fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p=1/4)
     return fig1, fig2, fig3
