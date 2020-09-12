@@ -55,7 +55,7 @@ def centroid_diagnostics(n_clusters, centroids, z_array, p):
         plt.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
         label_offset(ax, "y")
 
-    fig1.suptitle(f"L-{p} Distance to Centroids for:", size=16)
+    fig1.suptitle(f"L-{p} Distance from Centroids", size=14)
     fig1.subplots_adjust(top=0.95)
 
     dist_mat = utils.distance_matrix(centroids, centroids, p)
