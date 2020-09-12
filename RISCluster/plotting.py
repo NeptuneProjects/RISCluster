@@ -6,9 +6,11 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import h5py
+import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 import seaborn as sns
 import torch
@@ -18,53 +20,112 @@ from processing import get_metadata
 import utils
 from networks import AEC, DCM
 
-def centroid_diagnostics(n_clusters, centroids, z_array, p=2):
+def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     d = z_array.shape[1]
-    fig1 = plt.figure(figsize=(6, 4 * n_clusters), dpi=150)
-    gs = gridspec.GridSpec(nrows=n_clusters, ncols=1, hspace=0.5)
+    label_list, counts = np.unique(labels, return_counts=True)
+    # vmax = max(centroids.max() / 2, np.median([z_array.max(), centroids.max()]))
+    vmax = centroids.max()
+    # vmax = z_array.max()
+    heights = [0.1 if i==0 else 1 for i in range(1+len(label_list))]
+    # widths = [0.5 if i==0 else 1 for i in range(1+len(label_list))]
+    fig1 = plt.figure(figsize=(12, 4 * n_clusters), dpi=100)
+    gs = gridspec.GridSpec(nrows=1+n_clusters, ncols=2, hspace=0.35, height_ratios=heights)
+
+    ax = fig1.add_subplot(gs[0, :])
+    plt.axis('off')
+    axins = inset_axes(ax, width="50%", height="25%", loc="center")
+    norm = mpl.colors.Normalize(vmin=z_array.min(), vmax=vmax)
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm), cax=axins, orientation='horizontal')
+    cbar.set_label('Latent Feature Value')
+
     for l in range(n_clusters):
-        distance = utils.fractional_distance(centroids[l], z_array, p)
-        image_index = np.argsort(distance)
-        distance = np.sort(distance)
 
         heights = [3, 2]
         widths = [0.2, 4]
-        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
 
-        ax = fig1.add_subplot(gs_sub[0, 0])
-        plt.imshow(centroids[l][None].T)
+        distance_d = utils.fractional_distance(centroids[l], z_array, p)
+        image_index_d = np.argsort(distance_d)
+        distance_d = distance_d[image_index_d]
+        labels_d = labels[image_index_d]
+        query_i = np.where(labels_d == label_list[l])[0]
+        distance_i = distance_d[query_i]
+        extent = [0, max(counts), d, 0]
+        cdf = np.flip(np.cumsum(np.ones(len(query_i))) / len(query_i))
+
+        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l+1,0], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
+
+        ax = fig1.add_subplot(gs_sub[0,0])
+        plt.imshow(centroids[l][None].T, vmax=vmax)
         plt.xticks([])
         plt.yticks([])
         plt.ylabel('Centroid')
 
-        ax = fig1.add_subplot(gs_sub[0, 1])
-        plt.imshow(z_array[image_index].T, aspect='auto', vmax=25)
+        ax = fig1.add_subplot(gs_sub[0,1])
+        plt.imshow(z_array[image_index_d].T, aspect='auto', vmax=vmax)
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
         ax.yaxis.set_label_position('right')
-        plt.title(f"Cluster {l}")
+        plt.title(f"Cluster {l}: Dataset")
 
-        ax = fig1.add_subplot(gs_sub[1, 1])
-        plt.plot(distance)
+        ax = fig1.add_subplot(gs_sub[1,1])
+        ax.fill_between(query_i, cdf, color="slategray", alpha=0.4, linewidth=0, label=None)
+        plt.ylim([0, 1.2])
+        plt.ylabel('CDF')
+
+        ax2 = ax.twinx()
+        ax2.plot(distance_d, c='k', label="Distance")
+        scttr = plt.scatter(query_i, distance_i, c='firebrick', marker='|', alpha=0.2, label="Cluster Member")
         plt.xlim([0, len(z_array)])
-        plt.ylim([0, distance.max()])
+        plt.ylim([0, distance_d.max()])
         plt.xlabel('Sorted Sample Index')
         plt.ylabel('Distance')
         plt.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
+        label_offset(ax2, "y")
+        if l == 0:
+            plt.legend(loc="best", fontsize=6)
+
+        query = np.where(labels == label_list[l])[0]
+        distance = utils.fractional_distance(centroids[l], z_array[query], p)
+        image_index = np.argsort(distance)
+        distance = distance[image_index]
+
+        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l+1,1], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
+
+        ax = fig1.add_subplot(gs_sub[0,0])
+        plt.imshow(centroids[l][None].T, vmax=vmax)
+        plt.xticks([])
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
+
+        ax = fig1.add_subplot(gs_sub[0,1])
+        tmp = z_array[image_index].T
+        plt.imshow(np.concatenate((tmp, np.zeros((tmp.shape[0], counts.max() - tmp.shape[1]))), axis=1), extent=extent, aspect='auto', vmax=vmax)
+        plt.xticks([])
+        plt.yticks([])
+        # plt.yticks(ticks=np.linspace(0,d-1/2,d), labels=np.linspace(1,d,d, dtype='int'))
+        plt.title(f"Cluster {l}: Within Cluster")
+
+        ax = fig1.add_subplot(gs_sub[1,1])
+        plt.plot(distance, c='k')
+        plt.xlim([0, counts.max()])
+        plt.ylim([0, distance_d.max()])
+        plt.xlabel('Sorted Sample Index')
+        ax.yaxis.tick_right()
+        plt.ylabel('Distance')
+        ax.yaxis.set_label_position('right')
+        plt.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
         label_offset(ax, "y")
 
-    fig1.suptitle(f"L-{p} Distance from Centroids", size=14)
-    fig1.subplots_adjust(top=0.95)
+    fig1.suptitle(f"Centroid Distance Visualization for L-{p}", size=14)
+    fig1.subplots_adjust(top=0.96)
 
     dist_mat = utils.distance_matrix(centroids, centroids, p)
-
     fig2 = plt.figure(dpi=150)
     plt.imshow(dist_mat, origin='lower')
     cbar = plt.colorbar()
     cbar.set_label('Distance')
-    fig2.suptitle(f"L-{p} Distance Matrix for Centroids", size=14)
+    fig2.suptitle(f"L-{p} Distance Matrix", size=14)
     return fig1, fig2
 
 def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=None, p=1, show=False):
@@ -127,7 +188,7 @@ def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=Non
             plt.ylabel("Centroids", size=5)
 
         ax = fig.add_subplot(gs_sub[2])
-        plt.imshow(np.expand_dims(centroids[l], 0), cmap='viridis', aspect='auto')
+        plt.imshow(np.expand_dims(centroids[l], 0), cmap='viridis', aspect='auto', vmax = centroids.max())
         plt.xticks([])
         plt.yticks([])
 
