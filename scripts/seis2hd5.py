@@ -46,8 +46,8 @@ if __name__ == '__main__':
     # ========================== Initialize Parameters ============================
     # v v v v Modify these parameters when switching to Velella! v v v v
         num_workers = int(args.num_workers)
-        # datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
-        datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+        datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
+        # datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
         station_index = np.arange(0, 34)
         # station_index = np.array([24, 32])
         day_start = int(args.day_start)

@@ -744,6 +744,6 @@ def analyze_clustering(
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
     p = 1/4
-    fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p)
-    fig4, fig5 = plotting.centroid_diagnostics(model.n_clusters, centroids, z_array, p)
+    fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p=p)
+    fig4, fig5 = plotting.centroid_diagnostics(model.n_clusters, centroids, z_array, p=p)
     return fig1, fig2, fig3, fig4, fig5
