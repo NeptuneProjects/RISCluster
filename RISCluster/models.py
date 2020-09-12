@@ -329,7 +329,7 @@ def train_DCM(
     q, _ = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
-    fig1, fig2, fig3 = analyze_clustering(
+    fig1, fig2, fig3, fig4, fig5 = analyze_clustering(
         model,
         dataloader,
         labels_prev,
@@ -340,6 +340,8 @@ def train_DCM(
     tb.add_figure('Centroids',fig1, global_step=0, close=True)
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
     tb.add_figure('Results', fig3, global_step=0, close=True)
+    tb.add_figure('Distances', fig4, global_step=0, close=True)
+    tb.add_figure('Distance Matrix', fig5, global_step=0, close=True)
 
     n_iter = 1
     finished = False
@@ -441,7 +443,7 @@ def train_DCM(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            fig1, fig2, fig3 = analyze_clustering(
+            fig1, fig2, fig3, fig4, fig5 = analyze_clustering(
                 model,
                 dataloader,
                 labels,
@@ -452,6 +454,8 @@ def train_DCM(
             tb.add_figure('Centroids', fig1, global_step=epoch, close=True)
             tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
             tb.add_figure('Results', fig3, global_step=epoch, close=True)
+            tb.add_figure('Distances', fig4, global_step=epoch, close=True)
+            tb.add_figure('Distance Matrix', fig5, global_step=epoch, close=True)
 
         if finished:
             break
@@ -739,6 +743,7 @@ def analyze_clustering(
     print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
-
-    fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p=1/4)
-    return fig1, fig2, fig3
+    p = 1/4
+    fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p)
+    fig4, fig5 = plotting.centroid_diagnostics(model.n_clusters, centroids, z_array, p)
+    return fig1, fig2, fig3, fig4, fig5
