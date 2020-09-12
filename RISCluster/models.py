@@ -336,7 +336,8 @@ def train_DCM(
         labels_prev,
         device,
         0,
-        fname_dataset
+        fname_dataset,
+        index_tra
     )
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
     tb.add_figure('Results', fig3, global_step=0, close=True)
