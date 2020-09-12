@@ -6,8 +6,6 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import h5py
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -20,6 +18,55 @@ from processing import get_metadata
 import utils
 from networks import AEC, DCM
 
+def centroid_diagnostics(n_clusters, centroids, z_array, p):
+    d = z_array.shape[1]
+    fig1 = plt.figure(figsize=(6, 4 * n_clusters), dpi=150)
+    gs = gridspec.GridSpec(nrows=n_clusters, ncols=1, hspace=0.5)
+    for l in range(n_clusters):
+        distance = utils.fractional_distance(centroids[l], z_array, p)
+        image_index = np.argsort(distance)
+        distance = np.sort(distance)
+
+        heights = [3, 2]
+        widths = [0.2, 4]
+        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
+
+        ax = fig1.add_subplot(gs_sub[0, 0])
+        plt.imshow(centroids[l][None].T)
+        plt.xticks([])
+        plt.yticks([])
+        plt.ylabel('Centroid')
+
+        ax = fig1.add_subplot(gs_sub[0, 1])
+        plt.imshow(z_array[image_index].T, aspect='auto', vmax=25)
+        plt.xticks([])
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
+        ax.yaxis.tick_right()
+        plt.ylabel('Latent Feature')
+        ax.yaxis.set_label_position('right')
+        plt.title(f"Cluster {l}")
+
+        ax = fig1.add_subplot(gs_sub[1, 1])
+        plt.plot(distance)
+        plt.xlim([0, len(z_array)])
+        plt.ylim([0, distance.max()])
+        plt.xlabel('Sorted Sample Index')
+        plt.ylabel('Distance')
+        plt.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
+        label_offset(ax, "y")
+
+    fig1.suptitle(f"L-{p} Distance to Centroids for:", size=16)
+    fig1.subplots_adjust(top=0.95)
+
+    dist_mat = utils.distance_matrix(centroids, centroids, p)
+
+    fig2 = plt.figure(dpi=150)
+    plt.imshow(dist_mat, origin='lower')
+    cbar = plt.colorbar()
+    cbar.set_label('Distance')
+    fig2.suptitle(f"L-{p} Distance Matrix for Centroids", size=14)
+    return fig1, fig2
+
 def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=None, p=1, show=False):
     model.eval()
     label_list, counts = np.unique(labels, return_counts=True)
@@ -30,7 +77,7 @@ def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=Non
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
 
-    fig = plt.figure(figsize=(len(label_list),12), dpi=100)
+    fig = plt.figure(figsize=(len(label_list),12), dpi=150)
     gs_sup = gridspec.GridSpec(nrows=9, ncols=len(label_list), hspace=0.05, wspace=0.05)
     heights = [1, 4, 0.2]
     font = {'family': 'serif',
@@ -131,6 +178,33 @@ def compare_images(
     figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
     fig.savefig(figname)
     return fig
+
+def label_offset(ax, axis="y"):
+    if axis == "y":
+        fmt = ax.yaxis.get_major_formatter()
+        ax.yaxis.offsetText.set_visible(False)
+        set_label = ax.set_ylabel
+        label = ax.get_ylabel()
+
+    elif axis == "x":
+        fmt = ax.xaxis.get_major_formatter()
+        ax.xaxis.offsetText.set_visible(False)
+        set_label = ax.set_xlabel
+        label = ax.get_xlabel()
+
+    def update_label(event_axes):
+        offset = fmt.get_offset()
+        if offset == '':
+            set_label("{}".format(label))
+        else:
+            set_label("{} ({})".format(label, offset))
+        return
+
+    ax.callbacks.connect("ylim_changed", update_label)
+    ax.callbacks.connect("xlim_changed", update_label)
+    ax.figure.canvas.draw()
+    update_label(None)
+    return
 
 def save_DCM_output(x, label, x_rec, z, idx, savepath):
     # print(f'x={type(x)} | label={type(label)} | x_r={type(x_rec)} | z={type(z)} | idx={type(idx)} | path={type(savepath)}')

@@ -7,6 +7,9 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 import time
 
+import matplotlib
+matplotlib.use('Agg')
+
 import production
 import utils
 
