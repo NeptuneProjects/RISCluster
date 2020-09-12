@@ -325,8 +325,9 @@ def multi_load(path, index, send_message=False, transform=None, **kwargs):
         for i, future in enumerate(tqdm(as_completed(futures), **kwargs)):
             X[i, :, :] = future.result()
 
+    if not notqdm:
+        print("Transforming data...", end="", flush=True)
     X = X[:, :-1, 12:-14]
-
     if transform == "sample_norm": # <-------------------------- Works
         X /= np.abs(X).max(axis=(1,2))[:,None,None]
     elif transform == "sample_norm_cent": # <------------------- Works
@@ -337,8 +338,9 @@ def multi_load(path, index, send_message=False, transform=None, **kwargs):
             X.std(axis=(1,2))[:,None,None]
     elif transform == "pixelwise":
         X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
-
     X = np.expand_dims(X, axis=1)
+    if not notqdm:
+        print('complete.')
 
     toc = datetime.now()
     msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
