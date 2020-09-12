@@ -734,14 +734,13 @@ def analyze_clustering(
         early_exaggeration=20,
         learning_rate=6000,
         n_iter=1000,
-        metric='l2',
         verbose=0,
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
     print('complete.')
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
-    p = 1/4
+    p = 2
     fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p=p)
     fig4, fig5 = plotting.centroid_diagnostics(model.n_clusters, centroids, labels, z_array, p=p)
     return fig2, fig3, fig4, fig5
