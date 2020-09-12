@@ -56,9 +56,17 @@ def distance_matrix(x, y, f):
     assert len(x) == len(y)
     M = len(x)
     dist = np.zeros((M, M))
-    for i in tqdm(range(M), desc="Calculating distance matrix"):
+    for i in tqdm(
+        range(M),
+        desc="Calculating distance matrix",
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    ):
         for j in range(M):
-            dist[i, j] = fractional_distance(x[np.newaxis,i], y[np.newaxis,j], f)
+            dist[i, j] = fractional_distance(
+                x[np.newaxis,i],
+                y[np.newaxis,j],
+                f
+            )
     return dist
 
 def fractional_distance(x, y, f):
@@ -124,7 +132,13 @@ def init_output_env(savepath, mode, **kwargs):
 
     return savepath_run, serial_run
 
-def load_dataset(fname_dataset, index, send_message=False, transform=None, **kwargs):
+def load_dataset(
+        fname_dataset,
+        index,
+        send_message=False,
+        transform=None,
+        **kwargs
+    ):
     '''
     Arguments:
       fname_dataset: Path to h5 dataset
@@ -145,7 +159,7 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None, **kwa
         m, n, o = dset.shape
         m -= 1
         if not notqdm:
-            print('--------------------------------------------------------------')
+            print('-' * 80)
             print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
             print(f'Loading {M} samples...')
         tic = datetime.now()
@@ -157,7 +171,11 @@ def load_dataset(fname_dataset, index, send_message=False, transform=None, **kwa
         idx_sample = np.empty([M,], dtype=np.int)
         dset_arr = np.zeros([n, o])
         count = 0
-        for i in tqdm(range(M), bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}', disable=notqdm):
+        for i in tqdm(
+            range(M),
+            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+            disable=notqdm
+        ):
             dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
             if transform == "sample_norm":
                 dset_arr /= np.abs(dset_arr).max() # <---- This one works

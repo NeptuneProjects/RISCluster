@@ -259,6 +259,7 @@ def train_DCM(
         lr,
         gamma,
         tol,
+        index_tra,
         parameters
         ):
     '''
@@ -448,7 +449,8 @@ def train_DCM(
                 labels,
                 device,
                 epoch,
-                fname_dataset
+                fname_dataset,
+                index_tra
             )
             tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
             tb.add_figure('Results', fig3, global_step=epoch, close=True)
@@ -692,7 +694,8 @@ def analyze_clustering(
         labels,
         device,
         epoch,
-        fname_dataset
+        fname_dataset,
+        index_tra
     ):
     '''
     Function displays reconstructions using the centroids of the latent feature
@@ -733,7 +736,7 @@ def analyze_clustering(
         perplexity=1000,
         early_exaggeration=20,
         learning_rate=6000,
-        n_iter=1000,
+        n_iter=2000,
         verbose=0,
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
@@ -741,6 +744,20 @@ def analyze_clustering(
     title = f'T-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
     p = 2
-    fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p=p)
-    fig4, fig5 = plotting.centroid_diagnostics(model.n_clusters, centroids, labels, z_array, p=p)
+    fig3 = plotting.cluster_gallery(
+        model,
+        labels,
+        z_array,
+        fname_dataset,
+        index_tra,
+        device,
+        p=p
+    )
+    fig4, fig5 = plotting.centroid_diagnostics(
+        model.n_clusters,
+        centroids,
+        labels,
+        z_array,
+        p=p
+    )
     return fig2, fig3, fig4, fig5

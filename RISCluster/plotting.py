@@ -128,7 +128,17 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     fig2.suptitle(f"L-{p} Distance Matrix", size=14)
     return fig1, fig2
 
-def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=None, p=1, show=False):
+def cluster_gallery(
+        model,
+        labels,
+        z_array,
+        fname_dataset,
+        index_tra,
+        device,
+        centroids=None,
+        p=2,
+        show=False
+    ):
     model.eval()
     label_list, counts = np.unique(labels, return_counts=True)
     if centroids is not None:
@@ -146,18 +156,20 @@ def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=Non
         'weight': 'normal',
         'size': 6,
         }
-    vmax = centroids.max() + 10
+    transform = 'sample_norm_cent'
+    vmax = centroids.max()
     for l, label in enumerate(label_list):
         query = np.where(labels == label_list[l])[0]
         z_sub = z_array[query]
+        load_index = index_tra[query]
         N = 8
         distance = utils.fractional_distance(centroids[l], z_sub, p)
         # distance = np.linalg.norm(centroids[l,:] - z_array[query,:], ord=p, axis=1)
         sort_index = np.argsort(distance)[0:N]
+        load_index = load_index[sort_index]
         query = query[sort_index]
 
-        transform = 'sample_norm_cent'
-        dataset = utils.load_dataset(fname_dataset, query, send_message=False, transform=transform, **{"notqdm": True})
+        dataset = utils.load_dataset(fname_dataset, load_index, send_message=False, transform=transform, **{"notqdm": True})
         dataloader = DataLoader(dataset, batch_size=N)
         X = []
         for batch in dataloader:
@@ -166,7 +178,7 @@ def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=Non
         Z = model.encoder(X)
 
         with h5py.File(fname_dataset, 'r') as f:
-            M = len(query)
+            M = len(load_index)
             DataSpec = '/4s/Trace'
             dset = f[DataSpec]
             k = 351
@@ -175,7 +187,7 @@ def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=Non
             dset_arr = np.empty([k,])
 
             for i in range(M):
-                dset_arr = dset[query[i], 25:-25]
+                dset_arr = dset[load_index[i], 25:-25]
                 tr[i,:] = dset_arr
 
         gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[0,l], hspace=0, wspace=0, height_ratios=heights)
@@ -203,7 +215,7 @@ def cluster_gallery(model, labels, z_array, fname_dataset, device, centroids=Non
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[1])
             plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), aspect='auto', origin='lower')
-            plt.text(0, 60, f"{query[i]}", fontdict=font)
+            plt.text(0, 60, f"{load_index[i]}", fontdict=font)
             plt.xticks([])
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[2])

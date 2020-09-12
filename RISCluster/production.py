@@ -205,6 +205,7 @@ def DCM_train(parameters, hyperparameters):
             lr,
             gamma,
             tol,
+            index_tra,
             parameters
         )
         if send_message:
