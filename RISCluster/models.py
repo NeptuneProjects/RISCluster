@@ -329,7 +329,7 @@ def train_DCM(
     q, _ = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
-    fig1, fig2, fig3, fig4, fig5 = analyze_clustering(
+    fig2, fig3, fig4, fig5 = analyze_clustering(
         model,
         dataloader,
         labels_prev,
@@ -337,7 +337,6 @@ def train_DCM(
         0,
         fname_dataset
     )
-    tb.add_figure('Centroids',fig1, global_step=0, close=True)
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
     tb.add_figure('Results', fig3, global_step=0, close=True)
     tb.add_figure('Distances', fig4, global_step=0, close=True)
@@ -443,7 +442,7 @@ def train_DCM(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            fig1, fig2, fig3, fig4, fig5 = analyze_clustering(
+            fig2, fig3, fig4, fig5 = analyze_clustering(
                 model,
                 dataloader,
                 labels,
@@ -451,7 +450,6 @@ def train_DCM(
                 epoch,
                 fname_dataset
             )
-            tb.add_figure('Centroids', fig1, global_step=epoch, close=True)
             tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
             tb.add_figure('Results', fig3, global_step=epoch, close=True)
             tb.add_figure('Distances', fig4, global_step=epoch, close=True)
@@ -711,14 +709,14 @@ def analyze_clustering(
         Figures displaying centroids and their associated reconstructions.
     '''
     # Step 1: Show Centroid outputs
-    centroids = model.clustering.weights
-    X_r = model.decoder(centroids)
-    fig1 = plotting.view_centroid_output(
-        centroids,
-        X_r,
-        f'Centroid Reconstructions - Epoch {epoch}',
-        show=False
-    )
+    centroids = model.clustering.weights.detach().cpu().numpy()
+    # X_r = model.decoder(centroids)
+    # fig1 = plotting.view_centroid_output(
+    #     centroids,
+    #     X_r,
+    #     f'Centroid Reconstructions - Epoch {epoch}',
+    #     show=False
+    # )
     # Step 2: Show t-SNE & labels
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
@@ -746,4 +744,4 @@ def analyze_clustering(
     p = 1/4
     fig3 = plotting.cluster_gallery(model, labels, z_array, fname_dataset, device, p=p)
     fig4, fig5 = plotting.centroid_diagnostics(model.n_clusters, centroids, z_array, p=p)
-    return fig1, fig2, fig3, fig4, fig5
+    return fig2, fig3, fig4, fig5

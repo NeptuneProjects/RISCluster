@@ -45,68 +45,6 @@ class SeismoDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def multi_load(path, index, send_message=False, transform=None, **kwargs):
-    '''
-    Arguments:
-      fname_dataset: Path to h5 dataset
-      index: List of indices to load
-      send_message: Boolean
-      transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
-    '''
-    M = len(index)
-    if 'notqdm' in kwargs:
-        notqdm = kwargs.get("notqdm")
-    else:
-        notqdm = False
-        m, n, o = query_dbSize(path)
-        print('--------------------------------------------------------------')
-        print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
-        print(f'Loading {M} samples...')
-    tic = datetime.now()
-    A = [
-            {
-                'fname_dataset': path,
-                'index': index[i],
-            } for i in range(M)]
-    X = np.zeros((M, 70, 201))
-    with ProcessPoolExecutor(max_workers=16) as exec:
-        futures = [exec.submit(read_h5, **a) for a in A]
-        kwargs = {
-            'total': int(len(futures)),
-            'unit': 'samples',
-            'unit_scale': True,
-            'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}',
-            'leave': True,
-            'disable': notqdm
-        }
-        for i, future in enumerate(tqdm(as_completed(futures), **kwargs)):
-            X[i, :, :] = future.result()
-
-    X = X[:, :-1, 12:-14]
-
-    if transform == "sample_norm": # <-------------------------- Works
-        X /= np.abs(X).max(axis=(1,2))[:,None,None]
-    elif transform == "sample_norm_cent": # <------------------- Works
-        X = (X - X.mean(axis=(1,2))[:,None,None]) / \
-            np.abs(X).max(axis=(1,2))[:,None,None]
-    elif transform == "sample_std": # <------------------------- Doesn't work
-        X = (X - X.mean(axis=(1,2))[:,None,None]) / \
-            X.std(axis=(1,2))[:,None,None]
-    elif transform == "pixelwise":
-        X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
-
-    X = np.expand_dims(X, axis=1)
-
-    toc = datetime.now()
-    msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
-                 f'\nTime Elapsed = {(toc-tic)}'
-    if not notqdm:
-        print(msgcontent)
-    if send_message:
-        msgsubj = 'Data Loaded'
-        notify(msgsubj, msgcontent)
-    return SeismoDataset(X)
-
 def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
     for key in hyperparameters:
@@ -331,6 +269,68 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
 
     return savepath
+
+def multi_load(path, index, send_message=False, transform=None, **kwargs):
+    '''
+    Arguments:
+      fname_dataset: Path to h5 dataset
+      index: List of indices to load
+      send_message: Boolean
+      transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
+    '''
+    M = len(index)
+    if 'notqdm' in kwargs:
+        notqdm = kwargs.get("notqdm")
+    else:
+        notqdm = False
+        m, n, o = query_dbSize(path)
+        print('--------------------------------------------------------------')
+        print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
+        print(f'Loading {M} samples...')
+    tic = datetime.now()
+    A = [
+            {
+                'fname_dataset': path,
+                'index': index[i],
+            } for i in range(M)]
+    X = np.zeros((M, 70, 201))
+    with ProcessPoolExecutor(max_workers=16) as exec:
+        futures = [exec.submit(read_h5, **a) for a in A]
+        kwargs = {
+            'total': int(len(futures)),
+            'unit': 'samples',
+            'unit_scale': True,
+            'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}',
+            'leave': True,
+            'disable': notqdm
+        }
+        for i, future in enumerate(tqdm(as_completed(futures), **kwargs)):
+            X[i, :, :] = future.result()
+
+    X = X[:, :-1, 12:-14]
+
+    if transform == "sample_norm": # <-------------------------- Works
+        X /= np.abs(X).max(axis=(1,2))[:,None,None]
+    elif transform == "sample_norm_cent": # <------------------- Works
+        X = (X - X.mean(axis=(1,2))[:,None,None]) / \
+            np.abs(X).max(axis=(1,2))[:,None,None]
+    elif transform == "sample_std": # <------------------------- Doesn't work
+        X = (X - X.mean(axis=(1,2))[:,None,None]) / \
+            X.std(axis=(1,2))[:,None,None]
+    elif transform == "pixelwise":
+        X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
+
+    X = np.expand_dims(X, axis=1)
+
+    toc = datetime.now()
+    msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
+                 f'\nTime Elapsed = {(toc-tic)}'
+    if not notqdm:
+        print(msgcontent)
+    if send_message:
+        msgsubj = 'Data Loaded'
+        notify(msgsubj, msgcontent)
+    return SeismoDataset(X)
 
 def notify(msgsubj, msgcontent):
     '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012

@@ -18,7 +18,7 @@ from processing import get_metadata
 import utils
 from networks import AEC, DCM
 
-def centroid_diagnostics(n_clusters, centroids, z_array, p):
+def centroid_diagnostics(n_clusters, centroids, z_array, p=2):
     d = z_array.shape[1]
     fig1 = plt.figure(figsize=(6, 4 * n_clusters), dpi=150)
     gs = gridspec.GridSpec(nrows=n_clusters, ncols=1, hspace=0.5)
