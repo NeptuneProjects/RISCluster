@@ -39,15 +39,15 @@ if __name__ == '__main__':
         parser.add_argument(
             'day_stop',
             help="Select range of experiment days to compute.\
-                \n Stop day is midnight of the new day and does NOT include that \
-                day's data."
+                \n Stop day is midnight of the new day and does NOT include \
+                that day's data."
         )
         args = parser.parse_args()
-    # ========================== Initialize Parameters ============================
+    # ======================== Initialize Parameters ==========================
     # v v v v Modify these parameters when switching to Velella! v v v v
         num_workers = int(args.num_workers)
         datadir = '/home/wfjenkin/Research/Data/RIS_Seismic/'
-        # datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+        # datadir = '/Volumes/RISData/' # <---- Edit directory containing data.
         station_index = np.arange(0, 34)
         # station_index = np.array([24, 32])
         day_start = int(args.day_start)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         day_start = int(input('Start Day: '))
         day_stop = int(input(' Stop Day: '))
         num_workers = 12
-        datadir = '/Volumes/RISData/' # <----- Edit directory containing data.
+        datadir = '/Volumes/RISData/' # <------ Edit directory containing data.
         station_index = np.arange(0, 3)
     network_index = 0
     channel_index = 2
@@ -79,17 +79,17 @@ if __name__ == '__main__':
     elif debug:
         group_name = str(T_seg) + 's' # Group Name (grouped by T_seg)
         data_savename = f'DetectionData_{group_name}_debug.h5' # File name
-    print('======================================================================')
+    print('=' * 70)
     print(f' - Day {day_start} selected for start.')
     print(f' - Day {day_stop} selected for stop.')
     print(
         "NOTE: Stop day is midnight of the new day and does NOT\
         \n      include that day's data."
     )
-    print('----------------------------------------------------------------------')
+    print('-' * 70)
     datetime_indexes = np.arange(day_start, day_stop)
     numdays = len(datetime_indexes)
-    # ================================ Run Script =================================
+    # ============================== Run Script ===============================
     tic_run = datetime.now()
     for i in range(numdays):
         tic = datetime.now()
@@ -122,8 +122,6 @@ if __name__ == '__main__':
 
         with ProcessPoolExecutor(max_workers=num_workers) as exec:
             futures = [exec.submit(workflow_wrapper, **a) for a in A]
-            # results = list(exec.map(lambda p: workflow_wrapper(*p), params))
-            # results = list(executor.map(workflow_wrapper, station_index))
             kwargs = {
                 'total': int(len(futures)),
                 'unit': 'station',
@@ -162,14 +160,22 @@ if __name__ == '__main__':
             print('    Saving results...')
             with h5py.File(data_savepath+data_savename, 'a') as f:
                 if ('/' + group_name) not in f:
-                    print(f'    No h5 group found, creating group "{group_name}" '
-                          'and datasets.')
+                    print(
+                        f'    No h5 group found, creating group "{group_name}"'
+                        ' and datasets.'
+                    )
                     h5group_name = f.create_group(group_name)
                     h5group_name.attrs['T_seg (s)'] = T_seg
                     h5group_name.attrs['NFFT'] = NFFT
                     dset_tr, dset_spec, dset_scal, dset_cat = \
-                                        process.get_datasets(T_seg, NFFT, tpersnap, 100,
-                                                             h5group_name, overlap)
+                        process.get_datasets(
+                            T_seg,
+                            NFFT,
+                            tpersnap,
+                            100,
+                            h5group_name,
+                            overlap
+                    )
 
                 m = tr.shape[0]
                 print(f'    {m} detections found.')
@@ -189,13 +195,16 @@ if __name__ == '__main__':
                     dset_cat[-m+j,] = json.dumps(metadata[j])
 
     toc_run = datetime.now() - tic_run
-    print('----------------------------------------------------------------------')
+    print('-' * 70)
     print(f'Processing complete at {datetime.now()}; {toc_run} elapsed for '
           f'{numdays} day(s) processed.')
     print(f'Number of parallel workers: {num_workers}')
     print(f'Start Day = {day_start}, Stop Day = {day_stop}')
-    print('*Note: Stop day is midnight of the new day and does NOT include that \n'
-          'day\'s data. To resume computation, use Stop Day as the new Start Day.')
+    print(
+        '*Note: Stop day is midnight of the new day and does NOT include \n'
+        'that day\'s data. To resume computation, use Stop Day as the new \n'
+        'Start Day.'
+    )
     subj = 'Seismic Data Pre-processing Job Complete'
     msg = f'''Pre-processing completed at {datetime.now()}.
     Number of parallel workers = {num_workers}
@@ -205,9 +214,4 @@ if __name__ == '__main__':
     that day\'s data.  To resume computation, use Stop Day as the
     new Start Day.'''
     notify(subj,msg)
-    print('======================================================================')
-
-# For debugging:
-# import importlib as imp
-# imp.reload(process)
-# tr_out, S_out, catdict = [workflow_wrapper(**a) for a in A]
+    print('=' * 70)
