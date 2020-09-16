@@ -343,10 +343,10 @@ def train_DCM(
         fname_dataset,
         index_tra
     )
-    fig2.savefig(path2)
-    fig3.savefig(path3)
-    fig4.savefig(path4)
-    fig5.savefig(path5)
+    fig2.savefig(f"{path2}/TSNE.png")
+    fig3.savefig(f"{path3}/Results.png")
+    fig4.savefig(f"{path4}/Distance.png")
+    fig5.savefig(f"{path5}/DistMatrix.png")
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
     tb.add_figure('Results', fig3, global_step=0, close=True)
     tb.add_figure('Distances', fig4, global_step=0, close=True)
@@ -461,10 +461,10 @@ def train_DCM(
                 fname_dataset,
                 index_tra
             )
-            fig2.savefig(path2)
-            fig3.savefig(path3)
-            fig4.savefig(path4)
-            fig5.savefig(path5)
+            fig2.savefig(f"{path2}/TSNE.png")
+            fig3.savefig(f"{path3}/Results.png")
+            fig4.savefig(f"{path4}/Distance.png")
+            fig5.savefig(f"{path5}/DistMatrix.png")
             tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
             tb.add_figure('Results', fig3, global_step=epoch, close=True)
             tb.add_figure('Distances', fig4, global_step=epoch, close=True)
