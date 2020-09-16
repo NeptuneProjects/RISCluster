@@ -22,14 +22,16 @@ from networks import AEC, DCM
 
 def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     d = z_array.shape[1]
+    dist_mat = utils.distance_matrix(centroids, centroids, p)
     label_list, counts = np.unique(labels, return_counts=True)
     # vmax = max(centroids.max() / 2, np.median([z_array.max(), centroids.max()]))
     vmax = centroids.max()
     # vmax = z_array.max()
     heights = [0.1 if i==0 else 1 for i in range(1+len(label_list))]
+    widths = [3, 2]
     # widths = [0.5 if i==0 else 1 for i in range(1+len(label_list))]
     fig1 = plt.figure(figsize=(12, 4 * n_clusters), dpi=100)
-    gs = gridspec.GridSpec(nrows=1+n_clusters, ncols=2, hspace=0.35, height_ratios=heights)
+    gs = gridspec.GridSpec(nrows=1+n_clusters, ncols=2, hspace=0.35, wspace=0.27, height_ratios=heights, width_ratios=widths)
 
     # Colorbar
     ax = fig1.add_subplot(gs[0, :])
@@ -52,16 +54,27 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         distance_i = distance_d[query_i]
         cdf = np.flip(np.cumsum(np.ones(len(query_i))) / len(query_i))
 
+        labels_not = np.delete(label_list, l)
+        centroids_dist = np.delete(dist_mat[l,:], l)
+        centroids_ind = np.searchsorted(distance_d, centroids_dist)
+        centroids_sortind = np.argsort(centroids_dist)
+        centroids_ind = centroids_ind[centroids_sortind]
+        labels_not = labels_not[centroids_sortind]
+
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l+1,0], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
         # Centroid Plot
         ax = fig1.add_subplot(gs_sub[0,0])
         plt.imshow(centroids[l][None].T, vmax=vmax)
         plt.xticks([])
-        plt.yticks([])
-        plt.ylabel('Centroid')
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
+        plt.ylabel('Centroid Feature')
         # Dataset Latent Features
         ax = fig1.add_subplot(gs_sub[0,1])
         plt.imshow(z_array[sort_index_d].T, aspect='auto', vmax=vmax)
+        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', linestyles='dotted')
+        for ll in range(n_clusters-1):
+            plt.text(centroids_ind[ll], ll+1, str(labels_not[ll]), backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=0.5, edgecolor='w'))
+
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         ax.yaxis.tick_right()
@@ -75,7 +88,8 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         plt.ylabel('CDF')
         ax2 = ax.twinx()
         ax2.plot(distance_d, c='k', label="Distance")
-        scttr = plt.scatter(query_i, distance_i, c='firebrick', marker='|', alpha=0.2, label="Cluster Member")
+        plt.vlines(centroids_ind, distance_d.min(), distance_d.max(), colors='b', linestyles='dotted', label="Centroid")
+        scttr = plt.scatter(query_i, distance_i, c='firebrick', marker='x', alpha=0.4, label="Member")
         plt.xlim([0, len(z_array)])
         plt.ylim([0, distance_d.max()])
         plt.xlabel('Sorted Sample Index')
@@ -83,7 +97,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         plt.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
         label_offset(ax2, "y")
         if l == 0:
-            plt.legend(loc="best", fontsize=6)
+            plt.legend(loc=1, fontsize=6)
 
         query = np.where(labels == label_list[l])[0]
         z_sub = z_array[query]
@@ -97,13 +111,17 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         plt.imshow(centroids[l][None].T, vmax=vmax)
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
+        plt.ylabel('Centroid Feature')
         # Cluster Latent Features
         ax = fig1.add_subplot(gs_sub[0,1])
         tmp = z_sub.T
         plt.imshow(np.concatenate((tmp, np.zeros((tmp.shape[0], counts.max() - tmp.shape[1]))), axis=1), extent=extent, aspect='auto', vmax=vmax)
         plt.xticks([])
-        plt.yticks([])
-        # plt.yticks(ticks=np.linspace(0,d-1/2,d), labels=np.linspace(1,d,d, dtype='int'))
+        # plt.yticks([])
+        plt.yticks(ticks=np.linspace(0,d-1,d)+0.5, labels=np.linspace(1,d,d, dtype='int'))
+        ax.yaxis.tick_right()
+        plt.ylabel('Latent Feature')
+        ax.yaxis.set_label_position('right')
         plt.title(f"Cluster {l}: Within Cluster")
         # Cluster Distances
         ax = fig1.add_subplot(gs_sub[1,1])
@@ -117,10 +135,9 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         plt.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
         label_offset(ax, "y")
 
-    fig1.suptitle(f"Centroid Distance Visualization for L-{p}", size=14)
+    fig1.suptitle(fr"L{p} Distance Visualization", size=14)
     fig1.subplots_adjust(top=0.96)
 
-    dist_mat = utils.distance_matrix(centroids, centroids, p)
     fig2 = plt.figure(dpi=150)
     plt.imshow(dist_mat, origin='lower')
     cbar = plt.colorbar()
