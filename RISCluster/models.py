@@ -313,11 +313,11 @@ def train_DCM(
 
     # Initialize Clusters:
     # -- K-Means Initialization:
-    print('Initiating clusters with k-means...', end="", flush=True)
-    labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    # print('Initiating clusters with k-means...', end="", flush=True)
+    # labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
     # -- GMM Initialization:
-    # print('Initiating clusters with GMM...', end="", flush=True)
-    # labels_prev, centroids = gmm(model, copy.deepcopy(dataloader), device)
+    print('Initiating clusters with GMM...', end="", flush=True)
+    labels_prev, centroids = gmm(model, copy.deepcopy(dataloader), device)
     # -- K-Medoids Initialization:
     # print('Initiating clusters with k-medoids...', end="", flush=True)
     # labels_prev, centroids = kmeds(model, copy.deepcopy(dataloader), device)
@@ -552,7 +552,12 @@ def kmeans(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    km = KMeans(n_clusters=model.n_clusters, max_iter=10000, n_init=500, random_state=2009)
+    km = KMeans(
+        n_clusters=model.n_clusters,
+        max_iter=10000,
+        n_init=500,
+        random_state=2009
+    )
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
@@ -580,7 +585,13 @@ def kmeds(model, dataloader, device):
         labels: Sample-wise cluster assignment
         centroids: Sample-wise cluster centroids
     '''
-    kmed = KMedoids(n_clusters=model.n_clusters, metric='l1', init='heuristic', max_iter=10000, random_state=2009)
+    kmed = KMedoids(
+        n_clusters=model.n_clusters,
+        metric='l1',
+        init='heuristic',
+        max_iter=10000,
+        random_state=2009
+    )
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
@@ -761,4 +772,8 @@ def analyze_clustering(
         z_array,
         p=p
     )
+    fig2.savefig()
+    fig3.savefig()
+    fig4.savefig()
+    fig5.savefig()
     return fig2, fig3, fig4, fig5
