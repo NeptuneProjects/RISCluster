@@ -222,6 +222,12 @@ def load_weights(model, fname, device):
     print(f'Weights loaded to {device}')
     return model
 
+def make_dir(savepath_new, savepath_run="."):
+    path = f"{savepath_run}/{savepath_new}"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+
 def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     def _parse_nclusters(line):
         """

@@ -298,6 +298,10 @@ def train_DCM(
         'tol': tol
         }
     )
+    path2 = utils.make_dir('T-SNE', savepath_run)
+    path3 = utils.make_dir('Results', savepath_run)
+    path4 = utils.make_dir('Distance', savepath_run)
+    path5 = utils.make_dir('DistMatrix', savepath_run)
 
     model.load_state_dict(
         torch.load(loadpath, map_location=device), strict=False
@@ -339,6 +343,10 @@ def train_DCM(
         fname_dataset,
         index_tra
     )
+    fig2.savefig(path2)
+    fig3.savefig(path3)
+    fig4.savefig(path4)
+    fig5.savefig(path5)
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
     tb.add_figure('Results', fig3, global_step=0, close=True)
     tb.add_figure('Distances', fig4, global_step=0, close=True)
@@ -453,6 +461,10 @@ def train_DCM(
                 fname_dataset,
                 index_tra
             )
+            fig2.savefig(path2)
+            fig3.savefig(path3)
+            fig4.savefig(path4)
+            fig5.savefig(path5)
             tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
             tb.add_figure('Results', fig3, global_step=epoch, close=True)
             tb.add_figure('Distances', fig4, global_step=epoch, close=True)
@@ -772,8 +784,4 @@ def analyze_clustering(
         z_array,
         p=p
     )
-    fig2.savefig()
-    fig3.savefig()
-    fig4.savefig()
-    fig5.savefig()
     return fig2, fig3, fig4, fig5
