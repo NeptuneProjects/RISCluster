@@ -317,11 +317,11 @@ def train_DCM(
 
     # Initialize Clusters:
     # -- K-Means Initialization:
-    print('Initiating clusters with k-means...', end="", flush=True)
-    labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    # print('Initiating clusters with k-means...', end="", flush=True)
+    # labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
     # -- GMM Initialization:
-    # print('Initiating clusters with GMM...', end="", flush=True)
-    # labels_prev, centroids = gmm(model, copy.deepcopy(dataloader), device)
+    print('Initiating clusters with GMM...', end="", flush=True)
+    labels_prev, centroids = gmm(model, copy.deepcopy(dataloader), device)
     # -- K-Medoids Initialization:
     # print('Initiating clusters with k-medoids...', end="", flush=True)
     # labels_prev, centroids = kmeds(model, copy.deepcopy(dataloader), device)
