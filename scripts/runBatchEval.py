@@ -39,9 +39,9 @@ if __name__ == '__main__':
     device = utils.set_device()
     # ==== Checks =============================================================
     if not os.path.exists(fname_dataset):
-        raise ValueError('Dataset file not found.')
+        raise ValueError(f'Dataset file not found: {fname_dataset}')
     if not os.path.exists(indexpath):
-        raise ValueError('Index file not found.')
+        raise ValueError(f'Index file not found: {indexpath}')
     # =========================================================================
     # Prediction Routine
     # =========================================================================
