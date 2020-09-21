@@ -13,9 +13,9 @@ matplotlib.use('Agg')
 import production
 import utils
 
-loadpath = '../../../Outputs/Models/DCM'
-savepath = '../../ConfigFiles'
-overwrite = False
+# loadpath = '../../../Outputs/Models/DCM'
+# savepath = '../../ConfigFiles'
+# overwrite = False
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
