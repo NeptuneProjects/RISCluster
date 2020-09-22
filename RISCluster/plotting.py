@@ -736,7 +736,7 @@ def view_TSNE(results, labels, title, show=False):
     ax = fig.add_subplot(gs[0])
     sns.scatterplot(results[:, 0], results[:, 1], hue=labels, palette='Set1', alpha=0.2)
     plt.axis('off')
-    plt.title('T-SNE Results for GMM Centroids')
+    plt.title(title)
 
     ax = fig.add_subplot(gs[1])
     arr = plt.hist(labels, bins=np.arange(0, max(labels)+2, 1), histtype='bar', align='left', rwidth=0.8)
