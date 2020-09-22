@@ -48,6 +48,19 @@ class SigParam():
 #     pass
 #     return None
 
+def _copy_attributes(in_object, out_object):
+    '''Copy attributes between 2 HDF5 objects.'''
+    for key, value in in_object.attrs.items():
+        out_object.attrs[key] = value
+
+def _find_indeces(index, source, stations):
+    with h5py.File(source, 'r') as f:
+        metadata = json.loads(f['/4s/Catalogue'][index])
+    if metadata["Station"] in stations:
+        return index
+    else:
+        return np.nan
+
 def detector(tr, signal_args, detector_args, detector_type='classic'):
     '''Detect events using recursive STA/LTA.'''
     fs = signal_args.fs
