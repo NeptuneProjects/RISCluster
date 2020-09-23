@@ -84,6 +84,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         # Dataset Distances
         ax = fig1.add_subplot(gs_sub[1,1])
         ax.fill_between(query_i, cdf, color="slategray", alpha=0.4, linewidth=0, label=None)
+        plt.xlabel('Sorted Sample Index')
         plt.ylim([0, 1.2])
         plt.ylabel('CDF')
         ax2 = ax.twinx()
@@ -92,7 +93,6 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         scttr = plt.scatter(query_i, distance_i, c='firebrick', marker='x', alpha=0.4, label="Member")
         plt.xlim([0, len(z_array)])
         plt.ylim([0, distance_d.max()])
-        plt.xlabel('Sorted Sample Index')
         plt.ylabel('Distance')
         plt.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
         label_offset(ax2, "y")
@@ -171,7 +171,7 @@ def cluster_gallery(
     font = {'family': 'serif',
         'color':  'white',
         'weight': 'normal',
-        'size': 6,
+        'size': 5,
         }
     transform = 'sample_norm_cent'
     vmax = centroids.max()
@@ -185,6 +185,7 @@ def cluster_gallery(
         sort_index = np.argsort(distance)[0:N]
         load_index = load_index[sort_index]
         query = query[sort_index]
+        distance = distance[sort_index]
 
         dataset = utils.load_dataset(fname_dataset, load_index, send_message=False, transform=transform, **{"notqdm": True})
         dataloader = DataLoader(dataset, batch_size=N)
@@ -233,6 +234,7 @@ def cluster_gallery(
             ax = fig.add_subplot(gs_sub[1])
             plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), aspect='auto', origin='lower')
             plt.text(0, 60, f"{load_index[i]}", fontdict=font)
+            plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
             plt.xticks([])
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[2])
