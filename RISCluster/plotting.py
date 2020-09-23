@@ -73,14 +73,13 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         plt.imshow(z_array[sort_index_d].T, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', linestyles='dotted')
         for ll in range(n_clusters-1):
-            plt.text(centroids_ind[ll], ll+1, str(labels_not[ll]), backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=0.5, edgecolor='w'))
-
+            plt.text(centroids_ind[ll], ll+1, str(labels_not[ll]+1), backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=0.5, edgecolor='w'))
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
         ax.yaxis.set_label_position('right')
-        plt.title(f"Cluster {l}: Dataset")
+        plt.title(f"Cluster {l+1}: Dataset")
         # Dataset Distances
         ax = fig1.add_subplot(gs_sub[1,1])
         ax.fill_between(query_i, cdf, color="slategray", alpha=0.4, linewidth=0, label=None)
@@ -122,7 +121,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
         ax.yaxis.set_label_position('right')
-        plt.title(f"Cluster {l}: Within Cluster")
+        plt.title(f"Cluster {l+1}: Within Cluster")
         # Cluster Distances
         ax = fig1.add_subplot(gs_sub[1,1])
         plt.plot(distance, c='k')
@@ -140,6 +139,8 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
 
     fig2 = plt.figure(dpi=150)
     plt.imshow(dist_mat, origin='lower')
+    plt.xticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
+    plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     cbar = plt.colorbar()
     cbar.set_label('Distance')
     fig2.suptitle(f"L-{p} Distance Matrix", size=14)
@@ -184,7 +185,6 @@ def cluster_gallery(
         # distance = np.linalg.norm(centroids[l,:] - z_array[query,:], ord=p, axis=1)
         sort_index = np.argsort(distance)[0:N]
         load_index = load_index[sort_index]
-        query = query[sort_index]
         distance = distance[sort_index]
 
         dataset = utils.load_dataset(fname_dataset, load_index, send_message=False, transform=transform, **{"notqdm": True})
@@ -216,7 +216,7 @@ def cluster_gallery(
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
-        ax.set_xlabel(f"Cluster {label}", size=5)
+        ax.set_xlabel(f"Cluster {label+1}", size=5)
         if l == 0:
             plt.ylabel("Centroids", size=5)
 
@@ -732,24 +732,23 @@ def view_specgram_training(x, x_r, z, n, o, figtitle,
     return fig
 
 def view_TSNE(results, labels, title, show=False):
+    label_list, counts = np.unique(labels, return_counts=True)
     fig = plt.figure(figsize=(6,9))
     gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[4, 3])
 
     ax = fig.add_subplot(gs[0])
-    sns.scatterplot(results[:, 0], results[:, 1], hue=labels, palette='Set1', alpha=0.2)
+    sns.scatterplot(results[:, 0], results[:, 1], hue=labels+1, palette='Set1', alpha=0.2)
     plt.axis('off')
     plt.title(title)
 
     ax = fig.add_subplot(gs[1])
-    arr = plt.hist(labels, bins=np.arange(0, max(labels)+2, 1), histtype='bar', align='left', rwidth=0.8)
+    arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8)
     plt.grid(axis='y', linestyle='--')
     plt.xlabel('Cluster Label')
     plt.ylabel('Number of Detections')
     plt.title('Histogram of Cluster Assignments')
 
-    _, counts = np.unique(labels, return_counts=True)
     N = counts.sum()
-
     def CtP(x):
         return 100 * x / N
 
