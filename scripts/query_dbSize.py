@@ -1,4 +1,6 @@
 import argparse
+import sys
+sys.path.insert(0, '../RISCluster/')
 
 import h5py
 
