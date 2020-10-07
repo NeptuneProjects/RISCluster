@@ -6,8 +6,8 @@ This repository is a PyTorch implementation of deep embedded clustering (DEC) in
 4. Tune, train, and validate AEC
 5. Determine optimal number of clusters using gap statistic analysis
 6. Incorporate Clustering Layer into AEC model architecture
-7. Simultaneously train the DCEC model to maximize clustering while fine tuning AEC parameters.
-8. Feed unseen data to DCEC model and evaluate performance.
+7. Simultaneously train the DEC model to maximize clustering while fine tuning AEC parameters.
+8. Feed unseen data to DEC model and evaluate performance.
 
 ## References:
 Master thesis of Dylan Snover: https://github.com/dsnover/
