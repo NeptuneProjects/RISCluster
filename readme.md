@@ -1,5 +1,5 @@
-# Deep Convolutional Embedded Clustering
-This repository is a PyTorch implementation of deep convolutional embedded clustering (DCEC) in the unsupervised classification of seismic signals detected on a 34-station passive broadband seismic array on the Ross Ice Shelf from November 2014 to November 2016.  The workflow requires the following elements:
+# Deep Embedded Clustering
+This repository is a PyTorch implementation of deep embedded clustering (DEC) in the unsupervised classification of seismic signals detected on a 34-station passive broadband seismic array on the Ross Ice Shelf from November 2014 to November 2016.  The workflow requires the following elements:
 1. Import modules and set up environment
 2. Load and pre-process data
 3. Construct a convolutional auto-encoder (AEC)
