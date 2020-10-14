@@ -228,6 +228,17 @@ def make_dir(savepath_new, savepath_run="."):
         os.makedirs(path)
     return path
 
+def make_exp(exppath, **kwargs):
+    serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
+    savepath_exp = f"{exppath}/{serial_exp}"
+    savepath_AEC = f"{savepath_exp}/AEC"
+    savepath_DCM = f"{savepath_exp}/DCM"
+
+
+    if not os.path.exists(savepath_exp):
+        os.makedirs(savepath_exp)
+    return savepath_exp, serial_exp
+
 def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     def _parse_nclusters(line):
         """
