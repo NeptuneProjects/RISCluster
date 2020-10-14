@@ -336,15 +336,6 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
         plt.show()
     return fig
 
-def view_clusters(pca2d, labels):
-    fig = plt.figure(figsize=(6,6), dpi=300)
-    sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
-    plt.legend()
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-    fig.tight_layout()
-    return fig
-
 def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     init_file = [f for f in os.listdir(exppath) if f.endswith('.ini')][0]
     init_file = f'{exppath}/{init_file}'
@@ -485,6 +476,63 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         if save:
             print(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
             fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
+
+def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u):
+    def _make_patch_spines_invisible(ax):
+        ax.set_frame_on(True)
+        ax.patch.set_visible(False)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+
+    fig = plt.figure(figsize=(12,9), dpi=300)
+    _, host = plt.subplots()
+
+    par1 = host.twinx()
+    par2 = host.twinx()
+
+    par2.spines["right"].set_position(("axes", 1.15))
+    _make_patch_spines_invisible(par2)
+    par2.spines["right"].set_visible(True)
+
+    p1, = host.plot(inertia, color="navy", marker=".", label="Inertia")
+    p2, = par1.plot(silh, color="darkgreen", marker=".", label="Silhouette")
+    p3, = par2.plot(gap_g, "firebrick", ls=":", marker=".", label="Gaussian")
+    p4, = par2.plot(gap_u, "firebrick", ls="-.", marker=".", label="Uniform")
+
+    host.set_xlabel("Number of Clusters")
+    host.set_ylabel("Inertia")
+    par1.set_ylabel("Silhouette Score")
+    par2.set_ylabel("Gap Statistic")
+
+    host.yaxis.label.set_color(p1.get_color())
+    par1.yaxis.label.set_color(p2.get_color())
+    par2.yaxis.label.set_color(p3.get_color())
+
+    tkw = dict(size=4, width=1.5)
+    host.tick_params(axis='y', colors=p1.get_color(), **tkw)
+    par1.tick_params(axis='y', colors=p2.get_color(), **tkw)
+    par2.tick_params(axis='y', colors=p3.get_color(), **tkw)
+    host.tick_params(axis='x', **tkw)
+
+    host.set_xticks(range(len(k_list)))
+    host.set_xticklabels(k_list)
+
+    lines = [p1, p2, p3, p4]
+    leg = host.legend(lines, [l.get_label() for l in lines], ncol=4, bbox_to_anchor=(0.5, -0.28), loc='lower center')
+    plt.title("K-Means Metrics")
+    plt.tight_layout()
+    plt.subplots_adjust(right=0.8, bottom=0.2)
+
+    return fig
+
+def view_clusters(pca2d, labels):
+    fig = plt.figure(figsize=(6,6), dpi=300)
+    sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
+    plt.legend()
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    fig.tight_layout()
+    return fig
 
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)

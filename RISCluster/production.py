@@ -86,7 +86,7 @@ def DCM_pretrain(parameters, hyperparameters):
                 val_loader = DataLoader(val_dataset, batch_size=batch_size)
                 dataloaders = [tra_loader, val_loader]
                 # ==== Pre-train DCM parameters by training the autoencoder: =========
-                models.pretrain_DCM(
+                models.pretrain(
                     model,
                     dataloaders,
                     criteria,
@@ -195,7 +195,7 @@ def DCM_train(parameters, hyperparameters):
 
         dataloader = DataLoader(tra_dataset, batch_size=batch_size)
         # ==== Train DCM parameters: =========================================
-        models.train_DCM(
+        models.train(
             model,
             dataloader,
             criteria,
@@ -273,7 +273,7 @@ def DCM_predict(parameters, index_tst=None, tst_dataset=None):
     dataloader = DataLoader(tst_dataset, batch_size=batch_size)
     model = DCM(n_clusters).to(device)
 
-    models.predict_DCM(model, dataloader, index_tst, parameters)
+    models.predict(model, dataloader, index_tst, parameters)
     print('--------------------------------------------------------------')
     toc = datetime.now()
     msgcontent = f'DCM outputs saved.\nTime Elapsed = {toc-tic}.'

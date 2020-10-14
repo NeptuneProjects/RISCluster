@@ -52,6 +52,26 @@ def calc_tuning_runs(hyperparameters):
 
     return(tuning_runs)
 
+def config_training(universal, parameters, hyperparameters):
+    config = configparser.ConfigParser()
+    config['UNIVERSAL'] = universal
+    config['PARAMETERS'] = parameters
+    config['HYPERPARAMETERS'] = hyperparameters
+    fname = f"{universal['savepath']}/init_{parameters['mode']}.ini"
+    with open(fname, 'w') as configfile:
+        config.write(configfile)
+    return fname
+
+def config_train(universal, parameters, hyperparameters):
+    config = configparser.ConfigParser()
+    config['UNIVERSAL'] = universal
+    config['PARAMETERS'] = parameters
+    config['HYPERPARAMETERS'] = hyperparameters
+    fname = f"{universal['savepath']}/init_train.ini"
+    with open(fname, 'w') as configfile:
+        config.write(configfile)
+    return fname
+
 def distance_matrix(x, y, f):
     assert len(x) == len(y)
     M = len(x)
@@ -80,15 +100,15 @@ def init_exp_env(mode, savepath, **kwargs):
         exper = init_file.split("/")[-2][10:]
         serial_exp = exper[3:]
         run = f'Run{init_file.split("/")[-1][9:-4]}'
-        savepath_exp = f'{savepath}Trials/{exper}/{run}/'
+        savepath_exp = f'{savepath}/Trials/{exper}/{run}/'
     else:
         serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
         if mode == 'pretrain':
-            savepath_exp = f'{savepath}Models/AEC/Exp{serial_exp}/'
+            savepath_exp = f'{savepath}/Models/AEC/Exp{serial_exp}/'
         elif mode == 'train':
-            savepath_exp = f'{savepath}Models/DCM/Exp{serial_exp}/'
+            savepath_exp = f'{savepath}/Models/DCM/Exp{serial_exp}/'
         elif mode == 'predict':
-            savepath_exp = f'{savepath}Trials/Exp{serial_exp}/'
+            savepath_exp = f'{savepath}/Trials/Exp{serial_exp}/'
         else:
             raise ValueError(
                 'Incorrect mode selected; choose "pretrain", "train", or "eval".'

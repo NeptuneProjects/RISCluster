@@ -29,7 +29,7 @@ imp.reload(plotting)
 import utils
 imp.reload(utils)
 
-def pretrain_DCM(
+def pretrain(
         model,
         dataloaders,
         criteria,
@@ -249,7 +249,7 @@ def pretrain_DCM(
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model, tb
 
-def train_DCM(
+def train(
         model,
         dataloader,
         criteria,
@@ -495,7 +495,7 @@ def train_DCM(
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model
 
-def predict_DCM(model, dataloader, idx_smpl, parameters):
+def predict(model, dataloader, idx_smpl, parameters):
     device = parameters['device']
     savepath_exp = parameters['savepath']
     serial_exp = parameters['serial']

@@ -29,10 +29,10 @@ if __name__ == '__main__':
     # =========================================================================
     # Universal Parameters
     # =========================================================================
-    mode = config['UNIVERSAL']['mode']
     fname_dataset = config['UNIVERSAL']['fname_dataset']
     savepath = config['UNIVERSAL']['savepath']
     indexpath = config['UNIVERSAL']['indexpath']
+    mode = config['PARAMETERS']['mode']
     # =========================================================================
     # Pre-Training Routine
     # =========================================================================
