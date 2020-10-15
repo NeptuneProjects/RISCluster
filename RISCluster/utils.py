@@ -216,6 +216,25 @@ def load_dataset(
 
     return SeismoDataset(X)
 
+def load_images(fname_dataset, index):
+    with h5py.File(fname_dataset, 'r') as f:
+        #samples, frequency bins, time bins, amplitude
+        DataSpec = '/4s/Spectrogram'
+        dset = f[DataSpec]
+        X = np.zeros((len(index), 70, 201))
+        for i, index in enumerate(index):
+            dset_arr = dset[index, :, :]
+            X[i] = dset_arr
+    #         X = dset_arr / np.abs(dset_arr).max()
+    #         X = (dset_arr - dset_arr.mean()) / dset_arr.std()
+            fvec = dset[1, 0:68, 0]
+            tvec = dset[1, 69, 1:]
+        X = X[:, :-1, 12:-14]
+        tvec = tvec[12:-14]
+        fvec = fvec[:-1]
+        X = np.expand_dims(X, axis=1)
+    return X, tvec, fvec
+
 def load_labels(exppath):
     csv_file = [f for f in os.listdir(exppath) if f.endswith('.csv')][0]
     csv_file = f'{exppath}/{csv_file}'

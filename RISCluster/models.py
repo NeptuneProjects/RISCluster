@@ -62,12 +62,13 @@ def pretrain(
     device = parameters['device']
     mode = parameters['mode']
     savepath_exp = parameters['savepath']
+    fname_dataset = parameters['fname_dataset']
     show = parameters['show']
     early_stopping = parameters['early_stopping']
     patience = parameters['patience']
     km_metrics = parameters['km_metrics']
-    img_index = parameters['img_index']
-    img_index = [int(i) for i in img_index.split(',')]
+    disp_index = parameters['img_index']
+    disp_index = [int(i) for i in disp_index.split(',')]
 
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
@@ -86,18 +87,23 @@ def pretrain(
     M_tra = len(tra_loader.dataset)
     M_val = len(val_loader.dataset)
 
-    images = next(iter(tra_loader))
 
+    images, tvec, fvec = utils.load_images(fname_dataset, disp_index)
+    disp_loader = DataLoader(
+        utils.SeismoDataset(images),
+        batch_size=len(disp_index)
+    )
+    disp = next(iter(tra_loader))
+    # images = next(iter(tra_loader))
     # disp_idx = sorted(np.random.randint(0, images.size(0), 4))
-    disp_idx = img_index
-    disp = images[disp_idx]
+    # disp = images[disp_idx]
 
     tb = SummaryWriter(log_dir=savepath_run)
     fig = plotting.compare_images(
         model,
         disp.to(device),
         0,
-        disp_idx,
+        disp_index,
         savepath_run,
         fname_dataset,
         show
@@ -169,7 +175,8 @@ def pretrain(
             fig = plotting.compare_images(
                 model,
                 disp.to(device),
-                epoch,
+                0,
+                disp_index,
                 savepath_run,
                 fname_dataset,
                 show

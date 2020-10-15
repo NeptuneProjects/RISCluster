@@ -253,13 +253,17 @@ def compare_images(
         disp,
         epoch,
         disp_idx,
+        tvec,
+        fvec,
         savepath,
         fname_dataset,
         show=True
     ):
     model.eval()
     x_r, z = model(disp)
-    figtitle = f'DCM Pre-training: Epoch {epoch}'
+    print(x_r.shape)
+    print(z.shape)
+    figtitle = f'Pre-training: Epoch {epoch}'
     n, o = list(disp.size()[2:])
     fig = view_specgram_training(
         disp,
@@ -267,8 +271,10 @@ def compare_images(
         n, o,
         figtitle,
         disp_idx,
+        tvec,
+        fvec,
         fname_dataset,
-        figsize=(12,9),
+        figsize=(12,6),
         show=show
     )
     savepath_snap = savepath + '/snapshots/'
@@ -748,28 +754,39 @@ def view_specgram_training(
         x, x_r, z, n, o,
         figtitle,
         disp_idx,
+        tvec,
+        fvec,
         fname_dataset,
-        figsize=(12,9),
+        figsize=(6,5),
         show=True
     ):
-    sample_idx = np.arange(0, len(disp_index))
-    metadata = get_metadata(disp_idx, sample_idx, fname_dataset)
+    sample_idx = np.arange(0, len(disp_idx))
+    metadata = get_metadata(sample_idx, disp_idx, fname_dataset)
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
     fig = plt.figure(figsize=figsize, dpi=300)
-    heights = [4, 0.2, 4]
-    gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights)
+    heights = [4, 0.4, 4]
+    extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
+    gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights, wspace=0.3)
     counter = 0
     for i in range(x.size()[0]):
+        station = metadata[i]['Station']
+        try:
+            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        except:
+            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+
         ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), aspect='auto')
-        plt.gca().invert_yaxis()
-        plt.xlabel('Time Bin')
-        plt.ylabel('Frequency Bin')
-        if counter == 0:
-            plt.figtext(-0.01, 0.62, 'Original Spectrograms', rotation='vertical',
-                        fontweight='bold')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), extent=extent, aspect='auto', origin='lower')
+        plt.xlabel('Time (s)')
+        if i == 0:
+            plt.ylabel('Frequency (Hz)')
+        plt.title(f'Station {station}; Index: {disp_idx[i]}\nTrigger: {time_on}', fontsize=8)
 
         ax = fig.add_subplot(gs[1,counter])
         plt.imshow(np.expand_dims(z[i], 0), aspect='auto')
@@ -777,18 +794,19 @@ def view_specgram_training(
         plt.yticks([])
 
         ax = fig.add_subplot(gs[2,counter])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), aspect='auto')
-        plt.gca().invert_yaxis()
-        plt.xlabel('Time Bin')
-        plt.ylabel('Frequency Bin')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), extent=extent, aspect='auto', origin='lower')
+        plt.xlabel('Time (s)')
+        if i == 0:
+            plt.ylabel('Frequency (Hz)')
         if counter == 0:
-            plt.figtext(-0.01, 0.15, 'Reconstructed Spectrograms',
-                        rotation='vertical', fontweight='bold')
+            plt.figtext(0.03, 0.87, 'a)', size=16, fontweight='bold')
+            plt.figtext(0.03, 0.5, 'b)', size=16, fontweight='bold')
+            plt.figtext(0.03, 0.42, 'c)', size=16, fontweight='bold')
         counter += 1
 
-    fig.suptitle(figtitle, size=18, weight='bold')
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.92, left=0.1)
+    fig.suptitle(figtitle, size=16, weight='bold')
+    # fig.tight_layout()
+    fig.subplots_adjust(top=0.89, left=0.08)
     if show:
         plt.show()
     else:
