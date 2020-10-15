@@ -229,10 +229,14 @@ def load_images(fname_dataset, index):
     #         X = (dset_arr - dset_arr.mean()) / dset_arr.std()
             fvec = dset[1, 0:68, 0]
             tvec = dset[1, 69, 1:]
-        X = X[:, :-1, 12:-14]
-        tvec = tvec[12:-14]
-        fvec = fvec[:-1]
-        X = np.expand_dims(X, axis=1)
+    X = X[:, :-1, 12:-14]
+    tvec = tvec[12:-14]
+    fvec = fvec[:-1]
+
+    X = (X - X.mean(axis=(1,2))[:,None,None]) / \
+        np.abs(X).max(axis=(1,2))[:,None,None]
+    
+    X = np.expand_dims(X, axis=1)
     return X, tvec, fvec
 
 def load_labels(exppath):
