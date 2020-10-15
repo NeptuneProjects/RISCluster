@@ -873,13 +873,26 @@ def kmeans_metrics(dataloader, model, device, k_list):
     )
 
     for i, k in enumerate(pbar):
-        km = KMeans(n_clusters=k, n_init=100).fit(z_array)
-        kmg = KMeans(n_clusters=k, n_init=100).fit(gauss)
-        kmu = KMeans(n_clusters=k, n_init=100).fit(unifo)
-        inertia[i] = km.inertia_
-        inertiag[i] = kmg.inertia_
-        inertiau[i] = kmu.inertia_
-        silh[i] = silhouette_score(z_array, km.labels_)
+        complete = False
+        attempt = 0
+        while not complete:
+            try:
+                km = KMeans(n_clusters=k, n_init=100).fit(z_array)
+                kmg = KMeans(n_clusters=k, n_init=100).fit(gauss)
+                kmu = KMeans(n_clusters=k, n_init=100).fit(unifo)
+                inertia[i] = km.inertia_
+                inertiag[i] = kmg.inertia_
+                inertiau[i] = kmu.inertia_
+                silh[i] = silhouette_score(z_array, km.labels_)
+                complete = True
+                break
+            except:
+                if attempt == 5:
+                    break
+                complete = False
+                attempt += 1
+                continue
+
 
     gap_g = np.log(np.asarray(inertiag)) - np.log(np.asarray(inertia))
     gap_u = np.log(np.asarray(inertiau)) - np.log(np.asarray(inertia))
