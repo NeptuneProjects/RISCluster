@@ -28,4 +28,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     M = args.M
     fname_dataset = args.path
+    savepath = args.savepath
     utils.save_TraVal_index(M, fname_dataset, savepath)

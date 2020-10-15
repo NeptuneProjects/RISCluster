@@ -540,7 +540,8 @@ def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
         index_val=index_val
     )
     serial = datetime.now().strftime('%Y%m%dT%H%M%S')
-    savepath = f'{savepath}TraValIndex_M={M}_Res={reserve}_{serial}.pkl'
+    # savepath = f'{savepath}TraValIndex_M={M}_Res={reserve}_{serial}.pkl'
+    savepath = f'{savepath}/TraValIndex_M={M}.pkl'
     with open(savepath, 'wb') as f:
         pickle.dump(index, f)
     print(f'{M} training & validation indices saved to:')
