@@ -66,6 +66,8 @@ def pretrain(
     early_stopping = parameters['early_stopping']
     patience = parameters['patience']
     km_metrics = parameters['km_metrics']
+    img_index = parameters['img_index']
+    img_index = [int(i) for i in img_index.split(',')]
 
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
@@ -86,7 +88,8 @@ def pretrain(
 
     images = next(iter(tra_loader))
 
-    disp_idx = sorted(np.random.randint(0, images.size(0), 4))
+    # disp_idx = sorted(np.random.randint(0, images.size(0), 4))
+    disp_idx = img_index
     disp = images[disp_idx]
 
     tb = SummaryWriter(log_dir=savepath_run)
@@ -94,7 +97,9 @@ def pretrain(
         model,
         disp.to(device),
         0,
+        disp_idx,
         savepath_run,
+        fname_dataset,
         show
     )
     tb.add_figure('TrainingProgress', fig, global_step=0, close=True)
@@ -166,6 +171,7 @@ def pretrain(
                 disp.to(device),
                 epoch,
                 savepath_run,
+                fname_dataset,
                 show
             )
             tb.add_figure(

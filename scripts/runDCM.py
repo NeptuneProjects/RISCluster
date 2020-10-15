@@ -55,7 +55,8 @@ if __name__ == '__main__':
             patience=int(config['PARAMETERS']['patience']),
             transform=config['PARAMETERS']['transform'],
             km_metrics=config['PARAMETERS'].getboolean('km_metrics'),
-            klist=config['PARAMETERS']['klist']
+            klist=config['PARAMETERS']['klist'],
+            img_index=config['PARAMETERS']['img_index']
         )
         batch_size = config['HYPERPARAMETERS']['batch_size']
         lr = config['HYPERPARAMETERS']['lr']

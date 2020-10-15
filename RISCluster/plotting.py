@@ -252,7 +252,9 @@ def compare_images(
         model,
         disp,
         epoch,
+        disp_idx,
         savepath,
+        fname_dataset,
         show=True
     ):
     model.eval()
@@ -264,6 +266,8 @@ def compare_images(
         x_r, z,
         n, o,
         figtitle,
+        disp_idx,
+        fname_dataset,
         figsize=(12,9),
         show=show
     )
@@ -740,8 +744,16 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         plt.close()
     return fig
 
-def view_specgram_training(x, x_r, z, n, o, figtitle,
-                           figsize=(12,9), show=True):
+def view_specgram_training(
+        x, x_r, z, n, o,
+        figtitle,
+        disp_idx,
+        fname_dataset,
+        figsize=(12,9),
+        show=True
+    ):
+    sample_idx = np.arange(0, len(disp_index))
+    metadata = get_metadata(disp_idx, sample_idx, fname_dataset)
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
