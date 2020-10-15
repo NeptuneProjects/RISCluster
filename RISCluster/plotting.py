@@ -261,8 +261,6 @@ def compare_images(
     ):
     model.eval()
     x_r, z = model(disp)
-    print(x_r.shape)
-    print(z.shape)
     figtitle = f'Pre-training: Epoch {epoch}'
     n, o = list(disp.size()[2:])
     fig = view_specgram_training(
@@ -487,7 +485,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             print(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
             fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
 
-def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
+def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=True):
     def _make_patch_spines_invisible(ax):
         ax.set_frame_on(True)
         ax.patch.set_visible(False)
@@ -495,12 +493,12 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
             sp.set_visible(False)
 
     # fig = plt.figure(figsize=(12,9), dpi=300)
-    fig, host = plt.subplots(figsize=(5,4), dpi=300)
+    fig, host = plt.subplots(figsize=(6,4), dpi=300)
 
     par1 = host.twinx()
     par2 = host.twinx()
 
-    par2.spines["right"].set_position(("axes", 1.23))
+    par2.spines["right"].set_position(("axes", 1.25))
     _make_patch_spines_invisible(par2)
     par2.spines["right"].set_visible(True)
 
@@ -532,7 +530,7 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     leg = host.legend(lines, [l.get_label() for l in lines], ncol=4, bbox_to_anchor=(0.6, -0.28), loc='lower center')
     # plt.title("K-Means Metrics")
     plt.tight_layout()
-    plt.subplots_adjust(right=0.8, bottom=0.2)
+    plt.subplots_adjust(right=0.7, bottom=0.2)
     if show:
         plt.show()
     else:

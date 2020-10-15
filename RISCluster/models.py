@@ -93,7 +93,7 @@ def pretrain(
         utils.SeismoDataset(images),
         batch_size=len(disp_index)
     )
-    disp = next(iter(tra_loader))
+    disp = next(iter(disp_loader))
     # images = next(iter(tra_loader))
     # disp_idx = sorted(np.random.randint(0, images.size(0), 4))
     # disp = images[disp_idx]
@@ -104,6 +104,8 @@ def pretrain(
         disp.to(device),
         0,
         disp_index,
+        tvec,
+        fvec,
         savepath_run,
         fname_dataset,
         show
@@ -175,8 +177,10 @@ def pretrain(
             fig = plotting.compare_images(
                 model,
                 disp.to(device),
-                0,
+                epoch,
                 disp_index,
+                tvec,
+                fvec,
                 savepath_run,
                 fname_dataset,
                 show
@@ -248,6 +252,23 @@ def pretrain(
             'hp/Training MSE': epoch_tra_mse,
             'hp/Validation MSE': epoch_val_mse
         }
+    )
+    fig = plotting.compare_images(
+        model,
+        disp.to(device),
+        epoch,
+        disp_index,
+        tvec,
+        fvec,
+        savepath_run,
+        fname_dataset,
+        show
+    )
+    tb.add_figure(
+        'TrainingProgress',
+        fig,
+        global_step=epoch,
+        close=True
     )
     if early_stopping and (finished == True or epoch == n_epochs-1):
         src_file = f'{savepath_chkpnt}AEC_Best_Weights.pt'
