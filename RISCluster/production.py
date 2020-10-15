@@ -68,7 +68,7 @@ def DCM_pretrain(parameters, hyperparameters):
         q_tic = datetime.now()
         while not completed:
             try:
-                # ==== Instantiate Model, Optimizer, & Loss Functions =================
+                # ==== Instantiate Model, Optimizer, & Loss Functions =========
                 model = AEC()
                 # if (device.type == 'cuda') and (torch.cuda.device_count() > 1):
                     # print(f'{torch.cuda.device_count()} GPUs in use.')
@@ -85,8 +85,8 @@ def DCM_pretrain(parameters, hyperparameters):
                 tra_loader = DataLoader(tra_dataset, batch_size=batch_size)
                 val_loader = DataLoader(val_dataset, batch_size=batch_size)
                 dataloaders = [tra_loader, val_loader]
-                # ==== Pre-train DCM parameters by training the autoencoder: =========
-                models.pretrain(
+                # ==== Pre-train DCM by training the autoencoder: =============
+                model = models.pretrain(
                     model,
                     dataloaders,
                     criteria,

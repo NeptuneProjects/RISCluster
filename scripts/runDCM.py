@@ -33,11 +33,14 @@ if __name__ == '__main__':
     savepath = config['UNIVERSAL']['savepath']
     indexpath = config['UNIVERSAL']['indexpath']
     mode = config['PARAMETERS']['mode']
+    savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
+    if config['PARAMETERS'].getboolean('tb'):
+        tbport = int(config['PARAMETERS']['tbport'])
+        utils.start_tensorboard(savepath_exp, tbport)
     # =========================================================================
     # Pre-Training Routine
     # =========================================================================
     if mode == 'pretrain':
-        savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
             device=device,
@@ -50,7 +53,9 @@ if __name__ == '__main__':
             mode=mode,
             early_stopping=config['PARAMETERS'].getboolean('early_stopping'),
             patience=int(config['PARAMETERS']['patience']),
-            transform=config['PARAMETERS']['transform']
+            transform=config['PARAMETERS']['transform'],
+            km_metrics=config['PARAMETERS'].getboolean('km_metrics'),
+            klist=config['PARAMETERS']['klist']
         )
         batch_size = config['HYPERPARAMETERS']['batch_size']
         lr = config['HYPERPARAMETERS']['lr']
@@ -70,7 +75,6 @@ if __name__ == '__main__':
     # Training Routine
     # =========================================================================
     if mode == 'train':
-        savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         parameters = dict(
             fname_dataset=fname_dataset,
             device=device,
@@ -109,7 +113,6 @@ if __name__ == '__main__':
     # Prediction Routine
     # =========================================================================
     if mode == 'predict':
-        savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
         M = config['PARAMETERS']['m'] # Select integer or 'all'
         if M == 'all':
             pass

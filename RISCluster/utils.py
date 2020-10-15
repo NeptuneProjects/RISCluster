@@ -9,6 +9,7 @@ import re
 from shutil import copyfile
 import smtplib
 import ssl
+import subprocess
 import sys
 
 from dotenv import load_dotenv
@@ -58,16 +59,6 @@ def config_training(universal, parameters, hyperparameters):
     config['PARAMETERS'] = parameters
     config['HYPERPARAMETERS'] = hyperparameters
     fname = f"{universal['savepath']}/init_{parameters['mode']}.ini"
-    with open(fname, 'w') as configfile:
-        config.write(configfile)
-    return fname
-
-def config_train(universal, parameters, hyperparameters):
-    config = configparser.ConfigParser()
-    config['UNIVERSAL'] = universal
-    config['PARAMETERS'] = parameters
-    config['HYPERPARAMETERS'] = hyperparameters
-    fname = f"{universal['savepath']}/init_train.ini"
     with open(fname, 'w') as configfile:
         config.write(configfile)
     return fname
@@ -511,6 +502,12 @@ def set_device(cuda_device=None):
         print('CUDA device not available, using CPU.')
 
     return device
+
+def start_tensorboard(logdir, tbport):
+    cmd = f"python -m tensorboard.main --logdir=. --port={tbport} --samples_per_plugin images=1000"
+    p = subprocess.Popen(cmd, cwd=logdir, shell=True)
+    tbpid = p.pid
+    print(f"Tensorboard server available at http://localhost:{tbport}; PID={tbpid}")
 
 # =============================================================================
 #  Functions to set/save/get indices of training/validation/prediction samples.

@@ -477,20 +477,20 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             print(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
             fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
 
-def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u):
+def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     def _make_patch_spines_invisible(ax):
         ax.set_frame_on(True)
         ax.patch.set_visible(False)
         for sp in ax.spines.values():
             sp.set_visible(False)
 
-    fig = plt.figure(figsize=(12,9), dpi=300)
-    _, host = plt.subplots()
+    # fig = plt.figure(figsize=(12,9), dpi=300)
+    fig, host = plt.subplots(figsize=(5,4), dpi=300)
 
     par1 = host.twinx()
     par2 = host.twinx()
 
-    par2.spines["right"].set_position(("axes", 1.15))
+    par2.spines["right"].set_position(("axes", 1.23))
     _make_patch_spines_invisible(par2)
     par2.spines["right"].set_visible(True)
 
@@ -511,18 +511,22 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u):
     tkw = dict(size=4, width=1.5)
     host.tick_params(axis='y', colors=p1.get_color(), **tkw)
     par1.tick_params(axis='y', colors=p2.get_color(), **tkw)
-    par2.tick_params(axis='y', colors=p3.get_color(), **tkw)
+    par2.tick_params(axis='y', colors=p4.get_color(), **tkw)
     host.tick_params(axis='x', **tkw)
-
+    print(k_list)
     host.set_xticks(range(len(k_list)))
     host.set_xticklabels(k_list)
 
     lines = [p1, p2, p3, p4]
-    leg = host.legend(lines, [l.get_label() for l in lines], ncol=4, bbox_to_anchor=(0.5, -0.28), loc='lower center')
-    plt.title("K-Means Metrics")
+    host.xaxis.grid()
+    leg = host.legend(lines, [l.get_label() for l in lines], ncol=4, bbox_to_anchor=(0.6, -0.28), loc='lower center')
+    # plt.title("K-Means Metrics")
     plt.tight_layout()
     plt.subplots_adjust(right=0.8, bottom=0.2)
-
+    if show:
+        plt.show()
+    else:
+        plt.close()
     return fig
 
 def view_clusters(pca2d, labels):

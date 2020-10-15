@@ -15,6 +15,7 @@ if sys.platform == 'darwin':
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
     from cuml import KMeans, TSNE
+from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 from sklearn_extra.cluster import KMedoids
 import torch
@@ -64,6 +65,7 @@ def pretrain(
     show = parameters['show']
     early_stopping = parameters['early_stopping']
     patience = parameters['patience']
+    km_metrics = parameters['km_metrics']
 
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
@@ -214,7 +216,6 @@ def pretrain(
         tb.add_scalar('Validation MAE', epoch_val_mae, epoch)
 
         if early_stopping:
-
             if epoch_val_mse < best_val_loss:
                 strikes = 0
                 best_val_loss = epoch_val_mse
@@ -235,7 +236,6 @@ def pretrain(
             'hp/Validation MSE': epoch_val_mse
         }
     )
-    tb.close()
     if early_stopping and (finished == True or epoch == n_epochs-1):
         src_file = f'{savepath_chkpnt}AEC_Best_Weights.pt'
         dst_file = f'{savepath_run}/AEC_Params_{serial_run}.pt'
@@ -247,6 +247,24 @@ def pretrain(
 
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
+
+    if km_metrics:
+        klist = parameters['klist']
+        klist = np.arange(int(klist.split(',')[0]), int(klist.split(',')[1])+1)
+        print('-' * 62)
+        print("Calculating optimal cluster size...")
+        inertia, silh, gap_g, gap_u = kmeans_metrics(
+            tra_loader,
+            model,
+            device,
+            klist
+        )
+        fig = plotting.view_cluster_stats(klist, inertia, silh, gap_g, gap_u)
+        plt.savefig(f'{savepath_run}/KMeans_Metrics.png')
+        print("K-means statistics complete; figure saved.")
+        tb.add_figure('K-Means Metrics', fig, global_step=epoch, close=True)
+
+    tb.close()
     return model, tb
 
 def train(
@@ -785,3 +803,51 @@ def analyze_clustering(
         p=p
     )
     return fig2, fig3, fig4, fig5
+
+def kmeans_metrics(dataloader, model, device, k_list):
+    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    model.eval()
+    for b, batch in enumerate(dataloader):
+        x = batch.to(device)
+        stride = dataloader.batch_size
+        _, z = model(x)
+        z_array[b*stride:(b*stride) + x.size(0)] = z.detach().cpu().numpy()
+
+    feat_min = np.min(z_array, axis=0)
+    feat_max = np.max(z_array, axis=0)
+    feat_mean = np.mean(z_array, axis=0)
+    feat_std = np.std(z_array, axis=0)
+
+    gauss = np.zeros((z_array.shape[0], z_array.shape[1]))
+    unifo = np.zeros((z_array.shape[0], z_array.shape[1]))
+
+    for i in range(z_array.shape[1]):
+        gauss[:,i] = np.random.normal(loc=feat_min[i], scale=feat_std[i], size=z_array.shape[0])
+        unifo[:,i] = np.random.uniform(low=feat_min[i], high=feat_max[i], size=z_array.shape[0])
+
+    inertia = np.zeros(len(k_list))
+    inertiag = np.zeros(len(k_list))
+    inertiau = np.zeros(len(k_list))
+    silh = np.zeros(len(k_list))
+    silhg = np.zeros(len(k_list))
+    silhu = np.zeros(len(k_list))
+
+    pbar = tqdm(
+        k_list,
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+        desc='Calculating k-means statistics'
+    )
+
+    for i, k in enumerate(pbar):
+        km = KMeans(n_clusters=k, n_init=100).fit(z_array)
+        kmg = KMeans(n_clusters=k, n_init=100).fit(gauss)
+        kmu = KMeans(n_clusters=k, n_init=100).fit(unifo)
+        inertia[i] = km.inertia_
+        inertiag[i] = kmg.inertia_
+        inertiau[i] = kmu.inertia_
+        silh[i] = silhouette_score(z_array, km.labels_)
+
+    gap_g = np.log(np.asarray(inertiag)) - np.log(np.asarray(inertia))
+    gap_u = np.log(np.asarray(inertiau)) - np.log(np.asarray(inertia))
+
+    return inertia, silh, gap_g, gap_u
