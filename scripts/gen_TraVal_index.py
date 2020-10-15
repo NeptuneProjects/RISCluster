@@ -20,8 +20,12 @@ if __name__ == '__main__':
         metavar='path',
         help='Enter path to h5 dataset.'
     )
+    parser.add_argument(
+        'savepath',
+        metavar='savepath',
+        help='Enter savepath'
+    )
     args = parser.parse_args()
     M = args.M
     fname_dataset = args.path
-    savepath = '../../../Data/'
     utils.save_TraVal_index(M, fname_dataset, savepath)
