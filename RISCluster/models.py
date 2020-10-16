@@ -69,6 +69,7 @@ def pretrain(
     km_metrics = parameters['km_metrics']
     disp_index = parameters['img_index']
     disp_index = [int(i) for i in disp_index.split(',')]
+    tbpid = parameters['tbpid']
 
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
@@ -99,6 +100,12 @@ def pretrain(
     # disp = images[disp_idx]
 
     tb = SummaryWriter(log_dir=savepath_run)
+    if tbpid is not None:
+        tb.add_text(
+            "Tensorboard PID",
+            f"To terminate this TB instance, kill PID: {tbpid}",
+            global_step=None
+        )
     fig = plotting.compare_images(
         model,
         disp.to(device),
@@ -296,7 +303,7 @@ def pretrain(
         fig = plotting.view_cluster_stats(klist, inertia, silh, gap_g, gap_u)
         plt.savefig(f'{savepath_run}/KMeans_Metrics.png')
         print("K-means statistics complete; figure saved.")
-        tb.add_figure('K-Means Metrics', fig, global_step=epoch, close=True)
+        tb.add_figure('K-Means Metrics', fig, global_step=None, close=True)
 
     tb.close()
     return model, tb
@@ -339,6 +346,7 @@ def train(
     mode = parameters['mode']
     loadpath = parameters['saved_weights']
     fname_dataset = parameters['fname_dataset']
+    tbpid = parameters['tbpid']
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
         mode,
@@ -366,7 +374,12 @@ def train(
     M = len(dataloader.dataset)
 
     tb = SummaryWriter(log_dir = savepath_run)
-
+    if tbpid is not None:
+        tb.add_text(
+            "Tensorboard PID",
+            f"To terminate this TB instance, kill PID: {tbpid}",
+            global_step=None
+        )
     # Initialize Clusters:
     # -- K-Means Initialization:
     print('Initiating clusters with k-means...', end="", flush=True)

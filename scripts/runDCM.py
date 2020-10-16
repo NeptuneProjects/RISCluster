@@ -36,7 +36,9 @@ if __name__ == '__main__':
     savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
     if config['PARAMETERS'].getboolean('tb'):
         tbport = int(config['PARAMETERS']['tbport'])
-        utils.start_tensorboard(savepath_exp, tbport)
+        tbpid = utils.start_tensorboard(savepath_exp, tbport)
+    else:
+        tbpid = None
     # =========================================================================
     # Pre-Training Routine
     # =========================================================================
@@ -56,7 +58,8 @@ if __name__ == '__main__':
             transform=config['PARAMETERS']['transform'],
             km_metrics=config['PARAMETERS'].getboolean('km_metrics'),
             klist=config['PARAMETERS']['klist'],
-            img_index=config['PARAMETERS']['img_index']
+            img_index=config['PARAMETERS']['img_index'],
+            tbpid=tbpid
         )
         batch_size = config['HYPERPARAMETERS']['batch_size']
         lr = config['HYPERPARAMETERS']['lr']
@@ -88,7 +91,8 @@ if __name__ == '__main__':
             send_message=config['PARAMETERS'].getboolean('send_message'),
             mode=mode,
             saved_weights=config['PARAMETERS']['saved_weights'],
-            transform=config['PARAMETERS']['transform']
+            transform=config['PARAMETERS']['transform'],
+            tbpid=tbpid
         )
         n_clusters = config['HYPERPARAMETERS']['n_clusters']
         batch_size = config['HYPERPARAMETERS']['batch_size']

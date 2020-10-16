@@ -235,7 +235,7 @@ def load_images(fname_dataset, index):
 
     X = (X - X.mean(axis=(1,2))[:,None,None]) / \
         np.abs(X).max(axis=(1,2))[:,None,None]
-    
+
     X = np.expand_dims(X, axis=1)
     return X, tvec, fvec
 
@@ -531,6 +531,7 @@ def start_tensorboard(logdir, tbport):
     p = subprocess.Popen(cmd, cwd=logdir, shell=True)
     tbpid = p.pid
     print(f"Tensorboard server available at http://localhost:{tbport}; PID={tbpid}")
+    return tbpid
 
 # =============================================================================
 #  Functions to set/save/get indices of training/validation/prediction samples.
