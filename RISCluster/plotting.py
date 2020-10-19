@@ -141,6 +141,9 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     plt.imshow(dist_mat, origin='lower')
     plt.xticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
+    for i in range(n_clusters):
+        for j in range(n_clusters):
+            plt.text(i, j, f"{dist_mat[i,j]:.2f}", backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', edgecolor='w'))
     cbar = plt.colorbar()
     cbar.set_label('Distance')
     fig2.suptitle(f"L-{p} Distance Matrix", size=14)
@@ -169,7 +172,8 @@ def cluster_gallery(
     fig = plt.figure(figsize=(len(label_list),12), dpi=150)
     gs_sup = gridspec.GridSpec(nrows=9, ncols=len(label_list), hspace=0.05, wspace=0.05)
     heights = [1, 4, 0.2]
-    font = {'family': 'serif',
+    font = {
+        'family': 'serif',
         'color':  'white',
         'weight': 'normal',
         'size': 5,
