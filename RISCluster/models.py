@@ -824,9 +824,9 @@ def analyze_clustering(
     np.seterr(under='warn')
     results = TSNE(
         n_components=2,
-        perplexity=1000,
+        perplexity=int(len(dataloader.dataset)/100),
         early_exaggeration=20,
-        learning_rate=6000,
+        learning_rate=int(len(dataloader.dataset)/12),
         n_iter=2000,
         verbose=0,
         random_state=2009
