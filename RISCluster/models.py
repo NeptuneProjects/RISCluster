@@ -373,7 +373,7 @@ def train(
 
     M = len(dataloader.dataset)
     if update_interval == -1:
-        update_interval = int(np.ceil(M / batch_size)) - 1
+        update_interval = int(np.ceil(M / (batch_size * 2))) - 1
 
     tb = SummaryWriter(log_dir = savepath_run)
     if tbpid is not None:

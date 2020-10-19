@@ -143,7 +143,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     for i in range(n_clusters):
         for j in range(n_clusters):
-            plt.text(i, j, f"{dist_mat[i,j]:.2f}", backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', edgecolor='w'))
+            plt.text(i, j, f"{dist_mat[i,j]:.1f}", backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', edgecolor='w'))
     cbar = plt.colorbar()
     cbar.set_label('Distance')
     fig2.suptitle(f"L-{p} Distance Matrix", size=14)
