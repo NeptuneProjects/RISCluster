@@ -562,20 +562,10 @@ def train(
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model
 
-def predict(model, dataloader, idx_smpl, parameters):
+def predict(model, dataloader, parameters):
     device = parameters['device']
-    savepath_exp = parameters['savepath']
-    serial_exp = parameters['serial']
-    mode = parameters['mode']
     loadpath = parameters['saved_weights']
-    n_clusters = parameters['n_clusters']
-    max_workers = parameters['max_workers']
-
-    savepath_run, serial_run = utils.init_output_env(
-        savepath_exp,
-        mode,
-        **{'n_clusters': n_clusters}
-    )
+    savepath = os.path.dirname(loadpath)
 
     model.load_state_dict(torch.load(loadpath, map_location=device))
     model.eval()
@@ -588,33 +578,76 @@ def predict(model, dataloader, idx_smpl, parameters):
         bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
     )
 
-    label_list = []
-
-    running_size = 0
-    # counter = 0
-    for batch_num, batch in enumerate(pbar):
-        x = batch.to(device)
-        # q, x_rec, z = model(x)
-        q, _, _ = model(x)
+    for batch in pbar:
+        idx, x = batch
+        q, _, _ = model(x.to(device))
         label = torch.argmax(q, dim=1)
-        A = [
-                {
-                    # 'x': x[i].cpu().detach().numpy(),
-                    'label': label[i].cpu().detach().numpy(),
-                    # 'x_rec': x_rec[i].cpu().detach().numpy(),
-                    # 'z': z[i].cpu().detach().numpy(),
-                    'idx': idx_smpl[running_size:(running_size + x.size(0))][i]
-                    # 'savepath': savepath_run[int(label[i])]
-                } for i in range(x.size(0))]
+
+        A = [{
+            'idx': idx[i].cpu().detach().numpy(),
+            'label': label[i].cpu().detach().numpy()
+        } for i in range(x.size(0))]
 
         utils.save_labels(
             [{k: v for k, v in d.items() if \
                 (k == 'idx' or k == 'label')} for d in A],
-            savepath_exp,
-            serial_exp
+            savepath
         )
 
-        running_size += x.size(0)
+# Deprecated
+# def predict_(model, dataloader, idx_smpl, parameters):
+#     device = parameters['device']
+#     savepath_exp = parameters['savepath']
+#     serial_exp = parameters['serial']
+#     mode = parameters['mode']
+#     loadpath = parameters['saved_weights']
+#     n_clusters = parameters['n_clusters']
+#     max_workers = parameters['max_workers']
+#
+#     savepath_run, serial_run = utils.init_output_env(
+#         savepath_exp,
+#         mode,
+#         **{'n_clusters': n_clusters}
+#     )
+#
+#     model.load_state_dict(torch.load(loadpath, map_location=device))
+#     model.eval()
+#
+#     pbar = tqdm(
+#         dataloader,
+#         leave=True,
+#         desc="Saving cluster labels",
+#         unit="batch",
+#         bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+#     )
+#
+#     label_list = []
+#
+#     running_size = 0
+#     # counter = 0
+#     for batch_num, batch in enumerate(pbar):
+#         x = batch.to(device)
+#         # q, x_rec, z = model(x)
+#         q, _, _ = model(x)
+#         label = torch.argmax(q, dim=1)
+#         A = [
+#                 {
+#                     # 'x': x[i].cpu().detach().numpy(),
+#                     'label': label[i].cpu().detach().numpy(),
+#                     # 'x_rec': x_rec[i].cpu().detach().numpy(),
+#                     # 'z': z[i].cpu().detach().numpy(),
+#                     'idx': idx_smpl[running_size:(running_size + x.size(0))][i]
+#                     # 'savepath': savepath_run[int(label[i])]
+#                 } for i in range(x.size(0))]
+#
+#         utils.save_labels(
+#             [{k: v for k, v in d.items() if \
+#                 (k == 'idx' or k == 'label')} for d in A],
+#             savepath_exp,
+#             serial_exp
+#         )
+#
+#         running_size += x.size(0)
 
 # K-means clusters initialisation
 def kmeans(model, dataloader, device):

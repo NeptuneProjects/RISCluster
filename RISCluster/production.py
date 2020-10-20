@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms
 
 import importlib as imp
 import models
@@ -228,52 +229,38 @@ def DCM_train(parameters, hyperparameters):
     print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
 
-def DCM_predict(parameters, index_tst=None, tst_dataset=None):
+def DCM_predict(parameters):
     print('==============================================================')
     print('Executing Prediction Mode')
     tic = datetime.now()
     # ==== Unpack Parameters ==================================================
     fname_dataset = parameters['fname_dataset']
     device = parameters['device']
-    M = parameters['M']
-    batch_size = parameters['batch_size']
-    n_clusters = parameters['n_clusters']
-    show = parameters['show']
-    send_message = parameters['send_message']
-    mode = parameters['mode']
     saved_weights = parameters['saved_weights']
-    indexpath = parameters['indexpath']
-    exclude = parameters['exclude']
-    loaded = parameters['loaded']
+    n_clusters = parameters['n_clusters']
+    send_message = parameters['send_message']
     transform = parameters['transform']
+    workers = parameters['workers']
     # ==== Checks =============================================================
     if not os.path.exists(saved_weights):
         raise ValueError(f'Saved weights file not found: {saved_weights}')
     if not os.path.exists(fname_dataset):
         raise ValueError(f'Dataset file not found: {fname_dataset}')
-    if not os.path.exists(indexpath):
-        raise ValueError(f'Index file not found: {indexpath}')
-    # ==== Load Data ==========================================================
-    if not loaded:
-        if isinstance(M, str) and (M == 'all'):
-            M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
-        index_tst = utils.set_Tst_index(
-            M,
-            fname_dataset,
-            indexpath,
-            exclude=exclude
+    # ==== Run Model ==========================================================
+    dataset = utils.H5SeismicDataset(
+        fname_dataset,
+        transform = transforms.Compose(
+            [utils.SpecgramShaper(), utils.SpecgramToTensor()]
         )
-        tst_dataset = utils.multi_load(
-            fname_dataset,
-            index_tst,
-            send_message,
-            transform=transform
-        )
-
-    dataloader = DataLoader(tst_dataset, batch_size=batch_size)
+    )
+    dataloader = DataLoader(
+        dataset,
+        batch_size=1024,
+        shuffle=False,
+        num_workers=workers
+    )
     model = DCM(n_clusters).to(device)
-
-    models.predict(model, dataloader, index_tst, parameters)
+    models.predict(model, dataloader, parameters)
     print('--------------------------------------------------------------')
     toc = datetime.now()
     msgcontent = f'DCM outputs saved.\nTime Elapsed = {toc-tic}.'
@@ -282,3 +269,59 @@ def DCM_predict(parameters, index_tst=None, tst_dataset=None):
         msgsubj = 'DCM Outputs Saved'
         utils.notify(msgsubj, msgcontent)
     print('==============================================================')
+
+# Deprecated:
+# def DCM_predict_(parameters, index_tst=None, tst_dataset=None):
+#     print('==============================================================')
+#     print('Executing Prediction Mode')
+#     tic = datetime.now()
+#     # ==== Unpack Parameters ==================================================
+#     fname_dataset = parameters['fname_dataset']
+#     device = parameters['device']
+#     M = parameters['M']
+#     batch_size = parameters['batch_size']
+#     n_clusters = parameters['n_clusters']
+#     show = parameters['show']
+#     send_message = parameters['send_message']
+#     mode = parameters['mode']
+#     saved_weights = parameters['saved_weights']
+#     indexpath = parameters['indexpath']
+#     exclude = parameters['exclude']
+#     loaded = parameters['loaded']
+#     transform = parameters['transform']
+#     # ==== Checks =============================================================
+#     if not os.path.exists(saved_weights):
+#         raise ValueError(f'Saved weights file not found: {saved_weights}')
+#     if not os.path.exists(fname_dataset):
+#         raise ValueError(f'Dataset file not found: {fname_dataset}')
+#     if not os.path.exists(indexpath):
+#         raise ValueError(f'Index file not found: {indexpath}')
+#     # ==== Load Data ==========================================================
+#     if not loaded:
+#         if isinstance(M, str) and (M == 'all'):
+#             M = utils.set_M(fname_dataset, indexpath, exclude=exclude)
+#         index_tst = utils.set_Tst_index(
+#             M,
+#             fname_dataset,
+#             indexpath,
+#             exclude=exclude
+#         )
+#         tst_dataset = utils.multi_load(
+#             fname_dataset,
+#             index_tst,
+#             send_message,
+#             transform=transform
+#         )
+#     # ==== Run Model ==========================================================
+#     dataloader = DataLoader(tst_dataset, batch_size=batch_size)
+#     model = DCM(n_clusters).to(device)
+#
+#     models.predict(model, dataloader, index_tst, parameters)
+#     print('--------------------------------------------------------------')
+#     toc = datetime.now()
+#     msgcontent = f'DCM outputs saved.\nTime Elapsed = {toc-tic}.'
+#     print(msgcontent)
+#     if send_message:
+#         msgsubj = 'DCM Outputs Saved'
+#         utils.notify(msgsubj, msgcontent)
+#     print('==============================================================')

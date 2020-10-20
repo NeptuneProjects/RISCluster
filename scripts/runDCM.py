@@ -33,7 +33,8 @@ if __name__ == '__main__':
     savepath = config['UNIVERSAL']['savepath']
     indexpath = config['UNIVERSAL']['indexpath']
     mode = config['PARAMETERS']['mode']
-    savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
+    if mode != 'predict':
+        savepath_exp, serial_exp = utils.init_exp_env(mode, savepath)
     if config['PARAMETERS'].getboolean('tb'):
         tbport = int(config['PARAMETERS']['tbport'])
         tbpid = utils.start_tensorboard(savepath_exp, tbport)
@@ -115,37 +116,52 @@ if __name__ == '__main__':
         )
         production.DCM_train(parameters, hyperparameters)
     # =========================================================================
-    # Prediction Routine
+    # Prediction Routine - Revised
     # =========================================================================
     if mode == 'predict':
-        M = config['PARAMETERS']['m'] # Select integer or 'all'
-        if M == 'all':
-            pass
-        else:
-            M = int(M)
+        saved_weights=config['PARAMETERS']['saved_weights']
         parameters = dict(
             fname_dataset=fname_dataset,
             device=device,
-            M = M,
-            indexpath=indexpath,
-            exclude=config['PARAMETERS'].getboolean('exclude'),
-            batch_size=int(config['PARAMETERS']['batch_size']),
-            n_clusters=int(config['PARAMETERS']['n_clusters']),
-            savepath=savepath_exp,
-            serial=serial_exp,
-            show=config['PARAMETERS'].getboolean('show'),
+            saved_weights=saved_weights,
+            n_clusters=int(utils.parse_nclusters(saved_weights)),
             send_message=config['PARAMETERS'].getboolean('send_message'),
-            mode=mode,
-            saved_weights=config['PARAMETERS']['saved_weights'],
-            max_workers=int(config['PARAMETERS']['max_workers']),
-            loaded=False,
-            transform=config['PARAMETERS']['transform']
-        )
-        utils.save_exp_config(
-            savepath_exp,
-            serial_exp,
-            init_file,
-            parameters,
-            None
+            transform=config['PARAMETERS']['transform'],
+            workers=int(config['PARAMETERS']['workers'])
         )
         production.DCM_predict(parameters)
+    # =========================================================================
+    # Prediction Routine - Deprecated
+    # =========================================================================
+    # if mode == 'predict_':
+    #     M = config['PARAMETERS']['m'] # Select integer or 'all'
+    #     if M == 'all':
+    #         pass
+    #     else:
+    #         M = int(M)
+    #     parameters = dict(
+    #         fname_dataset=fname_dataset,
+    #         device=device,
+    #         M = M,
+    #         indexpath=indexpath,
+    #         exclude=config['PARAMETERS'].getboolean('exclude'),
+    #         batch_size=int(config['PARAMETERS']['batch_size']),
+    #         n_clusters=int(config['PARAMETERS']['n_clusters']),
+    #         savepath=savepath_exp,
+    #         serial=serial_exp,
+    #         show=config['PARAMETERS'].getboolean('show'),
+    #         send_message=config['PARAMETERS'].getboolean('send_message'),
+    #         mode=mode,
+    #         saved_weights=config['PARAMETERS']['saved_weights'],
+    #         max_workers=int(config['PARAMETERS']['max_workers']),
+    #         loaded=False,
+    #         transform=config['PARAMETERS']['transform']
+    #     )
+    #     utils.save_exp_config(
+    #         savepath_exp,
+    #         serial_exp,
+    #         init_file,
+    #         parameters,
+    #         None
+    #     )
+    #     production.DCM_predict_(parameters)

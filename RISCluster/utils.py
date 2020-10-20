@@ -26,16 +26,15 @@ class H5SeismicDataset(Dataset):
         self.transform = transform
         self.fname = fname
 
-
     def __len__(self):
-        m, _, _ = query_dbSize(self.fname)
+        m, _, _ = query_dbSize_(self.fname)
         return m
 
     def __getitem__(self, idx):
         X = torch.from_numpy(read_h5(self.fname, idx))
         if self.transform:
             X = self.transform(X)
-        return X
+        return idx, X
 
 class SeismoDataset(Dataset):
     "Converts ndarray already in memory to PyTorch dataset."
@@ -54,7 +53,7 @@ class SeismoDataset(Dataset):
 
 class SpecgramShaper(object):
     """Crop & reshape data."""
-    def __init__(self, n=None, o=None, transform='sample_cent_norm'):
+    def __init__(self, n=None, o=None, transform='sample_norm_cent'):
         self.n = n
         self.o = o
         self.transform = transform
@@ -65,10 +64,11 @@ class SpecgramShaper(object):
         else:
             X = X[:-1, 12:-14]
         if self.transform == "sample_norm":
-            X /= np.abs(X).max(axis=(1,2))
+            X /= np.abs(X).max(axis=(0,1))
         elif self.transform == "sample_norm_cent":
-            X = (X - X.mean(axis=(1,2))) / \
-            np.abs(X).max(axis=(1,2))
+            # X = (X - X.mean(axis=(0,1))) / \
+            # np.abs(X).max(axis=(0,1))
+            X = (X - X.mean()) / np.abs(X).max()
         X = np.expand_dims(X, axis=0)
         return X
 
@@ -306,20 +306,6 @@ def make_exp(exppath, **kwargs):
     return savepath_exp, serial_exp
 
 def make_pred_configs_batch(loadpath, savepath, overwrite=False):
-    def _parse_nclusters(line):
-        """
-        Do a regex search against all defined regexes and
-        return the key and match result of the first matching regex
-
-        """
-        rx_dict = {'n_clusters': re.compile(r'Clusters=(?P<n_clusters>\d+)')}
-        for key, rx in rx_dict.items():
-            match = rx.search(line)
-            if match:
-                return match.group('n_clusters')
-            else:
-                raise Exception('Unable to parse filename for n_clusters.')
-
     exper = loadpath.split("/")[-1]
     savepath = f"{savepath}/BatchEval_{exper}"
     if not os.path.exists(savepath):
@@ -360,7 +346,7 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
             'show': 'False',
             'send_message': 'False',
             'max_workers': '14',
-            'n_clusters': _parse_nclusters(run),
+            'n_clusters': parse_nclusters(run),
             'saved_weights': f'{loadpath}/{run}/{saved_weights}',
             'transform': transform
         }
@@ -478,6 +464,20 @@ def notify(msgsubj, msgcontent):
         print('Unable to send WhatsApp notification upon job completion.')
         pass
 
+def parse_nclusters(line):
+    """
+    Do a regex search against all defined regexes and
+    return the key and match result of the first matching regex
+
+    """
+    rx_dict = {'n_clusters': re.compile(r'Clusters=(?P<n_clusters>\d+)')}
+    for key, rx in rx_dict.items():
+        match = rx.search(line)
+        if match:
+            return match.group('n_clusters')
+        else:
+            raise Exception('Unable to parse filename for n_clusters.')
+
 def query_dbSize(path):
     with h5py.File(path, 'r') as f:
         #samples, frequency bins, time bins, amplitude
@@ -485,6 +485,14 @@ def query_dbSize(path):
         dset = f[DataSpec]
         m, n, o = dset.shape
         return m-1, n, o
+
+def query_dbSize_(path):
+    with h5py.File(path, 'r') as f:
+        #samples, frequency bins, time bins, amplitude
+        DataSpec = '/4s/Spectrogram'
+        dset = f[DataSpec]
+        m, n, o = dset.shape
+        return m, n, o
 
 def read_h5(fname_dataset, index):
     with h5py.File(fname_dataset, 'r') as f:
@@ -529,10 +537,11 @@ def save_history(training_history, validation_history, savepath, run_serial):
         w.writerow(d2.keys())
         w.writerows(zip(*d2.values()))
 
-    # print('History saved.')
-
-def save_labels(label_list, savepath, serial):
-    fname = f'{savepath}/Labels{serial}.csv'
+def save_labels(label_list, savepath, serial=None):
+    if serial is not None:
+        fname = f'{savepath}/Labels{serial}.csv'
+    else:
+        fname = f'{savepath}/Labels.csv'
     keys = label_list[0].keys()
     if not os.path.exists(fname):
         with open(fname, 'w') as csvfile:
@@ -544,8 +553,6 @@ def save_labels(label_list, savepath, serial):
             w = csv.DictWriter(csvfile, keys)
             w.writerows(label_list)
 
-    # print('Labels saved.')
-
 def set_device(cuda_device=None):
     if torch.cuda.is_available and (cuda_device is not None):
         device = torch.device(f'cuda:{cuda_device}')
@@ -555,7 +562,6 @@ def set_device(cuda_device=None):
     else:
         device = torch.device('cpu')
         print('CUDA device not available, using CPU.')
-
     return device
 
 def start_tensorboard(logdir, tbport):
