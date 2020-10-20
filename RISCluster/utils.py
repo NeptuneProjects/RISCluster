@@ -88,7 +88,8 @@ def config_training(universal, parameters, hyperparameters=None):
     config = configparser.ConfigParser()
     config['UNIVERSAL'] = universal
     config['PARAMETERS'] = parameters
-    config['HYPERPARAMETERS'] = hyperparameters
+    if hyperparameters is not None:
+        config['HYPERPARAMETERS'] = hyperparameters
     fname = f"{universal['savepath']}/init_{parameters['mode']}.ini"
     with open(fname, 'w') as configfile:
         config.write(configfile)
