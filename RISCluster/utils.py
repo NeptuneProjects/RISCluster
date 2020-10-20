@@ -20,19 +20,25 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 from twilio.rest import Client
 
-class testDataset(Dataset):
-
-    def __init__(self, fname_dataset, M, transform=None):
+class H5SeismicDataset(Dataset):
+    """Loads samples from H5 dataset for use in native PyTorch dataloader."""
+    def __init__(self, fname, transform=None):
         self.transform = transform
+        self.fname = fname
 
-    def __getitem__():
-        pass
 
-    def __len__():
-        pass
+    def __len__(self):
+        m, _, _ = query_dbSize(fname)
+        return m
+
+    def __getitem__(self, idx):
+        X = torch.from_numpy(read_h5(self.fname, idx))
+        if self.transform:
+            X = self.transform(X)
+        return X
 
 class SeismoDataset(Dataset):
-
+    "Converts ndarray already in memory to PyTorch dataset."
     def __init__(self, data, transform=None):
         self.data = torch.from_numpy(data).float()
         self.transform = transform
@@ -45,6 +51,31 @@ class SeismoDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
+
+class SpecgramShaper(object):
+    """Crop & reshape data."""
+    def __init__(self, n=None, o=None, transform='sample_cent_norm'):
+        self.n = n
+        self.o = o
+        self.transform = transform
+
+    def __call__(self, X):
+        if self.n is not None and self.o is not None:
+            N, O = X.shape
+        else:
+            X = X[:-1, 12:-14]
+        if self.transform == "sample_norm":
+            X /= np.abs(X).max(axis=(1,2))
+        elif self.transform == "sample_norm_cent":
+            X = (X - X.mean(axis=(1,2))) / \
+            np.abs(X).max(axis=(1,2))
+        X = np.expand_dims(X, axis=0)
+        return X
+
+class SpecgramToTensor(object):
+    """Convert ndarrays in sample to Tensors."""
+    def __call__(self, X):
+        return torch.from_numpy(X)
 
 def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
