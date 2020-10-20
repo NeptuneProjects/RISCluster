@@ -84,7 +84,7 @@ def calc_tuning_runs(hyperparameters):
 
     return(tuning_runs)
 
-def config_training(universal, parameters, hyperparameters):
+def config_training(universal, parameters, hyperparameters=None):
     config = configparser.ConfigParser()
     config['UNIVERSAL'] = universal
     config['PARAMETERS'] = parameters
