@@ -28,7 +28,7 @@ class H5SeismicDataset(Dataset):
 
 
     def __len__(self):
-        m, _, _ = query_dbSize(fname)
+        m, _, _ = query_dbSize(self.fname)
         return m
 
     def __getitem__(self, idx):
