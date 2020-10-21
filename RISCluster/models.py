@@ -875,6 +875,7 @@ def analyze_clustering(
         fname_dataset,
         index_tra,
         device,
+        centroids,
         p=p
     )
     fig4, fig5 = plotting.centroid_diagnostics(
