@@ -219,7 +219,7 @@ def load_dataset(
             bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
             disable=notqdm
         ):
-            dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
+            dset_arr = dset[index[i]+1, :-1, 12:-14] # <---- This by itself doesn't work.
             if transform == "sample_norm":
                 dset_arr /= np.abs(dset_arr).max() # <---- This one works
             elif transform == "sample_norm_cent":
