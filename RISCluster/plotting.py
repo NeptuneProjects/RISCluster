@@ -66,13 +66,13 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l+1,0], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
         # Centroid Plot
         ax = fig1.add_subplot(gs_sub[0,0])
-        plt.imshow(centroids[l][None].T, interpolation=None, cmap=cmap, vmax=vmax)
+        plt.imshow(centroids[l][None].T, cmap=cmap, vmax=vmax)
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         plt.ylabel('Centroid Feature')
         # Dataset Latent Features
         ax = fig1.add_subplot(gs_sub[0,1])
-        plt.imshow(z_array[sort_index_d].T, interpolation=None, cmap=cmap, aspect='auto', vmax=vmax)
+        plt.imshow(z_array[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', linestyles='dotted')
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], ll+1, str(labels_not[ll]+1), backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=0.5, edgecolor='w'))
@@ -109,14 +109,14 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l+1,1], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
         # Centroid Plot
         ax = fig1.add_subplot(gs_sub[0,0])
-        plt.imshow(centroids[l][None].T, interpolation=None, cmap=cmap, vmax=vmax)
+        plt.imshow(centroids[l][None].T, cmap=cmap, vmax=vmax)
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         plt.ylabel('Centroid Feature')
         # Cluster Latent Features
         ax = fig1.add_subplot(gs_sub[0,1])
         tmp = z_sub.T
-        plt.imshow(np.concatenate((tmp, np.zeros((tmp.shape[0], counts.max() - tmp.shape[1]))), axis=1), interpolation=None, cmap=cmap, extent=extent, aspect='auto', vmax=vmax)
+        plt.imshow(np.concatenate((tmp, np.zeros((tmp.shape[0], counts.max() - tmp.shape[1]))), axis=1), cmap=cmap, extent=extent, aspect='auto', vmax=vmax)
         plt.xticks([])
         # plt.yticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d)+0.5, labels=np.linspace(1,d,d, dtype='int'))
