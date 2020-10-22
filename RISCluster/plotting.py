@@ -187,7 +187,7 @@ def cluster_gallery(
         query = np.where(labels == label_list[l])[0]
         z_sub = z_array[query]
         load_index = index_tra[query]
-        N = 4
+        N = 8
         distance = utils.fractional_distance(centroids[l], z_sub, p)
         # distance = np.linalg.norm(centroids[l,:] - z_array[query,:], ord=p, axis=1)
         sort_index = np.argsort(distance)[0:N]
