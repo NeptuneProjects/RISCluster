@@ -311,7 +311,7 @@ def compare_images(
     if not os.path.exists(savepath_snap):
         os.makedirs(savepath_snap)
     figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
-    fig.savefig(figname)
+    fig.savefig(figname, dpi=300)
     return fig
 
 def label_offset(ax, axis="y"):
@@ -795,7 +795,7 @@ def view_specgram_training(
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
-    fig = plt.figure(figsize=figsize, dpi=300)
+    fig = plt.figure(figsize=figsize, dpi=100)
     heights = [4, 0.4, 4]
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
     gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights, wspace=0.3)
@@ -812,19 +812,19 @@ def view_specgram_training(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
         ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap='gray', extent=extent, aspect='auto', origin='lower')
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
         plt.title(f'Station {station}; Index: {disp_idx[i]}\nTrigger: {time_on}', fontsize=8)
 
         ax = fig.add_subplot(gs[1,counter])
-        plt.imshow(np.expand_dims(z[i], 0), aspect='auto')
+        plt.imshow(np.expand_dims(z[i], 0), cmap=cmo.deep_r, aspect='auto')
         plt.xticks([])
         plt.yticks([])
 
         ax = fig.add_subplot(gs[2,counter])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap='gray', extent=extent, aspect='auto', origin='lower')
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
@@ -836,7 +836,7 @@ def view_specgram_training(
 
     fig.suptitle(figtitle, size=16, weight='bold')
     # fig.tight_layout()
-    fig.subplots_adjust(top=0.89, left=0.08)
+    fig.subplots_adjust(top=0.88, left=0.08)
     if show:
         plt.show()
     else:
