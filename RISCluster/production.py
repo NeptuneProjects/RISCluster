@@ -38,9 +38,6 @@ def DCM_pretrain(parameters, hyperparameters):
         raise ValueError(f'Index file not found: {indexpath}')
     # ==== Load Data ==========================================================
     index_tra, index_val = utils.load_TraVal_index(fname_dataset, indexpath)
-    M_tra = len(index_tra)
-    M_val = len(index_val)
-
     tra_dataset = utils.multi_load(
         fname_dataset,
         index_tra,
@@ -165,7 +162,6 @@ def DCM_train(parameters, hyperparameters):
         raise ValueError(f'Index file not found: {indexpath}')
     # ==== Load Data ==========================================================
     index_tra, _ = utils.load_TraVal_index(fname_dataset, indexpath)
-    M_tra = len(index_tra)
     tra_dataset = utils.multi_load(
         fname_dataset,
         index_tra,

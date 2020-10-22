@@ -385,7 +385,8 @@ def train(
     # Initialize Clusters:
     # -- K-Means Initialization:
     print('Initiating clusters with k-means...', end="", flush=True)
-    labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    # labels_prev, centroids = kmeans(model, copy.deepcopy(dataloader), device)
+    labels_prev, centroids = kmeans(model, dataloader, device)
     # -- GMM Initialization:
     # print('Initiating clusters with GMM...', end="", flush=True)
     # labels_prev, centroids = gmm(model, copy.deepcopy(dataloader), device)
