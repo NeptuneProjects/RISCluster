@@ -108,6 +108,7 @@ def pretrain(
             f"To terminate this TB instance, kill PID: {tbpid}",
             global_step=None
         )
+    tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     fig = plotting.compare_images(
         model,
         disp.to(device),
@@ -286,6 +287,7 @@ def pretrain(
     else:
         fname = f'{savepath_run}/AEC_Params_ {serial_run}.pt'
         torch.save(model.state_dict(), fname)
+    tb.add_text("Path to Saved Weights", fname, global_step=None)
     print('AEC parameters saved.')
 
     toc = datetime.now()
@@ -384,6 +386,7 @@ def train(
             f"To terminate this TB instance, kill PID: {tbpid}",
             global_step=None
         )
+    tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     # Initialize Clusters:
     # -- K-Means Initialization:
     print('Initiating clusters with k-means...', end="", flush=True)
@@ -560,6 +563,7 @@ def train(
     tb.close()
     fname = f'{savepath_run}/DCM_Params_{serial_run}.pt'
     torch.save(model.state_dict(), fname)
+    tb.add_text("Path to Saved Weights", fname, global_step=None)
     print('DCM parameters saved.')
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
