@@ -31,7 +31,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     heights = [0.1 if i==0 else 1 for i in range(1+len(label_list))]
     widths = [3, 2]
     # widths = [0.5 if i==0 else 1 for i in range(1+len(label_list))]
-    fig1 = plt.figure(figsize=(12, 4 * n_clusters), dpi=300)
+    fig1 = plt.figure(figsize=(12, 4 * n_clusters), dpi=150)
     gs = gridspec.GridSpec(nrows=1+n_clusters, ncols=2, hspace=0.35, wspace=0.27, height_ratios=heights, width_ratios=widths)
 
     # Colorbar
@@ -139,7 +139,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     fig1.suptitle(fr"L{p} Distance Visualization", size=14)
     fig1.subplots_adjust(top=0.96)
 
-    fig2 = plt.figure(dpi=300)
+    fig2 = plt.figure(dpi=150)
     plt.imshow(dist_mat, cmap=cmo.solar_r, origin='lower')
     plt.xticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
@@ -171,7 +171,7 @@ def cluster_gallery(
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
 
-    fig = plt.figure(figsize=(len(label_list),12), dpi=300)
+    fig = plt.figure(figsize=(len(label_list),12), dpi=150)
     gs_sup = gridspec.GridSpec(nrows=9, ncols=len(label_list), hspace=0.05, wspace=0.05)
     heights = [1, 4, 0.2]
     font = {
@@ -329,7 +329,7 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
     widths = [2, 0.1]
     heights = [1 for i in range(len(centroids))]
 
-    fig = plt.figure(figsize=(3,2*len(centroids)), dpi=100)
+    fig = plt.figure(figsize=(3,2*len(centroids)), dpi=150)
     gs = gridspec.GridSpec(nrows=len(centroids), ncols=2, hspace=0.5, wspace=0.1, width_ratios=widths)
 
     for i in range(len(centroids)):
@@ -412,7 +412,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
         x_r_pretrain, z_pretrain = aec(X)
         _, x_r_train, z_train = dcm(X)
 
-        fig = plt.figure(figsize=(12,9), dpi=300)
+        fig = plt.figure(figsize=(12,9), dpi=150)
         gs_sup = gridspec.GridSpec(nrows=int(np.sqrt(N)+1), ncols=int(np.sqrt(N)+1), hspace=0.3, wspace=0.3)
 
         widths = [4, 0.2]
@@ -490,7 +490,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             plt.close()
         if save:
             print(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
-            fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
+            fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png', dpi=300)
 
 def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=True):
     def _make_patch_spines_invisible(ax):

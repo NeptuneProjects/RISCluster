@@ -303,7 +303,7 @@ def pretrain(
             klist
         )
         fig = plotting.view_cluster_stats(klist, inertia, silh, gap_g, gap_u)
-        plt.savefig(f'{savepath_run}/KMeans_Metrics.png')
+        plt.savefig(f'{savepath_run}/KMeans_Metrics.png', dpi=300)
         print("K-means statistics complete; figure saved.")
         tb.add_figure('K-Means Metrics', fig, global_step=None, close=True)
 
@@ -413,10 +413,10 @@ def train(
         fname_dataset,
         index_tra
     )
-    fig2.savefig(f"{path2}/TSNE_000.png")
-    fig3.savefig(f"{path3}/Results_000.png")
-    fig4.savefig(f"{path4}/Distance_000.png")
-    fig5.savefig(f"{path5}/DistMatrix_000.png")
+    fig2.savefig(f"{path2}/TSNE_000.png", dpi=300)
+    fig3.savefig(f"{path3}/Results_000.png", dpi=300)
+    fig4.savefig(f"{path4}/Distance_000.png", dpi=300)
+    fig5.savefig(f"{path5}/DistMatrix_000.png", dpi=300)
     tb.add_figure('TSNE', fig2, global_step=0, close=True)
     tb.add_figure('Results', fig3, global_step=0, close=True)
     tb.add_figure('Distances', fig4, global_step=0, close=True)
@@ -531,10 +531,10 @@ def train(
                 fname_dataset,
                 index_tra
             )
-            fig2.savefig(f"{path2}/TSNE_{epoch:03d}.png")
-            fig3.savefig(f"{path3}/Results_{epoch:03d}.png")
-            fig4.savefig(f"{path4}/Distance_{epoch:03d}.png")
-            fig5.savefig(f"{path5}/DistMatrix_{epoch:03d}.png")
+            fig2.savefig(f"{path2}/TSNE_{epoch:03d}.png", dpi=300)
+            fig3.savefig(f"{path3}/Results_{epoch:03d}.png", dpi=300)
+            fig4.savefig(f"{path4}/Distance_{epoch:03d}.png", dpi=300)
+            fig5.savefig(f"{path5}/DistMatrix_{epoch:03d}.png", dpi=300)
             tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
             tb.add_figure('Results', fig3, global_step=epoch, close=True)
             tb.add_figure('Distances', fig4, global_step=epoch, close=True)
