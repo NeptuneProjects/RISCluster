@@ -868,7 +868,7 @@ def analyze_clustering(
         random_state=2009
     ).fit_transform(z_array.astype('float64'))
     print('complete.')
-    title = f'T-SNE Results - Epoch {epoch}'
+    title = f't-SNE Results - Epoch {epoch}'
     fig2 = plotting.view_TSNE(results, labels, title, show=False)
     p = 1
     fig3 = plotting.cluster_gallery(

@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import torch
 from torch.utils.data import DataLoader
@@ -20,6 +21,29 @@ from torch.utils.data import DataLoader
 from processing import get_metadata
 import utils
 from networks import AEC, DCM
+
+def cmap_lifeaquatic(N=None):
+    """
+    Returns colormap inspired by Wes Andersen's The Life Aquatic
+    Available from https://jiffyclub.github.io/palettable/wesanderson/
+    """
+    colors = [
+        (27, 52, 108),
+        (244, 75, 26),
+        (67, 48, 34),
+        (35, 81, 53),
+        (123, 109, 168),
+        (139, 156, 184),
+        (214, 161, 66),
+        (1, 170, 233),
+        (195, 206, 208),
+        (229, 195, 158),
+    ]
+    colors = [tuple([v / 256 for v in c]) for c in colors]
+    if colors is not None:
+        return colors[0:N]
+    else:
+        return colors
 
 def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     d = z_array.shape[1]
@@ -37,7 +61,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     # Colorbar
     ax = fig1.add_subplot(gs[0, :])
     plt.axis('off')
-    cmap = cmo.deep_r
+    cmap = 'cmo.deep_r'
     axins = inset_axes(ax, width="50%", height="25%", loc="center")
     norm = mpl.colors.Normalize(vmin=z_array.min(), vmax=vmax)
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
@@ -140,7 +164,7 @@ def centroid_diagnostics(n_clusters, centroids, labels, z_array, p=2):
     fig1.subplots_adjust(top=0.96)
 
     fig2 = plt.figure(dpi=150)
-    plt.imshow(dist_mat, cmap=cmo.solar_r, origin='lower')
+    plt.imshow(dist_mat, cmap='cmo.solar_r', origin='lower')
     plt.xticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     for i in range(n_clusters):
@@ -241,6 +265,7 @@ def cluster_gallery(
             ax = fig.add_subplot(gs_sub[1])
             plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap='gray', aspect='auto', origin='lower')
             plt.text(0, 60, f"{load_index[i]}", fontdict=font)
+
             plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
             plt.xticks([])
             plt.yticks([])
@@ -820,20 +845,28 @@ def view_specgram_training(
 
 def view_TSNE(results, labels, title, show=False):
     label_list, counts = np.unique(labels, return_counts=True)
-    fig = plt.figure(figsize=(6,9))
-    gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[4, 3])
+
+    colors = cmap_lifeaquatic(len(counts))
+    data = np.stack([(labels+1), results[:,0], results[:,1]], axis=1)
+    df = pd.DataFrame(data=data, columns=["Label", "x", "y"])
+    df["Label"] = df["Label"].astype('int').astype('category')
+
+    fig = plt.figure(figsize=(6,8))
+    gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
 
     ax = fig.add_subplot(gs[0])
-    sns.scatterplot(results[:, 0], results[:, 1], hue=labels+1, palette='Set1', alpha=0.2)
+    sns.scatterplot(data=df, x="x", y="y", hue="Label", palette=colors, alpha=0.2)
     plt.axis('off')
+    plt.legend(loc='center left', bbox_to_anchor=(0.9, 0.75), ncol=1)
     plt.title(title)
 
     ax = fig.add_subplot(gs[1])
-    arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8)
+    arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8, color='k')
     plt.grid(axis='y', linestyle='--')
+    plt.ylim([0, 1.25 * max(counts)])
     plt.xlabel('Cluster Label')
-    plt.ylabel('Number of Detections')
-    plt.title('Histogram of Cluster Assignments')
+    plt.ylabel('Detections')
+    plt.title(f'Cluster Assignments of Detections, N = {len(labels)}')
 
     N = counts.sum()
     def CtP(x):
@@ -843,9 +876,9 @@ def view_TSNE(results, labels, title, show=False):
         return x * N / 100
 
     ax2 = ax.secondary_yaxis('right', functions=(CtP, PtC))
-    ax2.set_ylabel('Percentage of Detections')
+    ax2.set_ylabel('% of N')
     for i in range(len(np.unique(labels))):
-        plt.text(arr[1][i], arr[0][i]+10, str(int(arr[0][i])), ha='center')
+        plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
 
     if show:
         plt.show()
