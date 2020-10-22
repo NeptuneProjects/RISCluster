@@ -14,7 +14,9 @@ if sys.platform == 'darwin':
     from sklearn.cluster import KMeans
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
-    from cuml import KMeans, TSNE
+    # from cuml import KMeans, TSNE
+    from cuml import TSNE
+    from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 from sklearn_extra.cluster import KMedoids
