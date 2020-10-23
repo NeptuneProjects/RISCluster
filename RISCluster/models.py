@@ -285,6 +285,7 @@ def pretrain(
         src_file = f'{savepath_chkpnt}AEC_Best_Weights.pt'
         dst_file = f'{savepath_run}/AEC_Params_{serial_run}.pt'
         shutil.move(src_file, dst_file)
+        torch.save(model.state_dict(), dst_file)
     else:
         fname = f'{savepath_run}/AEC_Params_ {serial_run}.pt'
         torch.save(model.state_dict(), fname)

@@ -517,7 +517,7 @@ def view_cluster_results(exppath, show=True, save=True, savepath='.'):
             print(f'{savepath}/Label{label_list[l]:02d}_Examples.png')
             fig.savefig(f'{savepath}/Label{label_list[l]:02d}_Examples.png', dpi=300)
 
-def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=True):
+def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     def _make_patch_spines_invisible(ax):
         ax.set_frame_on(True)
         ax.patch.set_visible(False)
