@@ -941,7 +941,6 @@ def kmeans_metrics(dataloader, model, device, k_list):
                     kmg = KMeans(n_clusters=k, n_init=100).fit(gauss)
                     kmu = KMeans(n_clusters=k, n_init=100).fit(unifo)
                 elif sys.platform == 'linux':
-                    print('Using GPU to calculate.')
                     km = cuml.KMeans(n_clusters=k, n_init=100).fit(z_array)
                     kmg = cuml.KMeans(n_clusters=k, n_init=100).fit(gauss)
                     kmu = cuml.KMeans(n_clusters=k, n_init=100).fit(unifo)
