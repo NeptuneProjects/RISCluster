@@ -16,6 +16,7 @@ if sys.platform == 'darwin':
 elif sys.platform == 'linux':
     # from cuml import KMeans, TSNE
     from cuml import TSNE
+    from cuml import KMeans as cumlKMeans
     from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
@@ -933,9 +934,14 @@ def kmeans_metrics(dataloader, model, device, k_list):
         attempt = 0
         while not complete:
             try:
-                km = KMeans(n_clusters=k, n_init=100).fit(z_array)
-                kmg = KMeans(n_clusters=k, n_init=100).fit(gauss)
-                kmu = KMeans(n_clusters=k, n_init=100).fit(unifo)
+                if sys.platform == 'darwin':
+                    km = KMeans(n_clusters=k, n_init=100).fit(z_array)
+                    kmg = KMeans(n_clusters=k, n_init=100).fit(gauss)
+                    kmu = KMeans(n_clusters=k, n_init=100).fit(unifo)
+                elif sys.platform == 'linux':
+                    km = cumlKMeans(n_clusters=k, n_init=100).fit(z_array)
+                    kmg = cumlKMeans(n_clusters=k, n_init=100).fit(gauss)
+                    kmu = cumlKMeans(n_clusters=k, n_init=100).fit(unifo)
                 inertia[i] = km.inertia_
                 inertiag[i] = kmg.inertia_
                 inertiau[i] = kmu.inertia_
