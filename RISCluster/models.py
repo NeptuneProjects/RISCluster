@@ -936,10 +936,12 @@ def kmeans_metrics(dataloader, model, device, k_list):
         while not complete:
             try:
                 if sys.platform == 'darwin':
+                    print('Using CPU to calculate.')
                     km = KMeans(n_clusters=k, n_init=100).fit(z_array)
                     kmg = KMeans(n_clusters=k, n_init=100).fit(gauss)
                     kmu = KMeans(n_clusters=k, n_init=100).fit(unifo)
                 elif sys.platform == 'linux':
+                    print('Using GPU to calculate.')
                     km = cumlKMeans(n_clusters=k, n_init=100).fit(z_array)
                     kmg = cumlKMeans(n_clusters=k, n_init=100).fit(gauss)
                     kmu = cumlKMeans(n_clusters=k, n_init=100).fit(unifo)
