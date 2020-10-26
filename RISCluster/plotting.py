@@ -556,7 +556,7 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     print(k_list)
     host.set_xticks(range(len(k_list)))
     host.set_xticklabels(k_list)
-    for label in host.xaxis.get_ticklabels()[::2]:
+    for label in host.xaxis.get_ticklabels()[1:2]:
         label.set_visible(False)
 
     lines = [p1, p2, p3, p4]
