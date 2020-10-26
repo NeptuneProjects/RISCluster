@@ -160,6 +160,14 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
 
     return tr_out, S_out, C_out, catdict
 
+def file2dt(fname):
+    fname = fname.split('.')[0:5]
+    dt = datetime.strptime(
+        f'{fname[0]} {fname[1]} {fname[2]} {fname[3]} {fname[4]}',
+        '%Y %j %H %M %S'
+    )
+    return dt
+
 def get_channel(channel_index):
     '''Input: Integer channel index (0-2).
        Output: Channel name (str)'''
@@ -273,6 +281,11 @@ def get_station(station_index):
 # def get_trace():
 #     pass
 #     return None
+
+# def listdir_nohidden(path):
+#     for f in os.listdir(path):
+#         if not f.startswith('.'):
+#             yield f
 
 def mass_data_downloader(savepath, start='20141201', stop='20161201',
                          Network='XH', Station='*', Channel='HH*'):
