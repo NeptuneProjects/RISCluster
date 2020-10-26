@@ -553,7 +553,7 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     par1.tick_params(axis='y', colors=p2.get_color(), **tkw)
     par2.tick_params(axis='y', colors=p4.get_color(), **tkw)
     host.tick_params(axis='x', **tkw)
-    print(k_list)
+    host.xlim(k_list[0], k_list[-1])
     host.set_xticks(range(len(k_list)))
     host.set_xticklabels(k_list)
     for label in host.xaxis.get_ticklabels()[1::2]:
