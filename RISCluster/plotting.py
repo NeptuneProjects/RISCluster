@@ -560,7 +560,7 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
 
     lines = [p1, p2, p3, p4]
     host.xaxis.grid()
-    host.set_xlim(k_list[0]-1, k_list[-1]-1)
+    host.set_xlim(k_list[0], k_list[-1])
     leg = host.legend(lines, [l.get_label() for l in lines], ncol=4, bbox_to_anchor=(0.6, -0.28), loc='lower center')
     # plt.title("K-Means Metrics")
     plt.tight_layout()
