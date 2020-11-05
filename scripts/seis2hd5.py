@@ -180,17 +180,24 @@ if __name__ == '__main__':
                 m = tr.shape[0]
                 print(f'    {m} detections found.')
                 dset_tr = f[f'/{group_name}/Trace']
-                dset_tr.resize(dset_tr.shape[0]+m, axis=0)
-                dset_tr[-m:,:] = tr
                 dset_spec = f[f'/{group_name}/Spectrogram']
-                dset_spec.resize(dset_spec.shape[0]+m, axis=0)
-                dset_spec[-m:,:,:] = S
                 dset_scal = f[f'/{group_name}/Scalogram']
-                dset_scal.resize(dset_scal.shape[0]+m, axis=0)
-                dset_scal[-m:,:,:] = C
                 dset_cat = f[f'/{group_name}/Catalogue']
-                dset_cat.resize(dset_cat.shape[0]+m, axis=0)
 
+                if i == 0:
+                    dset_tr.resize(dset_tr.shape[0]+m-1, axis=0)
+                    dset_spec.resize(dset_spec.shape[0]+m-1, axis=0)
+                    dset_scal.resize(dset_scal.shape[0]+m-1, axis=0)
+                    dset_cat.resize(dset_cat.shape[0]+m-1, axis=0)
+                else:
+                    dset_tr.resize(dset_tr.shape[0]+m, axis=0)
+                    dset_spec.resize(dset_spec.shape[0]+m, axis=0)
+                    dset_scal.resize(dset_scal.shape[0]+m, axis=0)
+                    dset_cat.resize(dset_cat.shape[0]+m, axis=0)
+
+                dset_tr[-m:,:] = tr
+                dset_spec[-m:,:,:] = S
+                dset_scal[-m:,:,:] = C
                 for j in np.arange(0,m):
                     dset_cat[-m+j,] = json.dumps(metadata[j])
 
