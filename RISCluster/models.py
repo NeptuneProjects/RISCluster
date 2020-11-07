@@ -156,7 +156,8 @@ def pretrain(
         )
 
         for batch in pbar_tra:
-            x = batch.to(device)
+            idx, x = batch
+            x = x.to(device)
             optimizer.zero_grad()
 
             with torch.set_grad_enabled(True):
@@ -222,9 +223,11 @@ def pretrain(
         )
 
         for batch in pbar_val:
+            _, x = batch
+            x = x.to(device)
             model.eval()
             with torch.no_grad():
-                x = batch.to(device)
+                # x = batch.to(device)
                 x_rec, _ = model(x)
                 loss_mse = criterion_mse(x_rec, x)
                 loss_mae = criterion_mae(x_rec, x)
@@ -460,7 +463,8 @@ def train(
 
         # Iterate over data:
         for batch_num, batch in enumerate(pbar):
-            x = batch.to(device)
+            _, x = batch
+            x = x.to(device)
             # Uptade target distribution, check performance
             if (batch_num % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):

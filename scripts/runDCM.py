@@ -60,7 +60,8 @@ if __name__ == '__main__':
             km_metrics=config['PARAMETERS'].getboolean('km_metrics'),
             klist=config['PARAMETERS']['klist'],
             img_index=config['PARAMETERS']['img_index'],
-            tbpid=tbpid
+            tbpid=tbpid,
+            workers=int(config['PARAMETERS']['workers'])
         )
         batch_size = config['HYPERPARAMETERS']['batch_size']
         lr = config['HYPERPARAMETERS']['lr']
