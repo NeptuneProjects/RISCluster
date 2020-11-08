@@ -84,7 +84,6 @@ def pretrain(
     )
 
     criterion_mse = criteria[0]
-    criterion_mae = criteria[1]
 
     tra_loader = dataloaders[0]
     val_loader = dataloaders[1]
@@ -140,7 +139,6 @@ def pretrain(
         model.train(True)
 
         running_tra_mse = 0.0
-        running_tra_mae = 0.0
         running_size = 0
 
         pbar_tra = tqdm(
@@ -163,23 +161,18 @@ def pretrain(
             with torch.set_grad_enabled(True):
                 x_rec, _ = model(x)
                 loss_mse = criterion_mse(x_rec, x)
-                loss_mae = criterion_mae(x_rec, x)
                 loss_mse.backward()
                 optimizer.step()
 
             running_tra_mse += loss_mse.cpu().detach().numpy() * x.size(0)
-            running_tra_mae += loss_mae.cpu().detach().numpy() * x.size(0)
             running_size += x.size(0)
 
             pbar_tra.set_postfix(
-                MAE = f"{(running_tra_mae / running_size):.4e}",
                 MSE = f"{(running_tra_mse / running_size):.4e}"
             )
 
         epoch_tra_mse = running_tra_mse / M_tra
-        epoch_tra_mae = running_tra_mae / M_tra
         tb.add_scalar('Training MSE', epoch_tra_mse, epoch)
-        tb.add_scalar('Training MAE', epoch_tra_mae, epoch)
 
         for name, weight in model.named_parameters():
             tb.add_histogram(name, weight, epoch)
@@ -207,7 +200,6 @@ def pretrain(
         model.train(False)
 
         running_val_mse = 0.0
-        running_val_mae = 0.0
         running_size = 0
 
         pbar_val = tqdm(
@@ -230,21 +222,16 @@ def pretrain(
                 # x = batch.to(device)
                 x_rec, _ = model(x)
                 loss_mse = criterion_mse(x_rec, x)
-                loss_mae = criterion_mae(x_rec, x)
 
             running_val_mse += loss_mse.cpu().detach().numpy() * x.size(0)
-            running_val_mae += loss_mae.cpu().detach().numpy() * x.size(0)
             running_size += x.size(0)
 
             pbar_val.set_postfix(
-                MSE = f"{(running_val_mse / running_size):.4e}",
-                MAE = f"{(running_val_mae / running_size):.4e}"
+                MSE = f"{(running_val_mse / running_size):.4e}"
             )
 
         epoch_val_mse = running_val_mse / M_val
-        epoch_val_mae = running_val_mae / M_val
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
-        tb.add_scalar('Validation MAE', epoch_val_mae, epoch)
 
         if early_stopping:
             if epoch_val_mse < best_val_loss:

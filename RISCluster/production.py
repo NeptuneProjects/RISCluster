@@ -75,8 +75,7 @@ def DCM_pretrain(parameters, hyperparameters):
                 model.apply(init_weights)
 
                 criterion_mse = nn.MSELoss(reduction='mean')
-                criterion_mae = nn.L1Loss(reduction='mean')
-                criteria = [criterion_mse, criterion_mae]
+                criteria = [criterion_mse]
 
                 optimizer = optim.Adam(model.parameters(), lr=lr)
 
