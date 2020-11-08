@@ -243,7 +243,7 @@ def cluster_gallery(
         ax = fig.add_subplot(gs_sub[0])
         plt.axis('off')
         ax = fig.add_subplot(gs_sub[1])
-        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap='gray', aspect='auto', origin='lower')
+        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap='cmo.ice_r', aspect='auto', origin='lower')
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
@@ -263,7 +263,7 @@ def cluster_gallery(
             plt.xticks([])
             plt.yticks([])
             ax = fig.add_subplot(gs_sub[1])
-            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap='gray', aspect='auto', origin='lower')
+            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap='cmo.ice_r', aspect='auto', origin='lower')
             plt.text(0, 60, f"{load_index[i]}", fontdict=font)
 
             plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
@@ -814,7 +814,7 @@ def view_specgram_training(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
         ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap='gray', extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
@@ -826,7 +826,7 @@ def view_specgram_training(
         plt.yticks([])
 
         ax = fig.add_subplot(gs[2,counter])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap='gray', extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
