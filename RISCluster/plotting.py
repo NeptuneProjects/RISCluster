@@ -304,40 +304,6 @@ def cluster_gallery(
         plt.close()
     return fig
 
-def compare_images2(
-        model,
-        disp,
-        epoch,
-        disp_idx,
-        tvec,
-        fvec,
-        savepath,
-        fname_dataset,
-        show=True
-    ):
-    model.eval()
-    x_r, z = model(disp)
-    figtitle = f'Pre-training: Epoch {epoch}'
-    n, o = list(disp.size()[2:])
-    fig = view_specgram_training(
-        disp,
-        x_r, z,
-        n, o,
-        figtitle,
-        disp_idx,
-        tvec,
-        fvec,
-        fname_dataset,
-        figsize=(12,6),
-        show=show
-    )
-    savepath_snap = savepath + '/snapshots/'
-    if not os.path.exists(savepath_snap):
-        os.makedirs(savepath_snap)
-    figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
-    fig.savefig(figname, dpi=300)
-    return fig
-
 def compare_images(
         model,
         epoch,
@@ -645,15 +611,6 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
         plt.close()
     return fig
 
-def view_clusters(pca2d, labels):
-    fig = plt.figure(figsize=(6,6), dpi=300)
-    sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
-    plt.legend()
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-    fig.tight_layout()
-    return fig
-
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=300)
     gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
@@ -807,6 +764,15 @@ def view_learningcurve(training_history, validation_history, show=True):
         plt.show()
     else:
         plt.close()
+    return fig
+
+def view_PCA(pca2d, labels):
+    fig = plt.figure(figsize=(6,6), dpi=100)
+    sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
+    plt.legend()
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    fig.tight_layout()
     return fig
 
 def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
