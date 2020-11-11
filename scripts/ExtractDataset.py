@@ -107,7 +107,7 @@ if __name__ == "__main__":
     index_keep = np.sort(index_keep[~np.isnan(index_keep)]).astype(int)
 
     with h5py.File(source, 'r') as fs, h5py.File(dest, 'w') as fd:
-        M = len(index_keep) + 1
+        M = len(index_keep) + 1 # <------------------------------------------------------------------- Remove '+1'
         dset_names = ['Catalogue', 'Trace', 'Spectrogram', 'Scalogram']
         # dset_names = ['Catalogue']
         for dset_name in dset_names:
@@ -119,4 +119,4 @@ if __name__ == "__main__":
             dset_id = group_id.create_dataset(dset_name, dset_shape, dtype=dset.dtype, chunks=None)
             processing._copy_attributes(dset, dset_id)
             for i in tqdm(range(len(index_keep)), desc=dset_name):
-                dset_id[i+1] = dset[index_keep[i]]
+                dset_id[i+1] = dset[index_keep[i]] # <------------------------------------------------------------------- Remove '+1'
