@@ -9,6 +9,7 @@ import cmocean.cm as cmo
 import h5py
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
+from matplotlib.patches import ConnectionPatch
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -16,7 +17,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 from processing import get_metadata
 import utils
@@ -180,6 +181,7 @@ def cluster_gallery(
         labels,
         z_array,
         fname_dataset,
+        dataset,
         index_tra,
         device,
         centroids=None,
@@ -194,65 +196,66 @@ def cluster_gallery(
         centroids = model.clustering.weights
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
-
-    fig = plt.figure(figsize=(len(label_list),12), dpi=150)
-    gs_sup = gridspec.GridSpec(nrows=9, ncols=len(label_list), hspace=0.05, wspace=0.05)
-    heights = [1, 4, 0.2]
+    N = 4
+    fig = plt.figure(figsize=(len(label_list),8), dpi=150)
+    heights = [1 for i in range(N+1)] + [0.2]
+    gs_sup = gridspec.GridSpec(nrows=N+2, ncols=len(label_list), hspace=0.1, wspace=0.1, height_ratios=heights)
+    heights = [1, 4, 0.5]
     font = {
         'family': 'serif',
-        'color':  'white',
+        'color':  'k',
         'weight': 'normal',
         'size': 5,
         }
     transform = 'sample_norm_cent'
-    cmap = cmo.deep_r
+    cmap_feat = cmo.deep_r
+    cmap_spec = cmo.dense
     vmax = centroids.max()
     for l, label in enumerate(label_list):
-        query = np.where(labels == label_list[l])[0]
+
+        query = np.where(labels == label)[0]
         z_sub = z_array[query]
-        load_index = index_tra[query]
-        N = 8
         distance = utils.fractional_distance(centroids[l], z_sub, p)
-        # distance = np.linalg.norm(centroids[l,:] - z_array[query,:], ord=p, axis=1)
         sort_index = np.argsort(distance)[0:N]
-        load_index = load_index[sort_index]
+        load_index = query[sort_index]
         distance = distance[sort_index]
 
-        dataset = utils.load_dataset(fname_dataset, load_index, send_message=False, transform=transform, **{"notqdm": True})
-        dataloader = DataLoader(dataset, batch_size=N)
-        X = []
+        subset = Subset(dataset, load_index)
+        dataloader = DataLoader(subset, batch_size=N)
+
         for batch in dataloader:
-            X = batch.to(device)
+            idx, X = batch
+            idx.numpy()
+            X.to(device)
+            with h5py.File(fname_dataset, 'r') as f:
+                M = len(idx)
+                DataSpec = '/4s/Trace'
+                dset = f[DataSpec]
+                k = 351
+
+                tr = np.empty([M, k])
+                dset_arr = np.empty([k,])
+
+                for i in range(M):
+                    dset_arr = dset[idx[i], 25:-25]
+                    tr[i,:] = dset_arr
 
         Z = model.encoder(X)
-
-        with h5py.File(fname_dataset, 'r') as f:
-            M = len(load_index)
-            DataSpec = '/4s/Trace'
-            dset = f[DataSpec]
-            k = 351
-
-            tr = np.empty([M, k])
-            dset_arr = np.empty([k,])
-
-            for i in range(M):
-                dset_arr = dset[load_index[i], 25:-25]
-                tr[i,:] = dset_arr
 
         gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[0,l], hspace=0, wspace=0, height_ratios=heights)
         ax = fig.add_subplot(gs_sub[0])
         plt.axis('off')
         ax = fig.add_subplot(gs_sub[1])
-        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap='cmo.ice_r', aspect='auto', origin='lower')
+        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap=cmap_spec, aspect='auto', origin='lower')
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
-        ax.set_xlabel(f"Cluster {label+1}", size=5)
+        ax.set_xlabel(f"Cluster {label+1}", size=10)
         if l == 0:
-            plt.ylabel("Centroids", size=5)
+            plt.ylabel("Centroids", size=10)
 
         ax = fig.add_subplot(gs_sub[2])
-        plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap, aspect='auto', vmax = vmax)
+        plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
         plt.xticks([])
         plt.yticks([])
 
@@ -260,19 +263,40 @@ def cluster_gallery(
             gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[i+1,l], hspace=0, wspace=0, height_ratios=heights)
             ax = fig.add_subplot(gs_sub[0])
             plt.plot(tr[i], 'k', linewidth=0.5)
+            plt.xlim((0, k))
             plt.xticks([])
             plt.yticks([])
-            ax = fig.add_subplot(gs_sub[1])
-            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap='cmo.ice_r', aspect='auto', origin='lower')
-            plt.text(0, 60, f"{load_index[i]}", fontdict=font)
 
+            ax = fig.add_subplot(gs_sub[1])
+            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower')
+            # plt.text(0, 60, f"{load_index[i]}", fontdict=font)
             plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
             plt.xticks([])
             plt.yticks([])
+
             ax = fig.add_subplot(gs_sub[2])
-            plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap, aspect='auto', vmax = vmax)
+            plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
             plt.xticks([])
             plt.yticks([])
+
+    gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=gs_sup[-1,:])
+    # Colorbar: Specgram
+    ax = fig.add_subplot(gs_sub[0])
+    plt.axis('off')
+    cmap = 'cmo.deep_r'
+    axins = inset_axes(ax, width="75%", height="50%", loc="center")
+    norm = mpl.colors.Normalize(vmin=0, vmax=1)
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_spec), cax=axins, orientation='horizontal')
+    cbar.set_label('Normalized Spectrogram Value')
+
+    # Colorbar: Latent Space
+    ax = fig.add_subplot(gs_sub[1])
+    plt.axis('off')
+    cmap = 'cmo.deep_r'
+    axins = inset_axes(ax, width="75%", height="50%", loc="center")
+    norm = mpl.colors.Normalize(vmin=z_array.min(), vmax=vmax)
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_feat), cax=axins, orientation='horizontal')
+    cbar.set_label('Latent Feature Value')
 
     if show:
         plt.show()
@@ -280,7 +304,7 @@ def cluster_gallery(
         plt.close()
     return fig
 
-def compare_images(
+def compare_images2(
         model,
         disp,
         epoch,
@@ -312,6 +336,56 @@ def compare_images(
         os.makedirs(savepath_snap)
     figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
     fig.savefig(figname, dpi=300)
+    return fig
+
+def compare_images(
+        model,
+        epoch,
+        disp_idx,
+        fname_dataset,
+        savepath=None,
+        show=True,
+        mode='multi'
+    ):
+    images, tvec, fvec = utils.load_images(fname_dataset, disp_idx)
+    disp_loader = DataLoader(
+        utils.SeismoDataset(images),
+        batch_size=len(disp_idx)
+    )
+    disp = next(iter(disp_loader))
+
+    model.eval()
+    x_r, z = model(disp)
+    figtitle = f'Pre-training: Epoch {epoch}'
+    n, o = list(disp.size()[2:])
+    if mode == 'multi':
+        fig = view_specgram_training(
+            disp,
+            x_r, z, n, o,
+            figtitle,
+            disp_idx,
+            tvec,
+            fvec,
+            fname_dataset,
+            show=show
+        )
+        if savepath is not None:
+            savepath_snap = savepath + '/snapshots/'
+            if not os.path.exists(savepath_snap):
+                os.makedirs(savepath_snap)
+            figname = savepath_snap + f'AEC_Training_Epoch_{epoch:03d}.png'
+            fig.savefig(figname, dpi=300)
+    elif mode == 'single':
+        fig = view_specgram_training2(
+            disp,
+            x_r, z, n, o,
+            figtitle,
+            disp_idx,
+            tvec,
+            fvec,
+            fname_dataset,
+            show=show
+        )
     return fig
 
 def label_offset(ax, axis="y"):
@@ -839,6 +913,112 @@ def view_specgram_training(
     fig.suptitle(figtitle, size=16, weight='bold')
     # fig.tight_layout()
     fig.subplots_adjust(top=0.88, left=0.08)
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+def view_specgram_training2(
+        x, x_r, z, n, o,
+        figtitle,
+        disp_idx,
+        tvec,
+        fvec,
+        fname_dataset,
+        figsize=(8,3),
+        show=True
+    ):
+    rc_fonts = {
+        "text.usetex": True,
+        'text.latex.preview': True, # Gives correct legend alignment.
+        'mathtext.default': 'regular',
+        'text.latex.preamble': [r"""\usepackage{bm}"""],
+    }
+    mpl.rcParams.update(rc_fonts)
+    sample_idx = np.arange(0, len(disp_idx))
+    metadata = get_metadata(sample_idx, disp_idx, fname_dataset)
+    X = x.detach().cpu().numpy()
+    X_r = x_r.detach().cpu().numpy()
+    z = z.detach().cpu().numpy()
+    fig = plt.figure(figsize=(figsize[0],len(disp_idx)*figsize[1]), dpi=100)
+    heights = [4 for i in range(x.size()[0])]
+    widths = [3, 0.5, 3]
+    extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
+    arrow_yloc = 1.12
+    gs = gridspec.GridSpec(nrows=x.size()[0], ncols=3, height_ratios=heights, width_ratios=widths, wspace=0.2, hspace=0.6)
+    counter = 0
+    for i in range(x.size()[0]):
+        station = metadata[i]['Station']
+        try:
+            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        except:
+            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+                                        '%Y-%m-%dT%H:%M:%S').strftime(
+                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        ax1 = fig.add_subplot(gs[counter,0])
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
+        plt.colorbar(orientation='vertical', pad=0)
+        plt.clim(0,1)
+        plt.xlabel('Time (s)')
+        plt.ylabel('Frequency (Hz)')
+        plt.title('Input\n' + r'$\bm{x}$', x=0.55)
+
+        xy1 = (0.67, arrow_yloc)
+
+        ax2 = fig.add_subplot(gs[counter,1])
+        plt.imshow(np.expand_dims(z[i], 1), cmap=cmo.deep_r, aspect='auto')
+        for j in range(z.shape[1]):
+            plt.text(
+                0,
+                j,
+                f"{z[i,j]:.1f}",
+                backgroundcolor='w',
+                ha='center',
+                va='center',
+                bbox=dict(boxstyle='square,pad=0', facecolor='w', edgecolor='w')
+            )
+        plt.xticks([])
+        plt.yticks(ticks=np.arange(0, z.shape[1]), labels=np.arange(1, z.shape[1]+1))
+        plt.title('Latent Space\n' + r'$\bm{z}$')
+
+        xy2 = (-0.8, arrow_yloc)
+        con = ConnectionPatch(
+            xyA=xy1,
+            xyB=xy2,
+            coordsA="axes fraction",
+            coordsB="axes fraction",
+            axesA=ax1,
+            axesB=ax2,
+            arrowstyle="simple",
+            color="k"
+        )
+        ax2.add_artist(con)
+
+        ax3 = fig.add_subplot(gs[counter,2])
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
+        plt.colorbar(orientation='vertical', pad=0)
+        plt.clim(0,1)
+        plt.title("Output\n" + r"$\bm{x}'$", x=0.55)
+
+        xy2 = (1.8, arrow_yloc)
+        xy3 = (0.4, arrow_yloc)
+        con = ConnectionPatch(
+            xyA=xy2,
+            xyB=xy3,
+            coordsA="axes fraction",
+            coordsB="axes fraction",
+            axesA=ax2,
+            axesB=ax3,
+            arrowstyle="simple",
+            color="k"
+        )
+        ax3.add_artist(con)
+
+        counter += 1
+    fig.subplots_adjust(top=0.86, bottom=0.15)
     if show:
         plt.show()
     else:

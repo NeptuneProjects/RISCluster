@@ -84,22 +84,8 @@ def pretrain(
     )
 
     criterion_mse = criteria[0]
-
     tra_loader = dataloaders[0]
     val_loader = dataloaders[1]
-    M_tra = len(tra_loader.dataset)
-    M_val = len(val_loader.dataset)
-
-
-    images, tvec, fvec = utils.load_images(fname_dataset, disp_index)
-    disp_loader = DataLoader(
-        utils.SeismoDataset(images),
-        batch_size=len(disp_index)
-    )
-    disp = next(iter(disp_loader))
-    # images = next(iter(tra_loader))
-    # disp_idx = sorted(np.random.randint(0, images.size(0), 4))
-    # disp = images[disp_idx]
 
     tb = SummaryWriter(log_dir=savepath_run)
     if tbpid is not None:
@@ -111,14 +97,12 @@ def pretrain(
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     fig = plotting.compare_images(
         model,
-        disp.to(device),
         0,
-        disp_index,
-        tvec,
-        fvec,
-        savepath_run,
+        disp_idx,
         fname_dataset,
-        show
+        savepath=savepath_run,
+        show=show,
+        mode='multi'
     )
     tb.add_figure('TrainingProgress', fig, global_step=0, close=True)
 
@@ -146,16 +130,13 @@ def pretrain(
             leave=True,
             desc="  Training",
             unit="batch",
-            postfix={
-                "MAE": "%.6f" % 0.0,
-                "MSE": "%.6f" % 0.0
-            },
+            postfix={"MSE": "%.6f" % 0.0},
             bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
         )
 
         for batch in pbar_tra:
-            idx, x = batch
-            x = x.to(device)
+            _, x = batch
+            x.to(device)
             optimizer.zero_grad()
 
             with torch.set_grad_enabled(True):
@@ -171,7 +152,7 @@ def pretrain(
                 MSE = f"{(running_tra_mse / running_size):.4e}"
             )
 
-        epoch_tra_mse = running_tra_mse / M_tra
+        epoch_tra_mse = running_tra_mse / len(tra_loader.dataset)
         tb.add_scalar('Training MSE', epoch_tra_mse, epoch)
 
         for name, weight in model.named_parameters():
@@ -181,14 +162,12 @@ def pretrain(
         if (epoch % 5) == 0 and not (epoch == 0):
             fig = plotting.compare_images(
                 model,
-                disp.to(device),
                 epoch,
-                disp_index,
-                tvec,
-                fvec,
-                savepath_run,
+                disp_idx,
                 fname_dataset,
-                show
+                savepath=savepath_run,
+                show=show,
+                mode='multi'
             )
             tb.add_figure(
                 'TrainingProgress',
@@ -207,16 +186,13 @@ def pretrain(
             leave=True,
             desc="Validation",
             unit="batch",
-            postfix={
-                "MSE": "%.6f" % 0.0,
-                "MAE": "%.6f" % 0.0
-            },
+            postfix={"MSE": "%.6f" % 0.0},
             bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
         )
 
         for batch in pbar_val:
             _, x = batch
-            x = x.to(device)
+            x.to(device)
             model.eval()
             with torch.no_grad():
                 # x = batch.to(device)
@@ -230,7 +206,7 @@ def pretrain(
                 MSE = f"{(running_val_mse / running_size):.4e}"
             )
 
-        epoch_val_mse = running_val_mse / M_val
+        epoch_val_mse = running_val_mse / len(val_loader.dataset)
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
 
         if early_stopping:
@@ -354,10 +330,10 @@ def train(
         'tol': tol
         }
     )
-    path2 = utils.make_dir('T-SNE', savepath_run)
-    path3 = utils.make_dir('Results', savepath_run)
-    path4 = utils.make_dir('Distance', savepath_run)
-    path5 = utils.make_dir('DistMatrix', savepath_run)
+    path1 = utils.make_dir('T-SNE', savepath_run)
+    path2 = utils.make_dir('Results', savepath_run)
+    path3 = utils.make_dir('Distance', savepath_run)
+    path4 = utils.make_dir('DistMatrix', savepath_run)
 
     model.load_state_dict(
         torch.load(loadpath, map_location=device), strict=False
@@ -399,7 +375,7 @@ def train(
     q, _ = predict_labels(model, dataloader, device)
     p = target_distribution(q)
 
-    fig2, fig3, fig4, fig5 = analyze_clustering(
+    fig1, fig2, fig3, fig4 = analyze_clustering(
         model,
         dataloader,
         labels_prev,
@@ -408,14 +384,14 @@ def train(
         fname_dataset,
         index_tra
     )
-    fig2.savefig(f"{path2}/TSNE_000.png", dpi=300)
-    fig3.savefig(f"{path3}/Results_000.png", dpi=300)
-    fig4.savefig(f"{path4}/Distance_000.png", dpi=300)
-    fig5.savefig(f"{path5}/DistMatrix_000.png", dpi=300)
-    tb.add_figure('TSNE', fig2, global_step=0, close=True)
-    tb.add_figure('Results', fig3, global_step=0, close=True)
-    tb.add_figure('Distances', fig4, global_step=0, close=True)
-    tb.add_figure('Distance Matrix', fig5, global_step=0, close=True)
+    fig1.savefig(f"{path1}/TSNE_000.png", dpi=300)
+    fig2.savefig(f"{path2}/Results_000.png", dpi=300)
+    fig3.savefig(f"{path3}/Distance_000.png", dpi=300)
+    fig4.savefig(f"{path4}/DistMatrix_000.png", dpi=300)
+    tb.add_figure('TSNE', fig1, global_step=0, close=True)
+    tb.add_figure('Results', fig2, global_step=0, close=True)
+    tb.add_figure('Distances', fig3, global_step=0, close=True)
+    tb.add_figure('Distance Matrix', fig4, global_step=0, close=True)
 
     n_iter = 1
     finished = False
@@ -451,7 +427,7 @@ def train(
         # Iterate over data:
         for batch_num, batch in enumerate(pbar):
             _, x = batch
-            x = x.to(device)
+            x.to(device)
             # Uptade target distribution, check performance
             if (batch_num % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
@@ -518,7 +494,7 @@ def train(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            fig2, fig3, fig4, fig5 = analyze_clustering(
+            fig1, fig2, fig3, fig4 = analyze_clustering(
                 model,
                 dataloader,
                 labels,
@@ -527,14 +503,14 @@ def train(
                 fname_dataset,
                 index_tra
             )
-            fig2.savefig(f"{path2}/TSNE_{epoch:03d}.png", dpi=300)
-            fig3.savefig(f"{path3}/Results_{epoch:03d}.png", dpi=300)
-            fig4.savefig(f"{path4}/Distance_{epoch:03d}.png", dpi=300)
-            fig5.savefig(f"{path5}/DistMatrix_{epoch:03d}.png", dpi=300)
-            tb.add_figure('TSNE', fig2, global_step=epoch, close=True)
-            tb.add_figure('Results', fig3, global_step=epoch, close=True)
-            tb.add_figure('Distances', fig4, global_step=epoch, close=True)
-            tb.add_figure('Distance Matrix', fig5, global_step=epoch, close=True)
+            fig1.savefig(f"{path2}/TSNE_{epoch:03d}.png", dpi=300)
+            fig2.savefig(f"{path3}/Results_{epoch:03d}.png", dpi=300)
+            fig3.savefig(f"{path4}/Distance_{epoch:03d}.png", dpi=300)
+            fig4.savefig(f"{path5}/DistMatrix_{epoch:03d}.png", dpi=300)
+            tb.add_figure('TSNE', fig1, global_step=epoch, close=True)
+            tb.add_figure('Results', fig2, global_step=epoch, close=True)
+            tb.add_figure('Distances', fig3, global_step=epoch, close=True)
+            tb.add_figure('Distance Matrix', fig4, global_step=epoch, close=True)
 
         if finished:
             break
@@ -580,7 +556,8 @@ def predict(model, dataloader, parameters):
 
     for batch in pbar:
         idx, x = batch
-        q, _, _ = model(x.to(device))
+        x.to(device)
+        q, _, _ = model(x)
         label = torch.argmax(q, dim=1)
 
         A = [{
@@ -593,61 +570,6 @@ def predict(model, dataloader, parameters):
                 (k == 'idx' or k == 'label')} for d in A],
             savepath
         )
-
-# Deprecated
-# def predict_(model, dataloader, idx_smpl, parameters):
-#     device = parameters['device']
-#     savepath_exp = parameters['savepath']
-#     serial_exp = parameters['serial']
-#     mode = parameters['mode']
-#     loadpath = parameters['saved_weights']
-#     n_clusters = parameters['n_clusters']
-#     max_workers = parameters['max_workers']
-#
-#     savepath_run, serial_run = utils.init_output_env(
-#         savepath_exp,
-#         mode,
-#         **{'n_clusters': n_clusters}
-#     )
-#
-#     model.load_state_dict(torch.load(loadpath, map_location=device))
-#     model.eval()
-#
-#     pbar = tqdm(
-#         dataloader,
-#         leave=True,
-#         desc="Saving cluster labels",
-#         unit="batch",
-#         bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-#     )
-#
-#     label_list = []
-#
-#     running_size = 0
-#     # counter = 0
-#     for batch_num, batch in enumerate(pbar):
-#         x = batch.to(device)
-#         # q, x_rec, z = model(x)
-#         q, _, _ = model(x)
-#         label = torch.argmax(q, dim=1)
-#         A = [
-#                 {
-#                     # 'x': x[i].cpu().detach().numpy(),
-#                     'label': label[i].cpu().detach().numpy(),
-#                     # 'x_rec': x_rec[i].cpu().detach().numpy(),
-#                     # 'z': z[i].cpu().detach().numpy(),
-#                     'idx': idx_smpl[running_size:(running_size + x.size(0))][i]
-#                     # 'savepath': savepath_run[int(label[i])]
-#                 } for i in range(x.size(0))]
-#
-#         utils.save_labels(
-#             [{k: v for k, v in d.items() if \
-#                 (k == 'idx' or k == 'label')} for d in A],
-#             savepath_exp,
-#             serial_exp
-#         )
-#
-#         running_size += x.size(0)
 
 # K-means clusters initialisation
 def kmeans(model, dataloader, device):
@@ -674,7 +596,8 @@ def kmeans(model, dataloader, device):
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
-        x = batch.to(device)
+        _, x = batch
+        x.to(device)
         _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
     km.fit_predict(z_array)
@@ -708,7 +631,8 @@ def kmeds(model, dataloader, device):
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
-        x = batch.to(device)
+        _, x = batch
+        x.to(device)
         _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
     kmed.fit_predict(z_array)
@@ -747,7 +671,8 @@ def gmm(model, dataloader, device):
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
-        x = batch.to(device)
+        _, x = batch
+        x.to(device)
         _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
     np.seterr(under='ignore')
@@ -760,7 +685,8 @@ def pca(labels, model, dataloader, device, tb, counter):
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
-        x = batch.to(device)
+        _, x = batch
+        x.to(device)
         _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
     row_max = z_array.max(axis=1)
@@ -784,10 +710,14 @@ def predict_labels(model, dataloader, device):
         labels [n_samples,]: Hard assigned label based on max of q_array
     '''
     model.eval()
-    q_array = np.zeros((len(dataloader.dataset), model.n_clusters), dtype=np.float32)
+    q_array = np.zeros(
+        (len(dataloader.dataset), model.n_clusters),
+        dtype=np.float32
+    )
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
-        x = batch.to(device)
+        _, x = batch
+        x.to(device)
         q, _, _ = model(x)
         q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
     labels = np.argmax(q_array.data, axis=1)
@@ -835,21 +765,14 @@ def analyze_clustering(
     # Output:
         Figures displaying centroids and their associated reconstructions.
     '''
-    # Step 1: Show Centroid outputs
     centroids = model.clustering.weights.detach().cpu().numpy()
-    # X_r = model.decoder(centroids)
-    # fig1 = plotting.view_centroid_output(
-    #     centroids,
-    #     X_r,
-    #     f'Centroid Reconstructions - Epoch {epoch}',
-    #     show=False
-    # )
-    # Step 2: Show t-SNE & labels
+    # Show t-SNE & labels
     model.eval()
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
-        x = batch.to(device)
+        _, x = batch
+        x.to(device)
         _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
 
@@ -866,9 +789,9 @@ def analyze_clustering(
     ).fit_transform(z_array.astype('float64'))
     print('complete.')
     title = f't-SNE Results - Epoch {epoch}'
-    fig2 = plotting.view_TSNE(results, labels, title, show=False)
+    fig1 = plotting.view_TSNE(results, labels, title, show=False)
     p = 1
-    fig3 = plotting.cluster_gallery(
+    fig2 = plotting.cluster_gallery(
         model,
         labels,
         z_array,
@@ -878,20 +801,21 @@ def analyze_clustering(
         centroids,
         p=p
     )
-    fig4, fig5 = plotting.centroid_diagnostics(
+    fig3, fig4 = plotting.centroid_diagnostics(
         model.n_clusters,
         centroids,
         labels,
         z_array,
         p=p
     )
-    return fig2, fig3, fig4, fig5
+    return fig1, fig2, fig3, fig4
 
 def kmeans_metrics(dataloader, model, device, k_list):
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     model.eval()
     for b, batch in enumerate(dataloader):
-        x = batch.to(device)
+        _, x = batch
+        x.to(device)
         stride = dataloader.batch_size
         _, z = model(x)
         z_array[b*stride:(b*stride) + x.size(0)] = z.detach().cpu().numpy()
@@ -905,8 +829,16 @@ def kmeans_metrics(dataloader, model, device, k_list):
     unifo = np.zeros((z_array.shape[0], z_array.shape[1]))
 
     for i in range(z_array.shape[1]):
-        gauss[:,i] = np.random.normal(loc=feat_min[i], scale=feat_std[i], size=z_array.shape[0])
-        unifo[:,i] = np.random.uniform(low=feat_min[i], high=feat_max[i], size=z_array.shape[0])
+        gauss[:,i] = np.random.normal(
+            loc=feat_min[i],
+            scale=feat_std[i],
+            size=z_array.shape[0]
+        )
+        unifo[:,i] = np.random.uniform(
+            low=feat_min[i],
+            high=feat_max[i],
+            size=z_array.shape[0]
+        )
 
     inertia = np.zeros(len(k_list))
     inertiag = np.zeros(len(k_list))
@@ -948,8 +880,6 @@ def kmeans_metrics(dataloader, model, device, k_list):
                 attempt += 1
                 continue
 
-
     gap_g = np.log(np.asarray(inertiag)) - np.log(np.asarray(inertia))
     gap_u = np.log(np.asarray(inertiau)) - np.log(np.asarray(inertia))
-
     return inertia, silh, gap_g, gap_u
