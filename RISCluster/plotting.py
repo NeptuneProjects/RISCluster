@@ -416,6 +416,139 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
         plt.show()
     return fig
 
+def view_class_cdf(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p=2,
+        show=True
+    ):
+    label_list, counts_a = np.unique(labels_a, return_counts=True)
+    _, counts_b = np.unique(labels_b, return_counts=True)
+
+    fig = plt.figure(figsize=(6, 2*int(np.ceil(n_clusters/2))), dpi=100)
+    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.9, wspace=0.4)
+    colors = cmap_lifeaquatic(n_clusters)
+
+    for l in range(n_clusters):
+        ax = fig.add_subplot(gs[l])
+
+        distance_a = utils.fractional_distance(centroids_a[l], data_a, p)
+        sort_index_a = np.argsort(distance_a)
+        distance_a = distance_a[sort_index_a]
+        labels_a_ = labels_a[sort_index_a]
+        query_a = np.where(labels_a_ == label_list[l])[0]
+        distance_a = distance_a[query_a]
+        cdf_a = np.cumsum(np.ones(len(query_a))) / len(query_a)
+
+        distance_b = utils.fractional_distance(centroids_b[l], data_b, p)
+        sort_index_b = np.argsort(distance_b)
+        distance_b = distance_b[sort_index_b]
+        labels_b_ = labels_b[sort_index_b]
+        query_b = np.where(labels_b_ == label_list[l])[0]
+        distance_b = distance_b[query_b]
+        cdf_b = np.cumsum(np.ones(len(query_b))) / len(query_b)
+
+        plt.plot(distance_a, cdf_a, color=colors[0])
+        plt.plot(distance_b, cdf_b, color=colors[1])
+
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+        plt.xlabel(f"$d=\Vert\mathbf{{r}} - \pmb{{\mu}}_{l+1}\Vert_{p}$")
+        plt.ylabel(f"$F_{l+1}(d)$", rotation=90, ha="center")
+        plt.title(f"Class {l + 1} CDF")
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+def view_class_pdf(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p=2,
+        show=True
+    ):
+    label_list, counts_a = np.unique(labels_a, return_counts=True)
+    _, counts_b = np.unique(labels_b, return_counts=True)
+    dx = 1
+    nbins = 100
+    X = np.linspace(0, 301, nbins)
+
+    fig = plt.figure(figsize=(12, 2*int(np.ceil(n_clusters/2))), dpi=100)
+    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=1, wspace=0.25)
+    colors = cmap_lifeaquatic(n_clusters)
+    for l in range(n_clusters):
+        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[l], hspace=0, wspace=0)
+
+        distance_a = utils.fractional_distance(centroids_a[l], data_a, p)
+        sort_index_a = np.argsort(distance_a)
+        distance_a = distance_a[sort_index_a]
+        labels_a_ = labels_a[sort_index_a]
+        distance_b = utils.fractional_distance(centroids_b[l], data_b, p)
+        sort_index_b = np.argsort(distance_b)
+        distance_b = distance_b[sort_index_b]
+        labels_b_ = labels_b[sort_index_b]
+        # max_dist = np.max([distance_a.max(), distance_b.max()])
+
+        axa = fig.add_subplot(gs_sub[0])
+        for ll in range(n_clusters):
+            query_a = np.where(labels_a_ == label_list[ll])[0]
+            distance_a_ = distance_a[query_a]
+            hist_a = np.histogram(distance_a_, bins=X, density=True)[0]
+
+            plt.plot(X[:-1], hist_a, color=colors[ll], label=f"{ll+1}")
+            plt.fill_between(X[:-1], 0, hist_a, color=colors[ll], alpha=0.2)
+            plt.xlim(X.min(), X.max())
+            plt.xticks([])
+            plt.ylim(0.001, 1)
+            plt.yscale('log')
+            plt.yticks([0.001, 0.01, 0.1])
+            plt.text(1, 0.9, 'Before DEC', ha='right', va='top', transform=axa.transAxes)
+            plt.rc('text', usetex=True)
+            plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+            plt.ylabel(f"$f_j(d)$", rotation=0, ha="right", y=-0.2, size=14)
+            # plt.ylabel(f"$\mathrm{{PDF}}_j(\Vert\mathbf{{r}} - \pmb{{\mu}}_{l+1}\Vert_{p})$", rotation=90, ha="center", y=-0.1, size=14)
+            plt.title(f"Class PDFs relative to $\pmb{{\mu}}_{l+1}$", loc="left", size=14)
+
+        axb = fig.add_subplot(gs_sub[1])
+        for ll in range(n_clusters):
+            query_b = np.where(labels_b_ == label_list[ll])[0]
+            distance_b_ = distance_b[query_b]
+            hist_b = np.histogram(distance_b_, bins=X, density=True)[0]
+
+            plt.plot(X[:-1], hist_b, color=colors[ll], label=f"{ll+1}")
+            plt.fill_between(X[:-1], 0, hist_b, color=colors[ll], alpha=0.2)
+            plt.xlim(X.min(), X.max())
+            plt.rc('text', usetex=True)
+            plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+            plt.xlabel(f"$d=\Vert\mathbf{{r}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
+            plt.ylim(0.001, 1)
+            plt.yscale('log')
+            plt.yticks(ticks=[0.001, 0.01, 0.1])
+            plt.text(1, 0.9, 'After DEC', ha='right', va='top', transform=axb.transAxes)
+
+    fig.add_axes([0.9, 0.67, 0.1, 0.1]).axis('off')
+    handles, labels = axa.get_legend_handles_labels()
+    leg = plt.legend(handles, labels, fontsize=14, loc="right")
+    leg.set_title("Classes", prop = {'size':'x-large'})
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
 def view_cluster_results(exppath, show=True, save=True, savepath='.'):
     init_file = [f for f in os.listdir(exppath) if f.endswith('.ini')][0]
     init_file = f'{exppath}/{init_file}'
@@ -734,6 +867,136 @@ def view_detections(fname_dataset, image_index, figtitle,
     fig.suptitle(figtitle, size=18, weight='bold')
     # fig.tight_layout()
     fig.subplots_adjust(top=0.90)
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+def view_latent_space(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p,
+        show=True
+    ):
+
+    d = data_a.shape[1]
+    dist_mat_a = utils.distance_matrix(centroids_a, centroids_a, p)
+    dist_mat_b = utils.distance_matrix(centroids_b, centroids_b, p)
+    label_list, counts_a = np.unique(labels_a, return_counts=True)
+    _, counts_b = np.unique(labels_b, return_counts=True)
+    vmin = np.min([centroids_a.min(), centroids_b.min()])
+#     vmin = 0
+    vmax = np.max([centroids_a.max(), centroids_b.max()])
+    nrows = int(np.ceil(n_clusters/2))
+    heights = [1 for i in range(nrows)]
+
+    fig = plt.figure(figsize=(8, 2.5*nrows), dpi=150)
+    gs = gridspec.GridSpec(nrows=nrows, ncols=2, height_ratios=heights, hspace=0.3, wspace=0.05)
+    cmap = 'cmo.deep_r'
+    widths = [0.5, 4]
+
+    for l in range(n_clusters):
+        distance_d = utils.fractional_distance(centroids_a[l], data_a, p)
+        sort_index_d = np.argsort(distance_d)
+        distance_d = distance_d[sort_index_d]
+        labels_d = labels_a[sort_index_d]
+        query_i = np.where(labels_d == label_list[l])[0]
+        distance_i = distance_d[query_i]
+
+        labels_not = np.delete(label_list, l)
+        centroids_dist = np.delete(dist_mat_a[l,:], l)
+        centroids_ind = np.searchsorted(distance_d, centroids_dist)
+        centroids_sortind = np.argsort(centroids_dist)
+        centroids_ind = centroids_ind[centroids_sortind]
+        labels_not = labels_not[centroids_sortind]
+
+        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l], hspace=0.04, wspace=0, width_ratios=widths)
+
+        # Centroid A
+        ax = fig.add_subplot(gs_sub[0,0])
+        plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax)
+        plt.xticks([])
+        if l == 0:
+            plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
+            plt.ylabel('Before DEC', size=12, y=0.6)
+            plt.rc('text', usetex=True)
+            plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+            plt.title(f"$\pmb{{\mu}}_j$", size=14)
+        else:
+            plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
+
+        # Latent Space A
+        ax = fig.add_subplot(gs_sub[0,1])
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+        plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
+        for ll in range(n_clusters-1):
+            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+        plt.xticks([])
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
+        if l == 0:
+            plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
+        plt.title(f"$j={l+1}$", size=14)
+
+        distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
+        sort_index_d = np.argsort(distance_d)
+        distance_d = distance_d[sort_index_d]
+        labels_d = labels_b[sort_index_d]
+        query_i = np.where(labels_d == label_list[l])[0]
+        distance_i = distance_d[query_i]
+
+        labels_not = np.delete(label_list, l)
+        centroids_dist = np.delete(dist_mat_b[l,:], l)
+        centroids_ind = np.searchsorted(distance_d, centroids_dist)
+        centroids_sortind = np.argsort(centroids_dist)
+        centroids_ind = centroids_ind[centroids_sortind]
+        labels_not = labels_not[centroids_sortind]
+
+        # Centroid B
+        ax = fig.add_subplot(gs_sub[1,0])
+        plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax)
+        plt.xticks([])
+        if l == 0:
+            plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
+            plt.ylabel('After DEC', size=12, y=0.4)
+        else:
+            plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
+
+        # Latent Space B
+        ax = fig.add_subplot(gs_sub[1,1])
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+        plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
+        for ll in range(n_clusters-1):
+            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+        if l == 0:
+            label = ax.set_xlabel("$i$", size=14)
+            ax.xaxis.set_label_coords(-0.03, 0)
+        else:
+            xlabels = [item.get_text() for item in ax.get_xticklabels()]
+            empty_string_labels = ['']*len(xlabels)
+            ax.set_xticklabels(empty_string_labels)
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
+
+    # Colorbar
+    ax = fig.add_axes([0, 0.05, 1, 0.1])
+    plt.axis('off')
+    axins = inset_axes(ax, width="50%", height="15%", loc="center")
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
+    cbar.set_label('Latent Feature Value', size=14)
+
+    fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{r}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
+    fig.subplots_adjust(top=0.91)
+
     if show:
         plt.show()
     else:
