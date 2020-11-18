@@ -900,7 +900,7 @@ def view_latent_space(
     #     'mathtext.default': 'regular',
     #     'text.latex.preamble': [r"""\usepackage{bm}"""],
     # }
-    mpl.rcParams.update(rc_fonts)
+    # mpl.rcParams.update(rc_fonts)
     d = data_a.shape[1]
     dist_mat_a = utils.distance_matrix(centroids_a, centroids_a, p)
     dist_mat_b = utils.distance_matrix(centroids_b, centroids_b, p)
