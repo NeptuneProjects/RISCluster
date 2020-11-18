@@ -898,7 +898,7 @@ def view_latent_space(
         "text.usetex": True,
         'text.latex.preview': True, # Gives correct legend alignment.
         'mathtext.default': 'regular',
-        'text.latex.preamble': [r"""\usepackage{amsmath} \usepackage{bm}"""],
+        'text.latex.preamble': [r"""\usepackage{bm}"""],
     }
     mpl.rcParams.update(rc_fonts)
     d = data_a.shape[1]
