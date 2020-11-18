@@ -382,7 +382,7 @@ def train(
     z_array0 = infer_z(dataloader, model, device)
     p = target_distribution(q)
     epoch = 0
-    figures = analyze_clustering(
+    inertiae, figures = analyze_clustering(
         model,
         dataloader,
         device,
@@ -399,6 +399,11 @@ def train(
     )
     [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
         for i, fig in enumerate(figures)]
+    tb.add_scalars(
+        'Inertia',
+        {f"Class {i+1}": inertia for i, inertia in enumerate(inertiae)},
+        epoch
+    )
     [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
         for i, fig in enumerate(figures)]
 
@@ -503,7 +508,7 @@ def train(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            figures = analyze_clustering(
+            inertiae, figures = analyze_clustering(
                 model,
                 dataloader,
                 device,
@@ -520,6 +525,11 @@ def train(
             )
             [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
                 for i, fig in enumerate(figures)]
+            tb.add_scalars(
+                'Inertia',
+                {f"Class {i+1}": inertia for i, inertia in enumerate(inertiae)},
+                epoch
+            )
             [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
                 for i, fig in enumerate(figures)]
 
@@ -788,6 +798,7 @@ def analyze_clustering(
         Figures displaying centroids and their associated reconstructions.
     '''
     n_clusters = model.n_clusters
+    inertiae = measure_class_inertia(data_b, centroids_b, n_clusters)
     p = 2
     title = f't-SNE Results - Epoch {epoch}'
     fig1 = plotting.view_TSNE(tsne(data_b, dataloader), labels_b, title, show)
@@ -848,7 +859,7 @@ def analyze_clustering(
         n_clusters,
         p
     )
-    return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
+    return inertiae, [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
 
 def analyze_clustering2(
         model,
@@ -953,3 +964,10 @@ def kmeans_metrics(dataloader, model, device, k_list):
     gap_g = np.log(np.asarray(inertiag)) - np.log(np.asarray(inertia))
     gap_u = np.log(np.asarray(inertiau)) - np.log(np.asarray(inertia))
     return inertia, silh, gap_g, gap_u
+
+def measure_class_inertia(data, centroids, n_clusters):
+    inertia = np.empty(n_clusters)
+    for j in range(n_clusters):
+        mu = centroids[j]
+        inertia[j] = np.sum(np.sqrt(np.sum((data - mu) ** 2, axis=1)) ** 2)
+    return inertia
