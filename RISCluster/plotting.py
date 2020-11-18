@@ -936,75 +936,75 @@ def view_latent_space(
             plt.ylabel('Before DEC', size=12, y=0.6)
             plt.rc('text', usetex=True)
             plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
-            plt.title(f"$\pmb{{\mu}}_j$", size=14)
+            plt.title(f"$\\pmb{{\mu}}_j$", size=14)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
         # Latent Space A
-        ax = fig.add_subplot(gs_sub[0,1])
-        plt.rc('text', usetex=True)
-        plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
-        plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
-        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
-        for ll in range(n_clusters-1):
-            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
-        plt.xticks([])
-        plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
-        if l == 0:
-            plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
-        plt.title(f"$j={l+1}$", size=14)
-
-        distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
-        sort_index_d = np.argsort(distance_d)
-        distance_d = distance_d[sort_index_d]
-        labels_d = labels_b[sort_index_d]
-        query_i = np.where(labels_d == label_list[l])[0]
-        distance_i = distance_d[query_i]
-
-        labels_not = np.delete(label_list, l)
-        centroids_dist = np.delete(dist_mat_b[l,:], l)
-        centroids_ind = np.searchsorted(distance_d, centroids_dist)
-        centroids_sortind = np.argsort(centroids_dist)
-        centroids_ind = centroids_ind[centroids_sortind]
-        labels_not = labels_not[centroids_sortind]
-
-        # Centroid B
-        ax = fig.add_subplot(gs_sub[1,0])
-        plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax)
-        plt.xticks([])
-        if l == 0:
-            plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('After DEC', size=12, y=0.4)
-        else:
-            plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
-
-        # Latent Space B
-        ax = fig.add_subplot(gs_sub[1,1])
-        plt.rc('text', usetex=True)
-        plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
-        plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
-        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
-        for ll in range(n_clusters-1):
-            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
-        if l == 0:
-            label = ax.set_xlabel("$i$", size=14)
-            ax.xaxis.set_label_coords(-0.03, 0)
-        else:
-            xlabels = [item.get_text() for item in ax.get_xticklabels()]
-            empty_string_labels = ['']*len(xlabels)
-            ax.set_xticklabels(empty_string_labels)
-        plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
-
-    # Colorbar
-    ax = fig.add_axes([0, 0.05, 1, 0.1])
-    plt.axis('off')
-    axins = inset_axes(ax, width="50%", height="15%", loc="center")
-    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
-    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
-    cbar.set_label('Latent Feature Value', size=14)
-
-    fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{r}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
-    fig.subplots_adjust(top=0.91)
+    #     ax = fig.add_subplot(gs_sub[0,1])
+    #     plt.rc('text', usetex=True)
+    #     plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+    #     plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+    #     plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
+    #     for ll in range(n_clusters-1):
+    #         plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+    #     plt.xticks([])
+    #     plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
+    #     if l == 0:
+    #         plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
+    #     plt.title(f"$j={l+1}$", size=14)
+    #
+    #     distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
+    #     sort_index_d = np.argsort(distance_d)
+    #     distance_d = distance_d[sort_index_d]
+    #     labels_d = labels_b[sort_index_d]
+    #     query_i = np.where(labels_d == label_list[l])[0]
+    #     distance_i = distance_d[query_i]
+    #
+    #     labels_not = np.delete(label_list, l)
+    #     centroids_dist = np.delete(dist_mat_b[l,:], l)
+    #     centroids_ind = np.searchsorted(distance_d, centroids_dist)
+    #     centroids_sortind = np.argsort(centroids_dist)
+    #     centroids_ind = centroids_ind[centroids_sortind]
+    #     labels_not = labels_not[centroids_sortind]
+    #
+    #     # Centroid B
+    #     ax = fig.add_subplot(gs_sub[1,0])
+    #     plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax)
+    #     plt.xticks([])
+    #     if l == 0:
+    #         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
+    #         plt.ylabel('After DEC', size=12, y=0.4)
+    #     else:
+    #         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
+    #
+    #     # Latent Space B
+    #     ax = fig.add_subplot(gs_sub[1,1])
+    #     plt.rc('text', usetex=True)
+    #     plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
+    #     plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+    #     plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
+    #     for ll in range(n_clusters-1):
+    #         plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+    #     if l == 0:
+    #         label = ax.set_xlabel("$i$", size=14)
+    #         ax.xaxis.set_label_coords(-0.03, 0)
+    #     else:
+    #         xlabels = [item.get_text() for item in ax.get_xticklabels()]
+    #         empty_string_labels = ['']*len(xlabels)
+    #         ax.set_xticklabels(empty_string_labels)
+    #     plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
+    #
+    # # Colorbar
+    # ax = fig.add_axes([0, 0.05, 1, 0.1])
+    # plt.axis('off')
+    # axins = inset_axes(ax, width="50%", height="15%", loc="center")
+    # norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    # cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
+    # cbar.set_label('Latent Feature Value', size=14)
+    #
+    # fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{r}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
+    # fig.subplots_adjust(top=0.91)
 
     if show:
         plt.show()
