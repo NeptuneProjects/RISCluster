@@ -94,7 +94,8 @@ if __name__ == '__main__':
             mode=mode,
             saved_weights=config['PARAMETERS']['saved_weights'],
             transform=config['PARAMETERS']['transform'],
-            tbpid=tbpid
+            tbpid=tbpid,
+            workers=int(config['PARAMETERS']['workers'])
         )
         n_clusters = config['HYPERPARAMETERS']['n_clusters']
         batch_size = config['HYPERPARAMETERS']['batch_size']
