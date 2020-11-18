@@ -951,7 +951,7 @@ def view_latent_space(
         # Latent Space A
         ax = fig.add_subplot(gs_sub[0,1])
         plt.rc('text', usetex=True)
-        plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', 'r\usepackage{amsbsy}'])
+        plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
         plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
