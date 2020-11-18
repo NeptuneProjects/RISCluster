@@ -960,7 +960,7 @@ def view_latent_space(
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
-            plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
+            plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
         plt.title(f"$j={l+1}$", size=14)
     #
     #     distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
