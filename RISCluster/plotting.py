@@ -235,9 +235,9 @@ def cluster_gallery(
         dataloader = DataLoader(subset, batch_size=N)
 
         for batch in dataloader:
-            idx, X = batch
+            idx, batch = batch
             idx.numpy()
-            X.to(device)
+            X = batch.to(device)
             with h5py.File(fname_dataset, 'r') as f:
                 M = len(idx)
                 DataSpec = '/4s/Trace'
