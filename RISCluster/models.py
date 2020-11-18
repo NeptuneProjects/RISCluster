@@ -135,8 +135,8 @@ def pretrain(
         )
 
         for batch in pbar_tra:
-            _, x = batch
-            x.to(device)
+            _, batch = batch
+            x = batch.to(device)
             optimizer.zero_grad()
 
             with torch.set_grad_enabled(True):
@@ -191,8 +191,8 @@ def pretrain(
         )
 
         for batch in pbar_val:
-            _, x = batch
-            x.to(device)
+            _, batch = batch
+            x = batch.to(device)
             model.eval()
             with torch.no_grad():
                 # x = batch.to(device)
@@ -440,8 +440,8 @@ def train(
 
         # Iterate over data:
         for batch_num, batch in enumerate(pbar):
-            _, x = batch
-            x.to(device)
+            _, batch = batch
+            x = batch.to(device)
             # Uptade target distribution, check performance
             if (batch_num % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
@@ -576,8 +576,8 @@ def predict(model, dataloader, parameters):
     )
 
     for batch in pbar:
-        idx, x = batch
-        x.to(device)
+        idx, batch = batch
+        batch.to(device)
         q, _, _ = model(x)
         label = torch.argmax(q, dim=1)
 
@@ -742,7 +742,6 @@ def infer_z(dataloader, model, device, v=False):
     for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
         _, batch = batch
         x = batch.to(device)
-        print(type(x))
         if not hasattr(model, 'n_clusters'):
             _, z = model(x)
         else:
