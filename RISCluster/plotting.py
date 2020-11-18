@@ -905,11 +905,13 @@ def view_latent_space(
     nrows = int(np.ceil(n_clusters/2))
     heights = [1 for i in range(nrows)]
 
+    params = {
+        'text.usetex': True,
+        'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
+    }
+    plt.rcParams.update(params)
     fig = plt.figure(figsize=(8, 2.5*nrows), dpi=150)
-    # params = {
-    #     'text.usetex': True,
-    #     'text.latex.preamble': ['\\usepackage{amsmath}', '\\usepackage{bm}']
-    # }
+
     gs = gridspec.GridSpec(nrows=nrows, ncols=2, height_ratios=heights, hspace=0.3, wspace=0.05)
     cmap = 'cmo.deep_r'
     widths = [0.5, 4]
@@ -938,8 +940,8 @@ def view_latent_space(
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
             plt.ylabel('Before DEC', size=12, y=0.6)
-            plt.rc('text', usetex=True)
-            plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
+            # plt.rc('text', usetex=True)
+            # plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
             plt.title(r'$\boldsymbol{\mu}_j$')
 
             # plt.title("$\\boldsymbol{\\mu}_j$", size=14)
@@ -951,8 +953,8 @@ def view_latent_space(
 
         # Latent Space A
         ax1 = fig.add_subplot(gs_sub[0,1])
-        plt.rc('text', usetex=True)
-        plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
+        # plt.rc('text', usetex=True)
+        # plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
         plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
