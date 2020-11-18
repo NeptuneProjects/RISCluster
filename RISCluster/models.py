@@ -14,10 +14,10 @@ if sys.platform == 'darwin':
     from sklearn.cluster import KMeans
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
-    # from cuml import KMeans, TSNE
-    import cuml
-    from cuml import TSNE
-    from sklearn.cluster import KMeans
+    from cuml import KMeans, TSNE
+    # import cuml
+    # from cuml import TSNE
+    # from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 from sklearn_extra.cluster import KMedoids
@@ -330,10 +330,16 @@ def train(
         'tol': tol
         }
     )
-    path1 = utils.make_dir('T-SNE', savepath_run)
-    path2 = utils.make_dir('Results', savepath_run)
-    path3 = utils.make_dir('Distance', savepath_run)
-    path4 = utils.make_dir('DistMatrix', savepath_run)
+    fignames = [
+        'T-SNE',
+        'Gallery',
+        'Dashboard',
+        'DistMatrix',
+        'LatentSpace',
+        'CDF',
+        'PDF'
+    ]
+    figpaths = [utils.make_dir(fignames[i], savepath_run) for i in range(len(fignames))]
 
     model.load_state_dict(
         torch.load(loadpath, map_location=device), strict=False
@@ -372,26 +378,29 @@ def train(
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
     print('complete.')
     # Initialize Target Distribution:
-    q, _ = predict_labels(model, dataloader, device)
+    q, _ = infer_labels(dataloader, model, device)
+    z_array0 = infer_z(dataloader, model, device)
     p = target_distribution(q)
-
-    fig1, fig2, fig3, fig4 = analyze_clustering(
+    epoch = 0
+    figures = analyze_clustering(
         model,
         dataloader,
-        labels_prev,
         device,
-        0,
         fname_dataset,
-        index_tra
+        index_tra,
+        z_array0,
+        z_array0,
+        labels_prev,
+        labels_prev,
+        centroids,
+        centroids,
+        epoch,
+        show=False
     )
-    fig1.savefig(f"{path1}/TSNE_000.png", dpi=300)
-    fig2.savefig(f"{path2}/Results_000.png", dpi=300)
-    fig3.savefig(f"{path3}/Distance_000.png", dpi=300)
-    fig4.savefig(f"{path4}/DistMatrix_000.png", dpi=300)
-    tb.add_figure('TSNE', fig1, global_step=0, close=True)
-    tb.add_figure('Results', fig2, global_step=0, close=True)
-    tb.add_figure('Distances', fig3, global_step=0, close=True)
-    tb.add_figure('Distance Matrix', fig4, global_step=0, close=True)
+    [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
+        for i, fig in enumerate(figures)]
+    [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
+        for i, fig in enumerate(figures)]
 
     n_iter = 1
     finished = False
@@ -431,7 +440,7 @@ def train(
             # Uptade target distribution, check performance
             if (batch_num % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
-                q, labels = predict_labels(model, dataloader, device)
+                q, labels = infer_labels(dataloader, model, device)
                 p = target_distribution(q)
                 # check stop criterion
                 delta_label = np.sum(labels != labels_prev).astype(np.float32)\
@@ -494,23 +503,25 @@ def train(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            fig1, fig2, fig3, fig4 = analyze_clustering(
+            figures = analyze_clustering(
                 model,
                 dataloader,
-                labels,
                 device,
-                epoch,
                 fname_dataset,
-                index_tra
+                index_tra,
+                z_array0,
+                infer_z(dataloader, model, device),
+                labels_prev,
+                labels,
+                centroids,
+                model.clustering.weights.detach().cpu().numpy(),
+                epoch,
+                show=False
             )
-            fig1.savefig(f"{path2}/TSNE_{epoch:03d}.png", dpi=300)
-            fig2.savefig(f"{path3}/Results_{epoch:03d}.png", dpi=300)
-            fig3.savefig(f"{path4}/Distance_{epoch:03d}.png", dpi=300)
-            fig4.savefig(f"{path5}/DistMatrix_{epoch:03d}.png", dpi=300)
-            tb.add_figure('TSNE', fig1, global_step=epoch, close=True)
-            tb.add_figure('Results', fig2, global_step=epoch, close=True)
-            tb.add_figure('Distances', fig3, global_step=epoch, close=True)
-            tb.add_figure('Distance Matrix', fig4, global_step=epoch, close=True)
+            [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
+                for i, fig in enumerate(figures)]
+            [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
+                for i, fig in enumerate(figures)]
 
         if finished:
             break
@@ -592,14 +603,7 @@ def kmeans(model, dataloader, device):
         n_init=500,
         random_state=2009
     )
-    model.eval()
-    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
-    bsz = dataloader.batch_size
-    for b, batch in enumerate(dataloader):
-        _, x = batch
-        x.to(device)
-        _, _, z = model(x)
-        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    z_array = infer_z(dataloader, model, device)
     km.fit_predict(z_array)
     labels = km.labels_
     centroids = km.cluster_centers_
@@ -627,14 +631,7 @@ def kmeds(model, dataloader, device):
         max_iter=10000,
         random_state=2009
     )
-    model.eval()
-    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
-    bsz = dataloader.batch_size
-    for b, batch in enumerate(dataloader):
-        _, x = batch
-        x.to(device)
-        _, _, z = model(x)
-        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    z_array = infer_z(dataloader, model, device)
     kmed.fit_predict(z_array)
     labels = kmed.labels_
     centroids = kmed.cluster_centers_
@@ -667,28 +664,14 @@ def gmm(model, dataloader, device):
         weights_init=gmm_weights,
         means_init=centroids
     )
-    model.eval()
-    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
-    bsz = dataloader.batch_size
-    for b, batch in enumerate(dataloader):
-        _, x = batch
-        x.to(device)
-        _, _, z = model(x)
-        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    z_array = infer_z(dataloader, model, device)
     np.seterr(under='ignore')
     labels = GMM.fit_predict(z_array)
     centroids = GMM.means_
     return labels, centroids
 
 def pca(labels, model, dataloader, device, tb, counter):
-    model.eval()
-    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
-    bsz = dataloader.batch_size
-    for b, batch in enumerate(dataloader):
-        _, x = batch
-        x.to(device)
-        _, _, z = model(x)
-        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    z_array = infer_z(dataloader, model, device)
     row_max = z_array.max(axis=1)
     z_array /= row_max[:, np.newaxis]
 
@@ -697,7 +680,22 @@ def pca(labels, model, dataloader, device, tb, counter):
     fig = plotting.view_clusters(pca2d, labels)
     tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
 
-def predict_labels(model, dataloader, device):
+def tsne(data, dataloader):
+    print('Running t-SNE...', end="", flush=True)
+    np.seterr(under='warn')
+    results = TSNE(
+        n_components=2,
+        perplexity=int(len(dataloader.dataset)/100),
+        early_exaggeration=20,
+        learning_rate=int(len(dataloader.dataset)/12),
+        n_iter=2000,
+        verbose=0,
+        random_state=2009
+    ).fit_transform(data.astype('float64'))
+    print('complete.')
+    return results
+
+def infer_labels(dataloader, model, device):
     '''
     Function takes input data from dataloader, feeds through encoder layers,
     and returns predicted soft- and hard-assigned cluster labels.
@@ -723,6 +721,24 @@ def predict_labels(model, dataloader, device):
     labels = np.argmax(q_array.data, axis=1)
     return np.round(q_array, 5), labels
 
+def infer_z(dataloader, model, device, v=False):
+    if v:
+        notqdm = False
+    else:
+        notqdm = True
+    model.eval()
+    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    bsz = dataloader.batch_size
+    for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+        _, x = batch
+        x.to(device)
+        if not hasattr(model, 'n_clusters'):
+            _, z = model(x)
+        else:
+            _, _, z = model(x)
+        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    return z_array
+
 def target_distribution(q):
     '''
     From Xie/Girshick/Farhadi (2016). Computes the target distribution p, given
@@ -745,11 +761,17 @@ def target_distribution(q):
 def analyze_clustering(
         model,
         dataloader,
-        labels,
         device,
-        epoch,
         fname_dataset,
-        index_tra
+        index_tra,
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        epoch,
+        show=False
     ):
     '''
     Function displays reconstructions using the centroids of the latent feature
@@ -765,31 +787,86 @@ def analyze_clustering(
     # Output:
         Figures displaying centroids and their associated reconstructions.
     '''
+    n_clusters = model.n_clusters
+    p = 2
+    title = f't-SNE Results - Epoch {epoch}'
+    fig1 = plotting.view_TSNE(tsne(data_b, dataloader), labels_b, title, show)
+    fig2 = plotting.cluster_gallery(
+        model,
+        dataloader.dataset,
+        fname_dataset,
+        index_tra,
+        device,
+        data_b,
+        labels_b,
+        centroids_b,
+        p,
+        show
+    )
+    fig3 = plotting.centroid_dashboard(
+        data_b,
+        labels_b,
+        centroids_b,
+        n_clusters,
+        p,
+        show
+    )
+    fig4 = plotting.centroid_distances(
+        data_b,
+        labels_b,
+        centroids_b,
+        n_clusters,
+        p
+    )
+    fig5 = plotting.view_latent_space(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p
+    )
+    fig6 = plotting.view_class_cdf(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p
+    )
+    fig7 = plotting.view_class_pdf(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p
+    )
+    return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
+
+def analyze_clustering2(
+        model,
+        dataloader,
+        labels,
+        device,
+        epoch,
+        fname_dataset,
+        index_tra
+    ):
     centroids = model.clustering.weights.detach().cpu().numpy()
     # Show t-SNE & labels
-    model.eval()
-    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
-    bsz = dataloader.batch_size
-    for b, batch in enumerate(dataloader):
-        _, x = batch
-        x.to(device)
-        _, _, z = model(x)
-        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+    z_array = infer_z(dataloader, model, device)
 
-    print('Running t-SNE...', end="", flush=True)
-    np.seterr(under='warn')
-    results = TSNE(
-        n_components=2,
-        perplexity=int(len(dataloader.dataset)/100),
-        early_exaggeration=20,
-        learning_rate=int(len(dataloader.dataset)/12),
-        n_iter=2000,
-        verbose=0,
-        random_state=2009
-    ).fit_transform(z_array.astype('float64'))
-    print('complete.')
+    results = tsne(z_array)
+
     title = f't-SNE Results - Epoch {epoch}'
-    fig1 = plotting.view_TSNE(results, labels, title, show=False)
+    fig1 = plotting.view_TSNE(tsne(z_array), labels_b, title, show=False)
     p = 1
     fig2 = plotting.cluster_gallery(
         model,
@@ -811,14 +888,7 @@ def analyze_clustering(
     return fig1, fig2, fig3, fig4
 
 def kmeans_metrics(dataloader, model, device, k_list):
-    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
-    model.eval()
-    for b, batch in enumerate(dataloader):
-        _, x = batch
-        x.to(device)
-        stride = dataloader.batch_size
-        _, z = model(x)
-        z_array[b*stride:(b*stride) + x.size(0)] = z.detach().cpu().numpy()
+    z_array = infer_z(dataloader, model, device)
 
     feat_min = np.min(z_array, axis=0)
     feat_max = np.max(z_array, axis=0)
