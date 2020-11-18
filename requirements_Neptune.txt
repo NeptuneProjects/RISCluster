@@ -45,7 +45,7 @@ mkl-random==1.1.1
 mkl-service==2.3.0
 nbconvert==5.6.1
 nbformat==5.0.7
-notebook==6.0.3
+notebook==6.1.5
 numpy==1.18.5
 obspy @ file:///usr/local/miniconda/conda-bld/obspy_1593447863912/work
 packaging==20.4
