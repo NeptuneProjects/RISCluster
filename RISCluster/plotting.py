@@ -932,7 +932,7 @@ def view_latent_space(
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l], hspace=0.04, wspace=0, width_ratios=widths)
 
         # Centroid A
-        ax = fig.add_subplot(gs_sub[0,0])
+        ax0 = fig.add_subplot(gs_sub[0,0])
         plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax)
         plt.xticks([])
         if l == 0:
@@ -940,7 +940,8 @@ def view_latent_space(
             plt.ylabel('Before DEC', size=12, y=0.6)
             plt.rc('text', usetex=True)
             plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
-            plt.title(fr"$\pmb{{\mu}}_j$")
+            plt.title(r'$\pmb{\mu}_j$')
+
             # plt.title("$\\boldsymbol{\\mu}_j$", size=14)
             # plt.title(r"$\boldsymbol{\mu}_j$", size=14)
             # plt.title(fr"$\mu_j$", size=14) <---- works
@@ -949,7 +950,7 @@ def view_latent_space(
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
         # Latent Space A
-        ax = fig.add_subplot(gs_sub[0,1])
+        ax1 = fig.add_subplot(gs_sub[0,1])
         plt.rc('text', usetex=True)
         plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
         plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
@@ -977,7 +978,7 @@ def view_latent_space(
     #     labels_not = labels_not[centroids_sortind]
     #
     #     # Centroid B
-    #     ax = fig.add_subplot(gs_sub[1,0])
+    #     ax2 = fig.add_subplot(gs_sub[1,0])
     #     plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax)
     #     plt.xticks([])
     #     if l == 0:
@@ -987,7 +988,7 @@ def view_latent_space(
     #         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
     #
     #     # Latent Space B
-    #     ax = fig.add_subplot(gs_sub[1,1])
+    #     ax3 = fig.add_subplot(gs_sub[1,1])
     #     plt.rc('text', usetex=True)
     #     plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
     #     plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
@@ -1004,7 +1005,7 @@ def view_latent_space(
     #     plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
     #
     # # Colorbar
-    # ax = fig.add_axes([0, 0.05, 1, 0.1])
+    # ax4 = fig.add_axes([0, 0.05, 1, 0.1])
     # plt.axis('off')
     # axins = inset_axes(ax, width="50%", height="15%", loc="center")
     # norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
