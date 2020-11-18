@@ -910,7 +910,7 @@ def view_latent_space(
         'text.usetex': True,
         'text.latex.preamble': '\n'.join([
             '\\usepackage{amsmath}',
-            '\\usepackage{amsbsy}'}'
+            '\\usepackage{amsbsy}'
         ])
     }
     gs = gridspec.GridSpec(nrows=nrows, ncols=2, height_ratios=heights, hspace=0.3, wspace=0.05)
