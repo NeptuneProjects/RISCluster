@@ -99,11 +99,7 @@ def distance_matrix(x, y, f):
     assert len(x) == len(y)
     M = len(x)
     dist = np.zeros((M, M))
-    for i in tqdm(
-        range(M),
-        desc="Calculating distance matrix",
-        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-    ):
+    for i in range(M):
         for j in range(M):
             dist[i, j] = fractional_distance(
                 x[np.newaxis,i],
