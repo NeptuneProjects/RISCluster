@@ -894,13 +894,6 @@ def view_latent_space(
         p,
         show=True
     ):
-    # rc_fonts = {
-    #     "text.usetex": True,
-    #     'text.latex.preview': True, # Gives correct legend alignment.
-    #     'mathtext.default': 'regular',
-    #     'text.latex.preamble': [r"""\usepackage{bm}"""],
-    # }
-    # mpl.rcParams.update(rc_fonts)
     d = data_a.shape[1]
     dist_mat_a = utils.distance_matrix(centroids_a, centroids_a, p)
     dist_mat_b = utils.distance_matrix(centroids_b, centroids_b, p)
@@ -943,7 +936,7 @@ def view_latent_space(
             plt.ylabel('Before DEC', size=12, y=0.6)
             plt.rc('text', usetex=True)
             plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
-            plt.title(fr"$\pmb{{\mu}}_j$", size=14)
+            plt.title(f"$\pmb{{\mu}}_j$", size=14)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
@@ -954,11 +947,11 @@ def view_latent_space(
         plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
-            plt.text(centroids_ind[ll], 1.2*(ll+1), fr"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
-            plt.text(0.03, 1.1, fr"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
+            plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
         plt.title(f"$j={l+1}$", size=14)
 
         distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
@@ -992,7 +985,7 @@ def view_latent_space(
         plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
-            plt.text(centroids_ind[ll], 1.2*(ll+1), fr"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         if l == 0:
             label = ax.set_xlabel("$i$", size=14)
             ax.xaxis.set_label_coords(-0.03, 0)
@@ -1010,7 +1003,7 @@ def view_latent_space(
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
     cbar.set_label('Latent Feature Value', size=14)
 
-    fig.suptitle(fr"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{r}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
+    fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{r}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
     fig.subplots_adjust(top=0.91)
 
     if show:
