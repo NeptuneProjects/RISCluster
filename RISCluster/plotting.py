@@ -906,7 +906,13 @@ def view_latent_space(
     heights = [1 for i in range(nrows)]
 
     fig = plt.figure(figsize=(8, 2.5*nrows), dpi=150)
-    params = {'text.usetex': True, 'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}', r'\usepackage{unicode-math}']}
+    params = {
+        'text.usetex': True,
+        'text.latex.preamble': '\n'.join([
+            '\\usepackage{amsmath}',
+            '\\usepackage{amsbsy}'}'
+        ])
+    }
     gs = gridspec.GridSpec(nrows=nrows, ncols=2, height_ratios=heights, hspace=0.3, wspace=0.05)
     cmap = 'cmo.deep_r'
     widths = [0.5, 4]
