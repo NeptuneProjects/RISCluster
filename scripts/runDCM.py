@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, '../RISCluster/')
 
 import matplotlib
-matplotlib.use('pgf')
+matplotlib.use('Agg')
 
 import production
 import utils
