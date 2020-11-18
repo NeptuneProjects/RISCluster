@@ -273,7 +273,7 @@ def pretrain(
             klist
         )
         fig = plotting.view_cluster_stats(klist, inertia, silh, gap_g, gap_u)
-        plt.savefig(f'{savepath_run}/KMeans_Metrics.eps', dpi=300)
+        plt.savefig(f'{savepath_run}/KMeans_Metrics.png', dpi=300)
         print("K-means statistics complete; figure saved.")
         tb.add_figure('K-Means Metrics', fig, global_step=None, close=True)
 
@@ -397,7 +397,7 @@ def train(
         epoch,
         show
     )
-    [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.eps", dpi=300) \
+    [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
         for i, fig in enumerate(figures)]
     tb.add_scalars(
         'Inertia',
@@ -523,7 +523,7 @@ def train(
                 epoch,
                 show
             )
-            [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.eps", dpi=300) \
+            [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
                 for i, fig in enumerate(figures)]
             tb.add_scalars(
                 'Inertia',

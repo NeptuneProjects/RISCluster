@@ -932,35 +932,35 @@ def view_latent_space(
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l], hspace=0.04, wspace=0, width_ratios=widths)
 
         # Centroid A
-        ax = fig.add_subplot(gs_sub[0,0])
-        plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax)
-        plt.xticks([])
-        if l == 0:
-            plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('Before DEC', size=12, y=0.6)
-            plt.rc('text', usetex=True)
-            plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{bm}'])
-            plt.title(r"$\bm{\mu}_j$")
-            # plt.title("$\\boldsymbol{\\mu}_j$", size=14)
-            # plt.title(r"$\boldsymbol{\mu}_j$", size=14)
-            # plt.title(fr"$\mu_j$", size=14) <---- works
-            # plt.title(fr"$\pmb{{\mu}}_j$", size=14)
-        else:
-            plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
+        # ax = fig.add_subplot(gs_sub[0,0])
+        # plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax)
+        # plt.xticks([])
+        # if l == 0:
+        #     plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
+        #     plt.ylabel('Before DEC', size=12, y=0.6)
+        #     plt.rc('text', usetex=True)
+        #     plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{bm}'])
+        #     plt.title(r"$\bm{\mu}_j$")
+        #     # plt.title("$\\boldsymbol{\\mu}_j$", size=14)
+        #     # plt.title(r"$\boldsymbol{\mu}_j$", size=14)
+        #     # plt.title(fr"$\mu_j$", size=14) <---- works
+        #     # plt.title(fr"$\pmb{{\mu}}_j$", size=14)
+        # else:
+        #     plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
         # Latent Space A
-    #     ax = fig.add_subplot(gs_sub[0,1])
-    #     plt.rc('text', usetex=True)
-    #     plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
-    #     plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
-    #     plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
-    #     for ll in range(n_clusters-1):
-    #         plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
-    #     plt.xticks([])
-    #     plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
-    #     if l == 0:
-    #         plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
-    #     plt.title(f"$j={l+1}$", size=14)
+        ax = fig.add_subplot(gs_sub[0,1])
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', 'r\usepackage{amsbsy}'])
+        plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
+        for ll in range(n_clusters-1):
+            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+        plt.xticks([])
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
+        if l == 0:
+            plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax.transAxes)
+        plt.title(f"$j={l+1}$", size=14)
     #
     #     distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
     #     sort_index_d = np.argsort(distance_d)
