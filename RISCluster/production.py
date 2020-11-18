@@ -199,7 +199,7 @@ def DCM_train(parameters, hyperparameters):
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
         dataloader = DataLoader(
-            tra_dataset,
+            dataset,
             batch_size=batch_size,
             num_workers=workers
         )
