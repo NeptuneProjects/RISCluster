@@ -1112,6 +1112,7 @@ def view_specgram_training(
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
     fig = plt.figure(figsize=figsize, dpi=100)
+    cmap = 'cmo.ice_r'
     heights = [4, 0.4, 4]
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
     gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights, wspace=0.3)
@@ -1128,7 +1129,7 @@ def view_specgram_training(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
         ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
@@ -1140,7 +1141,7 @@ def view_specgram_training(
         plt.yticks([])
 
         ax = fig.add_subplot(gs[2,counter])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
@@ -1182,6 +1183,7 @@ def view_specgram_training2(
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
     fig = plt.figure(figsize=(figsize[0],len(disp_idx)*figsize[1]), dpi=100)
+    cmap = 'cmo.ice_r'
     heights = [4 for i in range(x.size()[0])]
     widths = [3, 0.5, 3]
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
@@ -1199,7 +1201,7 @@ def view_specgram_training2(
                                         '%Y-%m-%dT%H:%M:%S').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         ax1 = fig.add_subplot(gs[counter,0])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
         plt.colorbar(orientation='vertical', pad=0)
         plt.clim(0,1)
         plt.xlabel('Time (s)')
@@ -1238,7 +1240,7 @@ def view_specgram_training2(
         ax2.add_artist(con)
 
         ax3 = fig.add_subplot(gs[counter,2])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap='cmo.ice_r', extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
         plt.colorbar(orientation='vertical', pad=0)
         plt.clim(0,1)
         plt.title("Output\n" + r"$\bm{x}'$", x=0.55)
