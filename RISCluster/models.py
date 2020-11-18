@@ -395,7 +395,7 @@ def train(
         centroids,
         centroids,
         epoch,
-        show=False
+        show
     )
     [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
         for i, fig in enumerate(figures)]
@@ -521,7 +521,7 @@ def train(
                 centroids,
                 model.clustering.weights.detach().cpu().numpy(),
                 epoch,
-                show=False
+                show
             )
             [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
                 for i, fig in enumerate(figures)]
@@ -827,7 +827,8 @@ def analyze_clustering(
         labels_b,
         centroids_b,
         n_clusters,
-        p
+        p,
+        show
     )
     fig5 = plotting.view_latent_space(
         data_a,
@@ -837,7 +838,8 @@ def analyze_clustering(
         centroids_a,
         centroids_b,
         n_clusters,
-        p
+        p,
+        show
     )
     fig6 = plotting.view_class_cdf(
         data_a,
@@ -847,7 +849,8 @@ def analyze_clustering(
         centroids_a,
         centroids_b,
         n_clusters,
-        p
+        p,
+        show
     )
     fig7 = plotting.view_class_pdf(
         data_a,
@@ -857,46 +860,10 @@ def analyze_clustering(
         centroids_a,
         centroids_b,
         n_clusters,
-        p
+        p,
+        show
     )
     return inertiae, [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
-
-def analyze_clustering2(
-        model,
-        dataloader,
-        labels,
-        device,
-        epoch,
-        fname_dataset,
-        index_tra
-    ):
-    centroids = model.clustering.weights.detach().cpu().numpy()
-    # Show t-SNE & labels
-    z_array = infer_z(dataloader, model, device)
-
-    results = tsne(z_array)
-
-    title = f't-SNE Results - Epoch {epoch}'
-    fig1 = plotting.view_TSNE(tsne(z_array), labels_b, title, show=False)
-    p = 1
-    fig2 = plotting.cluster_gallery(
-        model,
-        labels,
-        z_array,
-        fname_dataset,
-        index_tra,
-        device,
-        centroids,
-        p=p
-    )
-    fig3, fig4 = plotting.centroid_diagnostics(
-        model.n_clusters,
-        centroids,
-        labels,
-        z_array,
-        p=p
-    )
-    return fig1, fig2, fig3, fig4
 
 def kmeans_metrics(dataloader, model, device, k_list):
     z_array = infer_z(dataloader, model, device)
