@@ -56,7 +56,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
     heights = [0.1 if i==0 else 1 for i in range(1+len(label_list))]
     widths = [3, 2]
     # widths = [0.5 if i==0 else 1 for i in range(1+len(label_list))]
-    fig = plt.figure(figsize=(12, 4 * n_clusters), Class=150)
+    fig = plt.figure(figsize=(12, 4 * n_clusters), dpi=150)
     gs = gridspec.GridSpec(nrows=1+n_clusters, ncols=2, hspace=0.35, wspace=0.27, height_ratios=heights, width_ratios=widths)
 
     # Colorbar
@@ -171,7 +171,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
 
 def centroid_distances(z_array, labels, centroids, n_clusters, p=2, show=True):
     dist_mat = utils.distance_matrix(centroids, centroids, p)
-    fig = plt.figure(Class=150)
+    fig = plt.figure(dpi=150)
     plt.imshow(dist_mat, cmap='cmo.solar_r', origin='lower')
     plt.xticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
