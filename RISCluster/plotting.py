@@ -940,7 +940,7 @@ def view_latent_space(
             plt.ylabel('Before DEC', size=12, y=0.6)
             plt.rc('text', usetex=True)
             plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{bm}'])
-            plt.title(r"\$\$\bm{\mu}_j\$\$")
+            plt.title(r"$\bm{\mu}_j$")
             # plt.title("$\\boldsymbol{\\mu}_j$", size=14)
             # plt.title(r"$\boldsymbol{\mu}_j$", size=14)
             # plt.title(fr"$\mu_j$", size=14) <---- works
