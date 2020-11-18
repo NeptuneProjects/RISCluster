@@ -741,7 +741,6 @@ def infer_z(dataloader, model, device, v=False):
     bsz = dataloader.batch_size
     for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
         _, batch = batch
-        print(type(x))
         x = batch.to(device)
         print(type(x))
         if not hasattr(model, 'n_clusters'):
