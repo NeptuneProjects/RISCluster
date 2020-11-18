@@ -208,7 +208,7 @@ def cluster_gallery(
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
     N = 4
-    fig = plt.figure(figsize=(len(label_list),8), Class=150)
+    fig = plt.figure(figsize=(len(label_list),8), dpi=150)
     heights = [1 for i in range(N+1)] + [0.2]
     gs_sup = gridspec.GridSpec(nrows=N+2, ncols=len(label_list), hspace=0.1, wspace=0.1, height_ratios=heights)
     heights = [1, 4, 0.5]
