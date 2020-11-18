@@ -56,7 +56,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
     heights = [0.1 if i==0 else 1 for i in range(1+len(label_list))]
     widths = [3, 2]
     # widths = [0.5 if i==0 else 1 for i in range(1+len(label_list))]
-    fig = plt.figure(figsize=(12, 4 * n_clusters), dpi=150)
+    fig = plt.figure(figsize=(12, 4 * n_clusters), Class=150)
     gs = gridspec.GridSpec(nrows=1+n_clusters, ncols=2, hspace=0.35, wspace=0.27, height_ratios=heights, width_ratios=widths)
 
     # Colorbar
@@ -171,7 +171,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
 
 def centroid_distances(z_array, labels, centroids, n_clusters, p=2, show=True):
     dist_mat = utils.distance_matrix(centroids, centroids, p)
-    fig = plt.figure(dpi=150)
+    fig = plt.figure(Class=150)
     plt.imshow(dist_mat, cmap='cmo.solar_r', origin='lower')
     plt.xticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
@@ -208,7 +208,7 @@ def cluster_gallery(
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
     N = 4
-    fig = plt.figure(figsize=(len(label_list),8), dpi=150)
+    fig = plt.figure(figsize=(len(label_list),8), Class=150)
     heights = [1 for i in range(N+1)] + [0.2]
     gs_sup = gridspec.GridSpec(nrows=N+2, ncols=len(label_list), hspace=0.1, wspace=0.1, height_ratios=heights)
     heights = [1, 4, 0.5]
@@ -396,7 +396,7 @@ def save_DCM_output(x, label, x_rec, z, idx, savepath):
     # print(f'x={type(x)} | label={type(label)} | x_r={type(x_rec)} | z={type(z)} | idx={type(idx)} | path={type(savepath)}')
     fig = view_DCM_output(x, label, x_rec, z, idx, show=False)
     # print(f'{savepath}{idx:07d}.png')
-    fig.savefig(f'{savepath}/{idx:07d}.png')
+    fig.savefig(f'{savepath}/{idx:07d}.png', dpi=300)
     return None
 
 def view_centroid_output(centroids, X_r, figtitle, show=True):
@@ -441,7 +441,7 @@ def view_class_cdf(
     label_list, counts_a = np.unique(labels_a, return_counts=True)
     _, counts_b = np.unique(labels_b, return_counts=True)
 
-    fig = plt.figure(figsize=(6, 2*int(np.ceil(n_clusters/2))), dpi=100)
+    fig = plt.figure(figsize=(6, 2*int(np.ceil(n_clusters/2))), dpi=150)
     gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.9, wspace=0.4)
     colors = cmap_lifeaquatic(n_clusters)
 
@@ -496,7 +496,7 @@ def view_class_pdf(
     nbins = 100
     X = np.linspace(0, 301, nbins)
 
-    fig = plt.figure(figsize=(12, 2*int(np.ceil(n_clusters/2))), dpi=100)
+    fig = plt.figure(figsize=(12, 2*int(np.ceil(n_clusters/2))), dpi=150)
     gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=1, wspace=0.25)
     colors = cmap_lifeaquatic(n_clusters)
     for l in range(n_clusters):
@@ -709,7 +709,7 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
             sp.set_visible(False)
 
     # fig = plt.figure(figsize=(12,9), dpi=300)
-    fig, host = plt.subplots(figsize=(6,4), dpi=300)
+    fig, host = plt.subplots(figsize=(6,4), dpi=150)
 
     par1 = host.twinx()
     par2 = host.twinx()
@@ -756,7 +756,7 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     return fig
 
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
-    fig = plt.figure(figsize=figsize, dpi=300)
+    fig = plt.figure(figsize=figsize, dpi=150)
     gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
     # Original Spectrogram
     ax = fig.add_subplot(gs[0])
@@ -838,7 +838,7 @@ def view_detections(fname_dataset, image_index, figtitle,
     if not len(sample_index) == nrows * ncols:
         raise ValueError('Subplot/sample number mismatch: check dimensions.')
     metadata = get_metadata(sample_index, image_index, fname_dataset)
-    fig = plt.figure(figsize=figsize, dpi=300)
+    fig = plt.figure(figsize=figsize, dpi=150)
     gs_sup = gridspec.GridSpec(nrows=nrows, ncols=ncols, hspace=0.4, wspace=0.25)
     counter = 0
     for i in range(len(sample_index)):
@@ -1016,7 +1016,7 @@ def view_latent_space(
 
 def view_learningcurve(training_history, validation_history, show=True):
     epochs = len(training_history['mse'])
-    fig = plt.figure(figsize=(18,6), dpi=300)
+    fig = plt.figure(figsize=(18,6), dpi=150)
     gs = gridspec.GridSpec(nrows=1, ncols=2)
     ax = fig.add_subplot(gs[0])
     plt.plot(range(epochs), training_history['mse'], label='Training')
@@ -1041,7 +1041,7 @@ def view_learningcurve(training_history, validation_history, show=True):
     return fig
 
 def view_PCA(pca2d, labels):
-    fig = plt.figure(figsize=(6,6), dpi=100)
+    fig = plt.figure(figsize=(6,6), dpi=150)
     sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
     plt.legend()
     plt.xlabel('Principal Component 1')
@@ -1055,7 +1055,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
     if not len(insp_idx) == nrows * ncols:
         raise ValueError('Subplot/sample number mismatch: check dimensions.')
     metadata = get_metadata(insp_idx, sample_index, fname_dataset)
-    fig = plt.figure(figsize=figsize, dpi=300)
+    fig = plt.figure(figsize=figsize, dpi=150)
     gs = gridspec.GridSpec(nrows=nrows, ncols=ncols)
     counter = 0
     for i in range(len(insp_idx)):
@@ -1111,7 +1111,7 @@ def view_specgram_training(
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
-    fig = plt.figure(figsize=figsize, dpi=100)
+    fig = plt.figure(figsize=figsize, dpi=150)
     cmap = 'cmo.ice_r'
     heights = [4, 0.4, 4]
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
@@ -1182,7 +1182,7 @@ def view_specgram_training2(
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
-    fig = plt.figure(figsize=(figsize[0],len(disp_idx)*figsize[1]), dpi=100)
+    fig = plt.figure(figsize=(figsize[0],len(disp_idx)*figsize[1]), dpi=150)
     cmap = 'cmo.ice_r'
     heights = [4 for i in range(x.size()[0])]
     widths = [3, 0.5, 3]
