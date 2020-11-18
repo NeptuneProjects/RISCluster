@@ -724,8 +724,8 @@ def infer_labels(dataloader, model, device):
     )
     bsz = dataloader.batch_size
     for b, batch in enumerate(dataloader):
-        _, x = batch
-        x.to(device)
+        _, batch = batch
+        x = batch.to(device)
         q, _, _ = model(x)
         q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
     labels = np.argmax(q_array.data, axis=1)
@@ -740,9 +740,9 @@ def infer_z(dataloader, model, device, v=False):
     z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
-        _, x = batch
+        _, batch = batch
         print(type(x))
-        x.to(device)
+        x = batch.to(device)
         print(type(x))
         if not hasattr(model, 'n_clusters'):
             _, z = model(x)
