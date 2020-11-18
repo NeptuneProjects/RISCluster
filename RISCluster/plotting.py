@@ -940,21 +940,12 @@ def view_latent_space(
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
             plt.ylabel('Before DEC', size=12, y=0.6)
-            # plt.rc('text', usetex=True)
-            # plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
             plt.title(r'$\boldsymbol{\mu}_j$')
-
-            # plt.title("$\\boldsymbol{\\mu}_j$", size=14)
-            # plt.title(r"$\boldsymbol{\mu}_j$", size=14)
-            # plt.title(fr"$\mu_j$", size=14) <---- works
-            # plt.title(fr"$\pmb{{\mu}}_j$", size=14)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
         # Latent Space A
         ax1 = fig.add_subplot(gs_sub[0,1])
-        # plt.rc('text', usetex=True)
-        # plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
         plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
@@ -991,8 +982,6 @@ def view_latent_space(
 
         # Latent Space B
         ax3 = fig.add_subplot(gs_sub[1,1])
-        # plt.rc('text', usetex=True)
-        # plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{amsbsy}')
         plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
@@ -1007,7 +996,7 @@ def view_latent_space(
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
 
     # Colorbar
-    ax4 = fig.add_axes([0, 0.05, 1, 0.1])
+    ax4 = fig.add_axes([0, 0.045, 1, 0.1])
     plt.axis('off')
     axins = inset_axes(ax4, width="50%", height="15%", loc="center")
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
