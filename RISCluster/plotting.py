@@ -933,13 +933,14 @@ def view_latent_space(
 
         # Centroid A
         ax = fig.add_subplot(gs_sub[0,0])
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
         plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax)
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
             plt.ylabel('Before DEC', size=12, y=0.6)
-            plt.rc('text', usetex=True)
-            plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
+            
             plt.title(f"$\pmb{{\mu}}_j$")
             # plt.title("$\\boldsymbol{\\mu}_j$", size=14)
             # plt.title(r"$\boldsymbol{\mu}_j$", size=14)
