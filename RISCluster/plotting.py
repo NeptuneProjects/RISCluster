@@ -998,18 +998,18 @@ def view_latent_space(
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         if l == 0:
-            label = ax.set_xlabel("$i$", size=14)
-            ax.xaxis.set_label_coords(-0.03, 0)
+            label = ax3.set_xlabel("$i$", size=14)
+            ax3.xaxis.set_label_coords(-0.03, 0)
         else:
-            xlabels = [item.get_text() for item in ax.get_xticklabels()]
+            xlabels = [item.get_text() for item in ax3.get_xticklabels()]
             empty_string_labels = ['']*len(xlabels)
-            ax.set_xticklabels(empty_string_labels)
+            ax3.set_xticklabels(empty_string_labels)
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
 
     # Colorbar
     ax4 = fig.add_axes([0, 0.05, 1, 0.1])
     plt.axis('off')
-    axins = inset_axes(ax, width="50%", height="15%", loc="center")
+    axins = inset_axes(ax4, width="50%", height="15%", loc="center")
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
     cbar.set_label('Latent Feature Value', size=14)
