@@ -176,6 +176,9 @@ def DCM_train(parameters, hyperparameters):
             [utils.SpecgramShaper(), utils.SpecgramToTensor()]
         )
     )
+    tra_dataset = Subset(dataset, index_tra)
+    print(f'Dataset has {len(dataset)} samples.')
+    print(f'Training subset has {len(tra_dataset)} samples.')
     # ==== Commence Training ==================================================
     hyperparam_values = [v for v in hyperparameters.values()]
     tuning_runs = utils.calc_tuning_runs(hyperparameters)
@@ -199,7 +202,7 @@ def DCM_train(parameters, hyperparameters):
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
         dataloader = DataLoader(
-            dataset,
+            tra_dataset,
             batch_size=batch_size,
             num_workers=workers
         )
