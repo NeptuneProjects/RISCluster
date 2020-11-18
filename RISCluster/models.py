@@ -741,11 +741,12 @@ def infer_z(dataloader, model, device, v=False):
     bsz = dataloader.batch_size
     for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
         _, x = batch
+        print(type(x))
         x.to(device)
+        print(type(x))
         if not hasattr(model, 'n_clusters'):
             _, z = model(x)
         else:
-            print(device)
             _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
     return z_array
