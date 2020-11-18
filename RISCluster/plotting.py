@@ -906,6 +906,7 @@ def view_latent_space(
     heights = [1 for i in range(nrows)]
 
     fig = plt.figure(figsize=(8, 2.5*nrows), dpi=150)
+    params = {'text.latex.preamble' : [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']}
     gs = gridspec.GridSpec(nrows=nrows, ncols=2, height_ratios=heights, hspace=0.3, wspace=0.05)
     cmap = 'cmo.deep_r'
     widths = [0.5, 4]
@@ -935,7 +936,7 @@ def view_latent_space(
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
             plt.ylabel('Before DEC', size=12, y=0.6)
             plt.rc('text', usetex=True)
-            plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
+            plt.rcParams.update(params)
             plt.title(fr"$\pmb{{\mu}}_j$", size=14)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
