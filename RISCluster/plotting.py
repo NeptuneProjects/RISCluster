@@ -106,7 +106,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
         ax.yaxis.set_label_position('right')
-        plt.title(f"Cluster {l+1}: Dataset")
+        plt.title(f"Class {l+1}: Dataset")
         # Dataset Distances
         ax = fig.add_subplot(gs_sub[1,1])
         ax.fill_between(query_i, cdf, color="slategray", alpha=0.6, linewidth=0, label=None)
@@ -148,7 +148,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
         ax.yaxis.set_label_position('right')
-        plt.title(f"Cluster {l+1}: Within Cluster")
+        plt.title(f"Class {l+1}: Within-class")
         # Cluster Distances
         ax = fig.add_subplot(gs_sub[1,1])
         plt.plot(distance, c='k')
@@ -261,7 +261,7 @@ def cluster_gallery(
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
-        ax.set_xlabel(f"Cluster {label+1}", size=10)
+        ax.set_xlabel(f"Class {label+1}", size=10)
         if l == 0:
             plt.ylabel("Centroids", size=10)
 
@@ -412,7 +412,7 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
         ax = fig.add_subplot(gs[i,0])
         plt.imshow(torch.reshape(X_r[i,:,:,:], (n,o)).cpu().detach().numpy(), aspect='auto')
         plt.gca().invert_yaxis()
-        plt.title(f'Cluster {i}')
+        plt.title(f'Class {i}')
 
         ax = fig.add_subplot(gs[i,1])
         plt.imshow(np.expand_dims(centroids[i].cpu().detach().numpy(), 1), cmap='viridis', aspect='auto')
@@ -786,7 +786,7 @@ def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     plt.gca().invert_yaxis()
     plt.colorbar()
     plt.title('Reconstructed Spectrogram')
-    fig.suptitle(f'Cluster: {label}', size=18, weight='bold')
+    fig.suptitle(f'Class: {label}', size=18, weight='bold')
     fig.tight_layout()
     fig.subplots_adjust(top=0.9)
     if show is False:
@@ -1286,9 +1286,9 @@ def view_TSNE(results, labels, title, show=False):
     arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8, color='k')
     plt.grid(axis='y', linestyle='--')
     plt.ylim([0, 1.25 * max(counts)])
-    plt.xlabel('Cluster Label')
+    plt.xlabel('Class')
     plt.ylabel('Detections')
-    plt.title(f'Cluster Assignments of Detections, N = {len(labels)}')
+    plt.title(f'Class Assignments, N = {len(labels)}')
 
     N = counts.sum()
     def CtP(x):
