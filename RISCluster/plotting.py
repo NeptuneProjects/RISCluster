@@ -936,7 +936,7 @@ def view_latent_space(
             plt.ylabel('Before DEC', size=12, y=0.6)
             plt.rc('text', usetex=True)
             plt.rc('text.latex', preamble=[r'\usepackage{amsmath}', r'\usepackage{amsbsy}'])
-            plt.title(f"$\pmb{{\mu}}_j$", size=14)
+            plt.title(fr"$\pmb{{\mu}}_j$", size=14)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
