@@ -490,6 +490,9 @@ def view_class_pdf(
         p=2,
         show=True
     ):
+    def _roundup(x):
+        return int(np.ceil(x / 100.0)) * 100
+
     label_list, counts_a = np.unique(labels_a, return_counts=True)
     _, counts_b = np.unique(labels_b, return_counts=True)
     dx = 1
@@ -499,6 +502,7 @@ def view_class_pdf(
     fig = plt.figure(figsize=(12, 2*int(np.ceil(n_clusters/2))), dpi=150)
     gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=1, wspace=0.25)
     colors = cmap_lifeaquatic(n_clusters)
+    max_dist = 0
     for l in range(n_clusters):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[l], hspace=0, wspace=0)
 
@@ -510,7 +514,12 @@ def view_class_pdf(
         sort_index_b = np.argsort(distance_b)
         distance_b = distance_b[sort_index_b]
         labels_b_ = labels_b[sort_index_b]
-        # max_dist = np.max([distance_a.max(), distance_b.max()])
+
+        max_dist_ = np.max([distance_a.max(), distance_b.max()])
+        print(l, max_dist_)
+        max_dist_ = _roundup(max_dist_)
+        if max_dist_ > max_dist:
+            max_dist = max_dist_ - 50
 
         axa = fig.add_subplot(gs_sub[0])
         for ll in range(n_clusters):
@@ -547,6 +556,10 @@ def view_class_pdf(
             plt.yscale('log')
             plt.yticks(ticks=[0.001, 0.01, 0.1])
             plt.text(1, 0.9, 'After DEC', ha='right', va='top', transform=axb.transAxes)
+
+    allaxes = fig.get_axes()
+    for ax in allaxes:
+        ax.set_xlim(0, max_dist)
 
     fig.add_axes([0.9, 0.67, 0.1, 0.1]).axis('off')
     handles, labels = axa.get_legend_handles_labels()
