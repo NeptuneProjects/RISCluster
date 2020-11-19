@@ -516,7 +516,6 @@ def view_class_pdf(
         labels_b_ = labels_b[sort_index_b]
 
         max_dist_ = np.max([distance_a.max(), distance_b.max()])
-        print(l, max_dist_)
         max_dist_ = _roundup(max_dist_)
         if max_dist_ > max_dist:
             max_dist = max_dist_ - 50
