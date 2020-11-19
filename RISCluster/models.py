@@ -865,6 +865,87 @@ def analyze_clustering(
     )
     return inertiae, [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
 
+def analyze_clustering2(
+        model,
+        dataloader,
+        device,
+        fname_dataset,
+        index_tra,
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        epoch,
+        show=False
+    ):
+    '''
+    Function displays reconstructions using the centroids of the latent feature
+    space.
+    # Arguments
+        model: PyTorch model instance
+        dataloader: PyTorch dataloader instance
+        labels: Vector of cluster assignments
+        device: PyTorch device object ('cpu' or 'gpu')
+        epoch: Training epoch, used for title.
+    # Input:
+        2D array of shape [n_samples, n_features]
+    # Output:
+        Figures displaying centroids and their associated reconstructions.
+    '''
+    n_clusters = model.n_clusters
+    inertiae = measure_class_inertia(data_b, centroids_b, n_clusters)
+    p = 2
+    # title = f't-SNE Results - Epoch {epoch}'
+    # fig1 = plotting.view_TSNE(tsne(data_b, dataloader), labels_b, title, show)
+    fns = [
+        plotting.cluster_gallery,
+        plotting.centroid_dashboard,
+        plotting.centroid_distances,
+        plotting.view_latent_space,
+        plotting.view_class_cdf,
+        plotting.view_class_pdf
+    ]
+    A = [{
+        'model': model,
+        'dataset': dataloader.dataset,
+        'fname_dataset': fname_dataset,
+        'index_tra': index_tra,
+        'device': device,
+        'z_array': data_b,
+        'labels': labels_b,
+        'centroids': centroids_b,
+        'p': p,
+        'show': show
+    }]
+    A = A + [{
+        'z_array': data_b,
+        'labels': labels_b,
+        'centroids': centroids_b,
+        'n_clusters': n_clusters,
+        'p': p,
+        'show': show
+    } for i in range(2)]
+    A = A + [{
+        'data_a': data_a,
+        'data_b': data_b,
+        'labels_a': labels_a,
+        'labels_b': labels_b,
+        'centroids_a': centroids_a,
+        'centroids_b': centroids_b,
+        'n_clusters': n_clusters,
+        'p': p,
+        'show': show
+    } for i in range(3)]
+
+    figures = []
+    with ProcessPoolExecutor(max_workers=len(fns)) as exec:
+        futures = [exec.submit(fns[i], **args) for i, args in enumerate(A)]
+        for i, future in enumerate(as_completed(futures)):
+            figures[i] = future.result()
+    return inertiae, figures
+
 def kmeans_metrics(dataloader, model, device, k_list):
     z_array = infer_z(dataloader, model, device)
 
