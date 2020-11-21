@@ -98,7 +98,7 @@ def pretrain(
     fig1 = plotting.compare_images(
         model,
         0,
-        disp_idx[0:1],
+        disp_index[0:1],
         fname_dataset,
         savepath=None,
         show=True,
@@ -107,7 +107,7 @@ def pretrain(
     fig2 = plotting.compare_images(
         model,
         0,
-        disp_idx,
+        disp_index,
         fname_dataset,
         savepath=None,
         show=True,
@@ -180,7 +180,7 @@ def pretrain(
             fig1 = plotting.compare_images(
                 model,
                 epoch,
-                disp_idx[0:1],
+                disp_index[0:1],
                 fname_dataset,
                 savepath=None,
                 show=True,
@@ -189,7 +189,7 @@ def pretrain(
             fig2 = plotting.compare_images(
                 model,
                 epoch,
-                disp_idx,
+                disp_index,
                 fname_dataset,
                 savepath=None,
                 show=True,
@@ -268,7 +268,7 @@ def pretrain(
     fig1 = plotting.compare_images(
         model,
         epoch,
-        disp_idx[0:1],
+        disp_index[0:1],
         fname_dataset,
         savepath=None,
         show=True,
@@ -277,7 +277,7 @@ def pretrain(
     fig2 = plotting.compare_images(
         model,
         epoch,
-        disp_idx,
+        disp_index,
         fname_dataset,
         savepath=None,
         show=True,
