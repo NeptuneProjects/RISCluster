@@ -567,7 +567,7 @@ def predict(model, dataloader, parameters):
 
     for batch in pbar:
         idx, batch = batch
-        batch.to(device)
+        x = batch.to(device)
         q, _, _ = model(x)
         label = torch.argmax(q, dim=1)
 
