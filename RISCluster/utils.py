@@ -150,7 +150,7 @@ def init_output_env(savepath, mode, **kwargs):
         savepath_chkpnt = f'{savepath_run}/tmp'
         if not os.path.exists(savepath_chkpnt):
             os.makedirs(savepath_chkpnt)
-        return savepath_run, serial_run, savepath_ckpnt
+        return savepath_run, serial_run, savepath_chkpnt
     elif mode == 'train':
         savepath_run = f'{savepath}Run' + \
                        f'_Clusters={kwargs.get("n_clusters")}' + \
