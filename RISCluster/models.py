@@ -230,7 +230,19 @@ def pretrain(
             'hp/Validation MSE': epoch_val_mse
         }
     )
-    fig = plotting.compare_images(
+    fig1 = plotting.compare_images(
+        model,
+        disp.to(device),
+        epoch,
+        disp_index[0:1],
+        tvec,
+        fvec,
+        savepath_run,
+        fname_dataset,
+        show,
+        mode='single'
+    )
+    fig2 = plotting.compare_images(
         model,
         disp.to(device),
         epoch,
@@ -239,11 +251,18 @@ def pretrain(
         fvec,
         savepath_run,
         fname_dataset,
-        show
+        show,
+        mode='multi'
     )
     tb.add_figure(
-        'TrainingProgress',
-        fig,
+        'TrainingProgress1',
+        fig1,
+        global_step=epoch,
+        close=True
+    )
+    tb.add_figure(
+        'TrainingProgress2',
+        fig2,
         global_step=epoch,
         close=True
     )
