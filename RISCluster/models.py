@@ -74,7 +74,7 @@ def pretrain(
     disp_index = [int(i) for i in disp_index.split(',')]
     tbpid = parameters['tbpid']
 
-    savepath_run, serial_run = utils.init_output_env(
+    savepath_run, serial_run, savepath_chkpnt = utils.init_output_env(
         savepath_exp,
         mode,
         **{
@@ -107,9 +107,6 @@ def pretrain(
     tb.add_figure('TrainingProgress', fig, global_step=0, close=True)
 
     if early_stopping:
-        savepath_chkpnt = f'{savepath_run}/tmp/'
-        if not os.path.exists(savepath_chkpnt):
-            os.makedirs(savepath_chkpnt)
         best_val_loss = 10000
 
     finished = False
@@ -213,7 +210,7 @@ def pretrain(
             if epoch_val_mse < best_val_loss:
                 strikes = 0
                 best_val_loss = epoch_val_mse
-                fname = f'{savepath_chkpnt}AEC_Best_Weights.pt'
+                fname = f'{savepath_chkpnt}/AEC_Best_Weights.pt'
                 torch.save(model.state_dict(), fname)
             else:
                 strikes += 1
@@ -222,6 +219,9 @@ def pretrain(
                 print('Stopping Early.')
                 finished = True
                 break
+        else:
+            fname = f'{savepath_chkpnt}/AEC_Params_{epoch:03d}}.pt'
+            torch.save(model.state_dict(), fname)
 
     tb.add_hparams(
         {'Batch Size': batch_size, 'LR': lr},
@@ -247,13 +247,11 @@ def pretrain(
         global_step=epoch,
         close=True
     )
+    fname = f'{savepath_run}/AEC_Params_Final.pt'
     if early_stopping and (finished == True or epoch == n_epochs-1):
         src_file = f'{savepath_chkpnt}AEC_Best_Weights.pt'
-        dst_file = f'{savepath_run}/AEC_Params_{serial_run}.pt'
-        shutil.move(src_file, dst_file)
-        torch.save(model.state_dict(), dst_file)
+        shutil.move(src_file, fname)
     else:
-        fname = f'{savepath_run}/AEC_Params_ {serial_run}.pt'
         torch.save(model.state_dict(), fname)
     tb.add_text("Path to Saved Weights", fname, global_step=None)
     print('AEC parameters saved.')

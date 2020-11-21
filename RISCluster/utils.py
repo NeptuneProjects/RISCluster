@@ -147,6 +147,10 @@ def init_output_env(savepath, mode, **kwargs):
                        f'_LR={kwargs.get("lr")}'
         if not os.path.exists(savepath_run):
             os.makedirs(savepath_run)
+        savepath_chkpnt = f'{savepath_run}/tmp'
+        if not os.path.exists(savepath_chkpnt):
+            os.makedirs(savepath_chkpnt)
+        return savepath_run, serial_run, savepath_ckpnt
     elif mode == 'train':
         savepath_run = f'{savepath}Run' + \
                        f'_Clusters={kwargs.get("n_clusters")}' + \
@@ -154,6 +158,7 @@ def init_output_env(savepath, mode, **kwargs):
                        f'_LR={kwargs.get("lr")}' + \
                        f'_gamma={kwargs.get("gamma")}' + \
                        f'_tol={kwargs.get("tol")}'
+        return savepath_run, serial_run
     elif mode == 'predict':
         n_clusters = kwargs.get('n_clusters')
         with open(f'{savepath}{n_clusters}_Clusters', 'w') as f:
@@ -164,12 +169,11 @@ def init_output_env(savepath, mode, **kwargs):
             if not os.path.exists(savepath_cluster):
                 os.makedirs(savepath_cluster)
             savepath_run.append(savepath_cluster)
+        return savepath_run, serial_run
     else:
         raise ValueError(
                 'Incorrect mode selected; choose "pretrain", "train", or "eval".'
             )
-
-    return savepath_run, serial_run
 
 def load_dataset(
         fname_dataset,
