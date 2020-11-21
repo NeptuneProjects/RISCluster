@@ -220,7 +220,7 @@ def pretrain(
                 finished = True
                 break
         else:
-            fname = f'{savepath_chkpnt}/AEC_Params_{epoch:03d}}.pt'
+            fname = f'{savepath_chkpnt}/AEC_Params_{epoch:03d}.pt'
             torch.save(model.state_dict(), fname)
 
     tb.add_hparams(
