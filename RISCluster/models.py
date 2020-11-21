@@ -376,6 +376,8 @@ def train(
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
+    fname = f'{savepath_run}/DCM_Params_Initial.pt'
+    torch.save(model.state_dict(), fname)
     print('complete.')
     # Initialize Target Distribution:
     q, _ = infer_labels(dataloader, model, device)
@@ -550,10 +552,10 @@ def train(
         }
     )
 
-    tb.close()
-    fname = f'{savepath_run}/DCM_Params_{serial_run}.pt'
+    fname = f'{savepath_run}/DCM_Params_Final.pt'
     torch.save(model.state_dict(), fname)
     tb.add_text("Path to Saved Weights", fname, global_step=None)
+    tb.close()
     print('DCM parameters saved.')
     toc = datetime.now()
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
