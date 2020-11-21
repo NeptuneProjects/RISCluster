@@ -97,12 +97,12 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(max_workers=14) as exec:
         print("Finding detections that meet filter criteria...")
         futures = [exec.submit(processing._find_indeces, **a) for a in A]
-        kwargs = {
+        kwargs1 = {
             "total": int(len(index)),
             "bar_format": '{l_bar}{bar:20}{r_bar}{bar:-20b}',
             "leave": True
         }
-        for i, future in enumerate(tqdm(as_completed(futures), **kwargs)):
+        for i, future in enumerate(tqdm(as_completed(futures), **kwargs1)):
             index_keep[i] = future.result()
     index_keep = np.sort(index_keep[~np.isnan(index_keep)]).astype(int)
 
@@ -118,5 +118,9 @@ if __name__ == "__main__":
             group_id = fd.require_group(group_path)
             dset_id = group_id.create_dataset(dset_name, dset_shape, dtype=dset.dtype, chunks=None)
             processing._copy_attributes(dset, dset_id)
-            for i in tqdm(range(len(index_keep)), desc=dset_name):
-                dset_id[i+1] = dset[index_keep[i]] # <------------------------------------------------------------------- Remove '+1'
+            kwargs2 = {
+                "desc": dset_name,
+                "bar_format": '{l_bar}{bar:20}{r_bar}{bar:-20b}'
+            }
+            for i in tqdm(range(len(index_keep)), **kwargs2):
+                dset_id[i] = dset[index_keep[i]] # <------------------------------------------------------------------- Remove '+1'
