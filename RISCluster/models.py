@@ -101,8 +101,8 @@ def pretrain(
         disp_index[0:1],
         fname_dataset,
         device,
-        savepath=None,
-        show=True,
+        savepath_run,
+        show,
         mode='single'
     )
     fig2 = plotting.compare_images(
@@ -111,8 +111,8 @@ def pretrain(
         disp_index,
         fname_dataset,
         device,
-        savepath=None,
-        show=True,
+        savepath_run,
+        show,
         mode='multi'
     )
     tb.add_figure(
@@ -185,8 +185,8 @@ def pretrain(
                 disp_index[0:1],
                 fname_dataset,
                 device,
-                savepath=None,
-                show=True,
+                savepath_run,
+                show,
                 mode='single'
             )
             fig2 = plotting.compare_images(
@@ -195,8 +195,8 @@ def pretrain(
                 disp_index,
                 fname_dataset,
                 device,
-                savepath=None,
-                show=True,
+                savepath_run,
+                show,
                 mode='multi'
             )
             tb.add_figure(
@@ -275,8 +275,8 @@ def pretrain(
         disp_index[0:1],
         fname_dataset,
         device,
-        savepath=None,
-        show=True,
+        savepath_run,
+        show,
         mode='single'
     )
     fig2 = plotting.compare_images(
@@ -285,8 +285,8 @@ def pretrain(
         disp_index,
         fname_dataset,
         device,
-        savepath=None,
-        show=True,
+        savepath_run,
+        show,
         mode='multi'
     )
     tb.add_figure(
