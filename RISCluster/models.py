@@ -384,7 +384,7 @@ def train(
     z_array0 = infer_z(dataloader, model, device)
     p = target_distribution(q)
     epoch = 0
-    inertiae, figures = analyze_clustering(
+    figures = analyze_clustering(
         model,
         dataloader,
         device,
@@ -401,11 +401,6 @@ def train(
     )
     [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
         for i, fig in enumerate(figures)]
-    tb.add_scalars(
-        'Inertia',
-        {f"Class {i+1}": inertia for i, inertia in enumerate(inertiae)},
-        epoch
-    )
     [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
         for i, fig in enumerate(figures)]
 
@@ -510,7 +505,7 @@ def train(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            inertiae, figures = analyze_clustering(
+            figures = analyze_clustering(
                 model,
                 dataloader,
                 device,
@@ -527,11 +522,6 @@ def train(
             )
             [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
                 for i, fig in enumerate(figures)]
-            tb.add_scalars(
-                'Inertia',
-                {f"Class {i+1}": inertia for i, inertia in enumerate(inertiae)},
-                epoch
-            )
             [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
                 for i, fig in enumerate(figures)]
 
@@ -800,7 +790,6 @@ def analyze_clustering(
         Figures displaying centroids and their associated reconstructions.
     '''
     n_clusters = model.n_clusters
-    inertiae = measure_class_inertia(data_b, centroids_b, n_clusters)
     p = 2
     title = f't-SNE Results - Epoch {epoch}'
     fig1 = plotting.view_TSNE(tsne(data_b, dataloader), labels_b, title, show)
@@ -865,7 +854,7 @@ def analyze_clustering(
         p,
         show
     )
-    return inertiae, [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
+    return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
 
 def analyze_clustering2(
         model,
@@ -897,7 +886,6 @@ def analyze_clustering2(
         Figures displaying centroids and their associated reconstructions.
     '''
     n_clusters = model.n_clusters
-    inertiae = measure_class_inertia(data_b, centroids_b, n_clusters)
     p = 2
     # title = f't-SNE Results - Epoch {epoch}'
     # fig1 = plotting.view_TSNE(tsne(data_b, dataloader), labels_b, title, show)
@@ -946,7 +934,7 @@ def analyze_clustering2(
         futures = [exec.submit(fns[i], **args) for i, args in enumerate(A)]
         for i, future in enumerate(as_completed(futures)):
             figures[i] = future.result()
-    return inertiae, figures
+    return figures
 
 def kmeans_metrics(dataloader, model, device, k_list):
     z_array = infer_z(dataloader, model, device)
