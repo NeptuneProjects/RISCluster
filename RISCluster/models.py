@@ -97,26 +97,20 @@ def pretrain(
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     fig1 = plotting.compare_images(
         model,
-        disp.to(device),
         0,
-        disp_index[0:1],
-        tvec,
-        fvec,
-        savepath_run,
+        disp_idx[0:1],
         fname_dataset,
-        show,
+        savepath=None,
+        show=True,
         mode='single'
     )
     fig2 = plotting.compare_images(
         model,
-        disp.to(device),
         0,
-        disp_index,
-        tvec,
-        fvec,
-        savepath_run,
+        disp_idx,
         fname_dataset,
-        show,
+        savepath=None,
+        show=True,
         mode='multi'
     )
     tb.add_figure(
@@ -185,26 +179,20 @@ def pretrain(
         if (epoch % 5) == 0 and not (epoch == 0):
             fig1 = plotting.compare_images(
                 model,
-                disp.to(device),
                 epoch,
-                disp_index[0:1],
-                tvec,
-                fvec,
-                savepath_run,
+                disp_idx[0:1],
                 fname_dataset,
-                show,
+                savepath=None,
+                show=True,
                 mode='single'
             )
             fig2 = plotting.compare_images(
                 model,
-                disp.to(device),
                 epoch,
-                disp_index,
-                tvec,
-                fvec,
-                savepath_run,
+                disp_idx,
                 fname_dataset,
-                show,
+                savepath=None,
+                show=True,
                 mode='multi'
             )
             tb.add_figure(
@@ -279,26 +267,20 @@ def pretrain(
     )
     fig1 = plotting.compare_images(
         model,
-        disp.to(device),
         epoch,
-        disp_index[0:1],
-        tvec,
-        fvec,
-        savepath_run,
+        disp_idx[0:1],
         fname_dataset,
-        show,
+        savepath=None,
+        show=True,
         mode='single'
     )
     fig2 = plotting.compare_images(
         model,
-        disp.to(device),
         epoch,
-        disp_index,
-        tvec,
-        fvec,
-        savepath_run,
+        disp_idx,
         fname_dataset,
-        show,
+        savepath=None,
+        show=True,
         mode='multi'
     )
     tb.add_figure(
