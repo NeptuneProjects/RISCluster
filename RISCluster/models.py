@@ -303,7 +303,7 @@ def pretrain(
     )
     fname = f'{savepath_run}/AEC_Params_Final.pt'
     if early_stopping and (finished == True or epoch == n_epochs-1):
-        src_file = f'{savepath_chkpnt}AEC_Best_Weights.pt'
+        src_file = f'{savepath_chkpnt}/AEC_Best_Weights.pt'
         shutil.move(src_file, fname)
     else:
         torch.save(model.state_dict(), fname)
