@@ -100,6 +100,7 @@ def pretrain(
         0,
         disp_index[0:1],
         fname_dataset,
+        device,
         savepath=None,
         show=True,
         mode='single'
@@ -109,6 +110,7 @@ def pretrain(
         0,
         disp_index,
         fname_dataset,
+        device,
         savepath=None,
         show=True,
         mode='multi'
@@ -182,6 +184,7 @@ def pretrain(
                 epoch,
                 disp_index[0:1],
                 fname_dataset,
+                device,
                 savepath=None,
                 show=True,
                 mode='single'
@@ -191,6 +194,7 @@ def pretrain(
                 epoch,
                 disp_index,
                 fname_dataset,
+                device,
                 savepath=None,
                 show=True,
                 mode='multi'
@@ -270,6 +274,7 @@ def pretrain(
         epoch,
         disp_index[0:1],
         fname_dataset,
+        device,
         savepath=None,
         show=True,
         mode='single'
@@ -279,6 +284,7 @@ def pretrain(
         epoch,
         disp_index,
         fname_dataset,
+        device,
         savepath=None,
         show=True,
         mode='multi'

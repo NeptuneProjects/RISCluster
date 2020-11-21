@@ -320,6 +320,7 @@ def compare_images(
         epoch,
         disp_idx,
         fname_dataset,
+        device,
         savepath=None,
         show=True,
         mode='multi'
@@ -329,7 +330,8 @@ def compare_images(
         utils.SeismoDataset(images),
         batch_size=len(disp_idx)
     )
-    disp = next(iter(disp_loader))
+    data = next(iter(disp_loader))
+    disp = data.to(device)
 
     model.eval()
     x_r, z = model(disp)
