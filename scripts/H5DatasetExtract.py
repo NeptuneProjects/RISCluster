@@ -107,7 +107,7 @@ if __name__ == "__main__":
     index_keep = np.sort(index_keep[~np.isnan(index_keep)]).astype(int)
 
     with h5py.File(source, 'r') as fs, h5py.File(dest, 'w') as fd:
-        M = len(index_keep) + 1 # <------------------------------------------------------------------- Remove '+1'
+        M = len(index_keep)
         dset_names = ['Catalogue', 'Trace', 'Spectrogram', 'Scalogram']
         # dset_names = ['Catalogue']
         for dset_name in dset_names:
@@ -123,4 +123,4 @@ if __name__ == "__main__":
                 "bar_format": '{l_bar}{bar:20}{r_bar}{bar:-20b}'
             }
             for i in tqdm(range(len(index_keep)), **kwargs2):
-                dset_id[i] = dset[index_keep[i]] # <------------------------------------------------------------------- Remove '+1'
+                dset_id[i] = dset[index_keep[i]]
