@@ -17,7 +17,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Dataset, Subset
+from torchvision import transforms
 
 from processing import get_metadata
 import utils
@@ -342,8 +343,6 @@ def compare_images(
         savepath_snap = savepath + '/snapshots/'
         if not os.path.exists(savepath_snap):
             os.makedirs(savepath_snap)
-
-
     if mode == 'multi':
         fig = view_specgram_training(
             disp,
@@ -814,19 +813,20 @@ def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     return fig
 
 def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
+    '''Plots selected spectrograms & traces.'''
+    sample_index = np.arange(0, len(image_index))
     dataset = utils.H5SeismicDataset(
         fname_dataset,
-        transform = transforms.Comopose(
+        transform = transforms.Compose(
             [utils.SpecgramShaper(), utils.SpecgramToTensor()]
         )
     )
     subset = Subset(dataset, image_index)
-    dataloader = Dataloader(subset, batch_size=len(image_index))
+    dataloader = DataLoader(subset, batch_size=len(image_index))
 
     for batch in dataloader:
-        idx, batch = batch
+        idx, X = batch
         idx.numpy()
-        X = batch.to(device)
         with h5py.File(fname_dataset, 'r') as f:
             M = len(idx)
             DataSpec = '/4s/Trace'
@@ -839,18 +839,6 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
             for i in range(M):
                 dset_arr = dset[idx[i], 25:-25]
                 tr[i,:] = dset_arr
-    pass
-
-def view_detections(fname_dataset, image_index, figtitle,
-                  nrows=2, ncols=2, figsize=(12,9), show=True):
-    # images, tvec, fvec = utils.load_images(fname_dataset, disp_idx)
-    # disp_loader = DataLoader(
-    #     utils.SeismoDataset(images),
-    #     batch_size=len(disp_idx)
-    # )
-    # data = next(iter(disp_loader))
-    # disp = data.to(device)
-    sample_index = np.arange(0, len(image_index))
 
     with h5py.File(fname_dataset, 'r') as f:
         M = len(image_index)
@@ -859,47 +847,20 @@ def view_detections(fname_dataset, image_index, figtitle,
         # fvec = dset[1, 0:64, 0]
         fvec = dset[1, 0:68, 0]
         # tvec = dset[1, 65, 12:-14]
-        tvec = dset[1, 69, 12:-14]
-        m, _, _ = dset.shape
-        m -= 1
-        # n = 65
-        n = 69
-        o = 175
-        X = np.empty([M, n, o])
-        dset_arr = np.empty([n, o])
-
-        for i in range(M):
-            dset_arr = dset[image_index[i], :-1, 12:-14]
-            dset_arr /= dset_arr.max()
-            X[i,:,:] = dset_arr
-
-    with h5py.File(fname_dataset, 'r') as f:
-        M = len(image_index)
-        DataSpec = '/4s/Trace'
-        dset = f[DataSpec]
-        k = 635
-
-        tr = np.empty([M, k])
-        dset_arr = np.empty([k,])
-
-        for i in range(M):
-            dset_arr = dset[image_index[i], 0:k]
-            tr[i,:] = dset_arr/1e-6
+        tvec = dset[1, 69, 25:-25]
 
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
-    '''Plots selected spectrograms from input data.'''
-    if not len(sample_index) == nrows * ncols:
-        raise ValueError('Subplot/sample number mismatch: check dimensions.')
+
     metadata = get_metadata(sample_index, image_index, fname_dataset)
     fig = plt.figure(figsize=figsize, dpi=150)
     cmap = 'cmo.ice_r'
-    gs_sup = gridspec.GridSpec(nrows=nrows, ncols=ncols, hspace=0.4, wspace=0.25)
+    gs_sup = gridspec.GridSpec(nrows=2, ncols=2, hspace=0.4, wspace=0.25)
     counter = 0
     for i in range(len(sample_index)):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_sup[i], hspace=0)
 
         ax = fig.add_subplot(gs_sub[0])
-        plt.imshow(X[sample_index[i],:,:], extent=extent, aspect='auto', origin='lower', cmap=cmap)
+        plt.imshow(X[sample_index[i],:,:].squeeze(), extent=extent, aspect='auto', origin='lower', cmap=cmap)
         ax.set_xticks([])
         plt.ylabel('Frequency (Hz)')
         station = metadata[counter]['Station']
@@ -913,25 +874,17 @@ def view_detections(fname_dataset, image_index, figtitle,
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         plt.title(f'Station {station}\nTrigger: {time_on}; '
                   f'Index: {image_index[sample_index[i]]}')
-        # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes("right", size="5%", pad=0.05)
-        # plt.colorbar(cax=cax)
 
         tvec = np.linspace(extent[0], extent[1], tr.shape[1])
 
         ax = fig.add_subplot(gs_sub[1])
         plt.plot(tvec, tr[i,:])
+        plt.xlim(min(tvec), max(tvec))
         plt.xlabel('Time (s)')
         plt.ylabel('Velocity (1e-6 m/s)')
 
-        # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes("right", size="5%", pad=0.05)
-        # cax.axis('off')
-
         counter += 1
-    fig.suptitle(figtitle, size=18, weight='bold')
-    # fig.tight_layout()
-    fig.subplots_adjust(top=0.90)
+
     if show:
         plt.show()
     else:
