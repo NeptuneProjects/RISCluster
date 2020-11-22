@@ -1,6 +1,6 @@
 .env
 .DS_STORE
-xOld/
+test/
 **/__pycache__
 *.ipynb_checkpoints/
 *.pyo
