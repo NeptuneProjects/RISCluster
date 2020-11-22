@@ -17,7 +17,7 @@ import utils
 
 debug = False
 if debug:
-    source = '../../../Data/DetectionData_4s_BPFilt.h5'
+    source = '../../../Data/Full/Full.h5'
     include = '[24]'
     exclude = None
     after = None
