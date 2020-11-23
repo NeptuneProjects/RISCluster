@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+from subprocess import run
 
 import h5py
 import numpy as np
@@ -15,6 +16,8 @@ from obspy.signal.trigger import classic_sta_lta, recursive_sta_lta, \
     trigger_onset
 import pandas as pd
 from scipy import signal
+from tqdm import tqdm
+
 
 class DetectorParam():
     def __init__(self, STA, LTA, trigger_on, trigger_off):
@@ -23,10 +26,23 @@ class DetectorParam():
         self.trigger_on = trigger_on
         self.trigger_off = trigger_off
 
+
 class SigParam():
-    def __init__(self, datadir, network_index, station_index, channel_index,
-                 datetime_index, taper_trace, pre_feed, cutoff, T_seg, NFFT,
-                 tpersnap, overlap):
+    def __init__(
+            self,
+            datadir,
+            network_index,
+            station_index,
+            channel_index,
+            datetime_index,
+            taper_trace,
+            pre_feed,
+            cutoff,
+            T_seg,
+            NFFT,
+            tpersnap,
+            overlap
+        ):
         self.datadir = datadir
         self.network_index = network_index
         self.station_index = station_index
@@ -40,18 +56,12 @@ class SigParam():
         self.tpersnap = tpersnap
         self.overlap = overlap
 
-# def build_dtvec(starttime, dt):
-#     pass
-#     return None
-#
-# def build_fvec(cutoff, fs):
-#     pass
-#     return None
 
 def _copy_attributes(in_object, out_object):
     '''Copy attributes between 2 HDF5 objects.'''
     for key, value in in_object.attrs.items():
         out_object.attrs[key] = value
+
 
 def _find_indeces(index, source, stations):
     with h5py.File(source, 'r') as f:
@@ -60,6 +70,7 @@ def _find_indeces(index, source, stations):
         return index
     else:
         return np.nan
+
 
 def detector(tr, signal_args, detector_args, detector_type='classic'):
     '''Detect events using recursive STA/LTA.'''
@@ -136,7 +147,15 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
         tr_data /= np.abs(tr_data).max()
         tr_out[i, :] = tr_data
         # Calculate spectrogram:
-        t_spec, f_spec, S = get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap)
+        t_spec, f_spec, S = get_specgram(
+            tr,
+            fs,
+            i0,
+            i1,
+            NFFT,
+            overlap,
+            tpersnap
+        )
         t_spec = np.insert(t_spec, 0, np.NAN)
         S = np.hstack((f_spec[:, None], S))
         S_out[i, :, :] = np.vstack((S, t_spec))
@@ -160,6 +179,7 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
 
     return tr_out, S_out, C_out, catdict
 
+
 def file2dt(fname):
     fname = fname.split('.')[0:5]
     dt = datetime.strptime(
@@ -168,6 +188,7 @@ def file2dt(fname):
     )
     return dt
 
+
 def get_channel(channel_index):
     '''Input: Integer channel index (0-2).
        Output: Channel name (str)'''
@@ -175,9 +196,11 @@ def get_channel(channel_index):
     channel_name = channel_list[channel_index]
     return channel_name
 
+
 def get_cwt(tr, fs, cutoff):
     scalogram = cwt(tr, 1 / fs, 8, cutoff, 30, 69)
     return np.abs(scalogram[:,0:-1:2])
+
 
 def get_datasets(T_seg, NFFT, tpersnap, fs, group_name, overlap):
     '''Defines the structure of the .h5 database; h5py package required.
@@ -187,17 +210,26 @@ def get_datasets(T_seg, NFFT, tpersnap, fs, group_name, overlap):
     # Set up dataset for traces:
     m = 1
     n = fs*T_seg + 1
-    dset_tr = group_name.create_dataset('Trace', (m, n), maxshape=(None,n),
-                                        chunks=(20, n), dtype='f')
+    dset_tr = group_name.create_dataset(
+        'Trace',
+        (m, n),
+        maxshape=(None,n),
+        chunks=(20, n),
+        dtype='f'
+    )
     dset_tr.attrs['AmplUnits'] = 'Velocity (m/s)'
     # Set up dataset for spectrograms:
     m = 1
     # n = int(NFFT/2 + 1) + 1
     n = 70
     o = int(T_seg/(tpersnap*(1 - overlap)) + 1)
-    dset_spec = group_name.create_dataset('Spectrogram', (m, n, o),
-                                          maxshape=(None, n, o),
-                                          chunks=(20, n, o), dtype='f')
+    dset_spec = group_name.create_dataset(
+        'Spectrogram',
+        (m, n, o),
+        maxshape=(None, n, o),
+        chunks=(20, n, o),
+        dtype='f'
+    )
     dset_spec.attrs['TimeUnits'] = 's'
     dset_spec.attrs['TimeVecXCoord'] = np.array([1,200])
     dset_spec.attrs['TimeVecYCoord'] = 70
@@ -210,16 +242,25 @@ def get_datasets(T_seg, NFFT, tpersnap, fs, group_name, overlap):
     # n = int(NFFT/2 + 1)
     n = 69
     o = int(T_seg/(tpersnap*(1 - overlap)))
-    dset_scal = group_name.create_dataset('Scalogram', (m, n, o),
-                                          maxshape=(None, n, o),
-                                          chunks=(20, n, o), dtype='f')
+    dset_scal = group_name.create_dataset(
+        'Scalogram',
+        (m, n, o),
+        maxshape=(None, n, o),
+        chunks=(20, n, o),
+        dtype='f'
+    )
 
     # Set up dataset for catalogue:
     m = 1
     dtvl = h5py.string_dtype(encoding='utf-8')
-    dset_cat = group_name.create_dataset('Catalogue', (m,), maxshape=(None,),
-                                         dtype=dtvl)
+    dset_cat = group_name.create_dataset(
+        'Catalogue',
+        (m,),
+        maxshape=(None,),
+        dtype=dtvl
+    )
     return dset_tr, dset_spec, dset_scal, dset_cat
+
 
 def get_datetime(datetime_index):
     '''Input: Integer datetime index for any day between ti and tf.
@@ -229,6 +270,7 @@ def get_datetime(datetime_index):
     datetimes = pd.date_range(ti, tf, freq='d')
     datetime = datetimes[datetime_index]
     return datetime
+
 
 def get_metadata(query_index, sample_index, fname_dataset):
     '''Returns station metadata given sample index.'''
@@ -243,12 +285,14 @@ def get_metadata(query_index, sample_index, fname_dataset):
             counter += 1
     return metadata
 
+
 def get_network(network_index):
     '''Input: Integer network index (0).
        Output: Network name string'''
     network_list = ['XH']
     network_name = network_list[network_index]
     return network_name
+
 
 def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
     npersnap = fs*tpersnap # Points per snapshot.
@@ -259,13 +303,20 @@ def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
     tr = tr[i0:i1]
     tr /= np.abs(tr).max()
     window = np.kaiser(npersnap, beta=5.7)
-    f, t, S = signal.spectrogram(tr, fs, window, nperseg=npersnap,
-                                 noverlap = overlap*npersnap, nfft = NFFT)
+    f, t, S = signal.spectrogram(
+        tr,
+        fs,
+        window,
+        nperseg=npersnap,
+        noverlap = overlap*npersnap,
+        nfft = NFFT
+    )
     t = t - min(t)
     mask = (f >= 3) & (f <= 30)
     S = S[mask, : ]
     f = f[mask]
     return t, f, S
+
 
 def get_station(station_index):
     '''Input: Integer station index (0-33).
@@ -278,17 +329,15 @@ def get_station(station_index):
     station_name = station_list[station_index]
     return station_name
 
-# def get_trace():
-#     pass
-#     return None
 
-# def listdir_nohidden(path):
-#     for f in os.listdir(path):
-#         if not f.startswith('.'):
-#             yield f
-
-def mass_data_downloader(savepath, start='20141201', stop='20161201',
-                         Network='XH', Station='*', Channel='HH*'):
+def mass_data_downloader(
+        savepath,
+        start='20141201',
+        stop='20161201',
+        Network='XH',
+        Station='*',
+        Channel='HH*'
+    ):
     '''
     This function uses the FDSN mass data downloader to automatically download
     data from the XH network deployed on the RIS from Nov 2014 - Nov 2016.
@@ -347,6 +396,7 @@ def mass_data_downloader(savepath, start='20141201', stop='20161201',
     logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
     logger.setLevel(logging.DEBUG)
 
+
 def read_stationXML(signal_args):
     datadir = signal_args.datadir
     network_index = signal_args.network_index
@@ -357,8 +407,7 @@ def read_stationXML(signal_args):
     inv = read_inventory(filespec)
     return inv
 
-# def readStream_addBuffer(datadir, network_index, station_index, channel_index, datetime_index,
-#                          taper_trace=10, pre_feed=20):
+
 def readStream_addBuffer(signal_args):
     datadir = signal_args.datadir
     network_index = signal_args.network_index
@@ -405,8 +454,10 @@ def readStream_addBuffer(signal_args):
     # Merge the traces into one stream:
     st.merge(method=1, fill_value='interpolate', interpolation_samples=5)
     # Trim, detrend, and taper the data:
-    tr = st[0].trim(starttime=UTCDateTime(time_start),
-                    endtime=UTCDateTime(time_stop))
+    tr = st[0].trim(
+        starttime=UTCDateTime(time_start),
+        endtime=UTCDateTime(time_stop)
+    )
     # Return (None, None, None) if the data in the merged trace is a masked
     # array due to missing data points:
     if ma.is_masked(tr.data):
@@ -421,6 +472,7 @@ def readStream_addBuffer(signal_args):
     signal_args.station = station
     signal_args.channel = channel
     return tr, signal_args
+
 
 def trace_processor(tr, inv, signal_args):
     taper_trace = signal_args.taper_trace
@@ -446,11 +498,12 @@ def trace_processor(tr, inv, signal_args):
                        pre_filt=pre_filt, plot=False)
     # Filter the trace:
     # tr.filter('highpass', freq=cutoff, corners=2, zerophase=True)
-    tr.filter('bandpass', freqmin=cutoff, freqmax=30, corners=4, zerophase=True)
+    tr.filter('bandpass', freqmin=cutoff, freqmax=30, zerophase=True)
     # signal_args.tvec = tvec
     signal_args.dtvec = dtvec
     signal_args.fs = fs
     return tr, signal_args
+
 
 def workflow_wrapper(
         station_index,
@@ -471,23 +524,401 @@ def workflow_wrapper(
         trigger_off,
         debug=False
     ):
-    signal_args = SigParam(datadir, network_index, station_index,
-                                   channel_index, datetime_index, taper_trace,
-                                   pre_feed, cutoff, T_seg, NFFT, tpersnap, overlap)
+    signal_args = SigParam(
+        datadir,
+        network_index,
+        station_index,
+        channel_index,
+        datetime_index,
+        taper_trace,
+        pre_feed,
+        cutoff,
+        T_seg,
+        NFFT,
+        tpersnap,
+        overlap
+    )
     detector_args = DetectorParam(STA, LTA, trigger_on, trigger_off)
     if debug:
         tr, signal_args = readStream_addBuffer(signal_args)
         inv = read_stationXML(signal_args)
         tr, signal_args = trace_processor(tr, inv, signal_args)
-        tr_out, S_out, C_out, catdict = detector(tr, signal_args, detector_args, 'classic')
+        tr_out, S_out, C_out, catdict = detector(
+            tr,
+            signal_args,
+            detector_args,
+            'classic'
+        )
         return tr_out, S_out, C_out, catdict
     else:
         try:
             tr, signal_args = readStream_addBuffer(signal_args)
             inv = read_stationXML(signal_args)
             tr, signal_args = trace_processor(tr, inv, signal_args)
-            tr_out, S_out, C_out, catdict = detector(tr, signal_args, detector_args, 'classic')
+            tr_out, S_out, C_out, catdict = detector(
+                tr,
+                signal_args,
+                detector_args,
+                'classic'
+            )
             return tr_out, S_out, C_out, catdict
         except:
             # print(f'\n    Station {get_station(station_index)} skipped.')
             return None, None, None, None
+
+
+def KPDR_sac2mseed(datadir='.', destdir='.', response=False):
+    print("Converting station KPDR SAC files to MSEED.")
+    print(f"     Source: {datadir}\nDestination: {destdir}")
+    if response:
+        print("Processing WITH instrument response removal...")
+        try:
+            respf = [f for f in os.listdir(datadir) if 'RESP' in f][0]
+        except IndexError:
+            raise IndexError("No RESP files found in directory 'datadir'.")
+    else:
+        print("Processing WITHOUT instrument response removal...")
+
+    files = sorted([f for f in os.listdir(datadir) if ('HDH' and 'SAC') in f])
+    if len(files) < 3:
+        raise ValueError("Not enough SAC files for continuous conversion.")
+
+    if not os.path.exists(destdir):
+        os.makedirs(destdir)
+
+    dt_start = file2dt(files[0]).date()
+    dt_end = file2dt(files[-1]).date()
+    dti = pd.date_range(dt_start, dt_end, freq='D')
+
+    # NFFT = 4096
+    overlap = 0.25
+    taper_trace = 10
+    pre_feed = 20
+    cutoff = 0.4
+    buffer_front = taper_trace + pre_feed
+    buffer_back = taper_trace
+
+    for d in tqdm(
+        range(1, len(dti) - 1),
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+        unit="file",
+    ):
+        t0 = dti[d]
+        t1 = dti[d+1]
+        time_start = t0 - timedelta(minutes=buffer_front)
+        time_stop = t1 + timedelta(minutes=buffer_back)
+        search_start = time_start.floor('D')
+        search_stop = time_stop.ceil('D')
+        search_range = pd.date_range(search_start, search_stop,freq='D')
+
+        first = True
+        for i in range(len(search_range) - 1):
+            flist = [f for f in files if file2dt(f).date() in search_range[0:-1]]
+            for f, fname in enumerate(flist):
+                if first:
+                    st = read(f"{datadir}/{fname}")
+                    first = False
+                else:
+                    st += read(f"{datadir}/{fname}")
+        st.merge(method=1, fill_value='interpolate', interpolation_samples=5)
+        tr = st[0].trim(starttime=UTCDateTime(time_start), endtime=UTCDateTime(time_stop))
+
+        tr.detrend(type='linear')
+        tr.taper(max_percentage=0.5, type='hann', max_length=60*taper_trace)
+        fs = tr.stats.sampling_rate
+        # Decimate:
+        try:
+            tr.filter("lowpass", freq=0.4, corners=2, zerophase=True)
+        except ValueError:
+            raise ValueError("Check source files; missing data likely.")
+        tr.decimate(100, no_filter=True)
+        # Remove Instrument Response:
+        if response:
+            remove_trace(
+                tr,
+                f"{datadir}/{respf}",
+                "DISP",
+                paz_remove=None,
+                pre_filt=(0.0015, 0.003, 0.5, 0.6),
+                pitsasim=False,
+                sacsim=True
+            )
+        tr.filter("bandpass", freqmin=0.001, freqmax=0.04, zerophase=True)
+        tr.trim(starttime=UTCDateTime(t0), endtime=UTCDateTime(t1))
+        destfname = f"KP.KPDR..HDH__{t0.strftime('%Y%m%dT%H%M%SZ')}__{t1.strftime('%Y%m%dT%H%M%SZ')}.mseed"
+        tr.write(
+            f"{destdir}/{destfname}",
+            format="MSEED"
+        )
+    print("Complete.")
+
+
+"""The following functions were written by Zhao Chen, UCSD
+Compute and read instrument response
+- read_file_response_text
+- find_file_response_text
+- read_file_response_function
+- compute
+- remove_trace
+- remove_stream
+"""
+def read_file_response_text(file_response_text_name):
+    """Read station information from the response file.
+
+    Read station name, network name, location, channel, start time, end time,
+    sensitivity and the corresponding frequency from the response file.
+
+    Args:
+        file_response_text_name (str): response file name.
+
+    Returns:
+        dict: dictionary containing the instrument information.
+
+    Raises:
+        ValueError: (1) If the information occurs multiple times in the response
+            file. (2) If the decimation information is missed.
+
+    """
+    instrument_information = {
+        'station': None, 'network': None, 'location': None, 'channel': None,
+        't_start': None, 't_end': None, 'sensitivity': None,
+        'frequency_sensitivity': None, 'sampling_rate': None
+    }
+    f_input = None
+    decimation_factor = None
+    with open(file_response_text_name) as file_response_text:
+        response_text = file_response_text.read().split('\n')
+        for i_line in range(len(response_text)):
+            line = [item for item in response_text[i_line].split(' ') if item]
+            if len(line) == 3 and line[1].lower() == 'station:':
+                if not instrument_information['station']:
+                    instrument_information['station'] = line[2]
+                elif instrument_information['station'] != line[2]:
+                    raise ValueError('Multiple station names!')
+            elif len(line) == 3 and line[1].lower() == 'network:':
+                if not instrument_information['network']:
+                    instrument_information['network'] = line[2]
+                elif instrument_information['network'] != line[2]:
+                    raise ValueError('Multiple network names!')
+            elif len(line) == 3 and line[1].lower() == 'location:':
+                if not instrument_information['location']:
+                    if line[2] == '??':
+                        instrument_information['location'] = ''
+                    else:
+                        instrument_information['location'] = line[2]
+                elif instrument_information['location'] != line[2]:
+                    raise ValueError('Multiple location values!')
+            elif len(line) == 3 and line[1].lower() == 'channel:':
+                if not instrument_information['channel']:
+                    instrument_information['channel'] = line[2]
+                elif instrument_information['channel'] != line[2]:
+                    raise ValueError('Multiple channels!')
+            elif (len(line) == 4
+                  and ' '.join(line[1:3]).lower() == 'start date:'):
+                t_start = UTCDateTime().strptime(line[3], '%Y,%j,%H:%M:%S')
+                if not instrument_information['t_start']:
+                    instrument_information['t_start'] = t_start
+                elif instrument_information['t_start'] != t_start:
+                    raise ValueError('Multiple start dates!')
+            elif (len(line) == 4
+                  and ' '.join(line[1:3]).lower() == 'end date:'):
+                t_end = UTCDateTime().strptime(line[3], '%Y,%j,%H:%M:%S')
+                if not instrument_information['t_end']:
+                    instrument_information['t_end'] = t_end
+                elif instrument_information['t_end'] != t_end:
+                    raise ValueError('Multiple end dates!')
+            elif (len(line) == 5
+                  and ' '.join(line[1:4]).lower() == 'input sample rate:'):
+                f_input = float(line[4])
+            elif (len(line) == 6
+                  and ' '.join(line[1:5]).lower() == 'input sample rate (hz):'):
+                f_input = float(line[5])
+            elif (len(line) == 4
+                  and ' '.join(line[1:3]).lower() == 'decimation factor:'):
+                decimation_factor = float(line[3])
+            elif len(line) == 3 and line[1].lower() == 'sensitivity:':
+                sensitivity = float(line[2])
+                if not instrument_information['sensitivity']:
+                    instrument_information['sensitivity'] = sensitivity
+                elif instrument_information['sensitivity'] != sensitivity:
+                    raise ValueError('Multiple sensitivity values!')
+            elif ((len(line) == 5 or len(line) == 6)
+                  and ' '.join(line[1:4]).lower()
+                      == 'frequency of sensitivity:'):
+                frequency_sensitivity = float(line[4])
+                if not instrument_information['frequency_sensitivity']:
+                    instrument_information['frequency_sensitivity'] = (
+                        frequency_sensitivity
+                    )
+                elif (instrument_information['frequency_sensitivity'] !=
+                      frequency_sensitivity):
+                    raise ValueError(
+                        'Multiple frequency of sensitivity values!')
+            else:
+                continue
+    if (f_input is not None) and (decimation_factor is not None):
+        instrument_information['sampling_rate'] = f_input/decimation_factor
+    else:
+        raise ValueError('Decimation information missing!')
+    return instrument_information
+
+
+def find_file_response_text(tr, file_response_text_name_list):
+    """Find the right response file corresponding to the trace.
+
+    Args:
+        tr (obspy.core.trace.Trace): data.
+        file_response_text_name_list (list): response file name list.
+
+    Returns:
+        file_response_text_name (str): response file name.
+
+    """
+    for file_response_text_name in file_response_text_name_list:
+        instrument_information = read_file_response_text(
+            file_response_text_name)
+        if (tr.stats.network == instrument_information['network'] and
+                tr.stats.station == instrument_information['station'] and
+                tr.stats.location == instrument_information['location'] and
+                tr.stats.channel == instrument_information['channel']):
+            return file_response_text_name
+    raise ValueError('No corresponding response text file found!')
+
+
+def read_file_response_function(file_response_function_name, n_f=1000):
+    """Read instrument response function generated by evalresp.
+
+    Args:
+        file_response_function_name (str): name of the response function file
+            generated by evalresp.
+
+    Returns:
+        numpy.ndarray: frequency
+        numpy.ndarray: amplitude/phase response
+
+    """
+    # f = np.empty(n_f)
+    # value = np.empty(n_f)
+    f = []
+    value = []
+    with open(file_response_function_name) as file_response_function:
+        response_function = file_response_function.read().split('\n')
+        # for i_f in range(n_f):
+        #     line = response_function[i_f].split(' ')
+        #     f[i_f] = float(line[0])
+        #     value[i_f] = float(line[1])
+        for i_f, line in enumerate(response_function):
+            line_break = line.split(' ')
+            if len(line_break) < 2:
+                continue
+            f.append(float(line_break[0]))
+            value.append(float(line_break[1]))
+    return np.array(f), np.array(value)
+
+
+def compute(file_response_text_name, f_min, f_max, n_f):
+    """Compute response function by calling evalresp.
+
+    Args:
+        file_response_text_name (str): response file name.
+        f_min (float): minimum frequency.
+        f_max (float): maximum frequency.
+        n_f (int): number of frequency samples.
+
+    Returns:
+        dict: dictionary containing the instrument information.
+
+    """
+    # Read instrument information from the response text file
+    instrument_information = read_file_response_text(
+        file_response_text_name)
+
+    # Compute instrument response with evalresp
+    run(['evalresp',
+         instrument_information['station'], instrument_information['channel'],
+         str(instrument_information['t_start'].year),
+         str(instrument_information['t_start'].julday),
+         str(f_min), str(f_max), str(n_f),
+         '-f', file_response_text_name,
+         '-t', instrument_information['t_start'].strftime('%H:%M:%S'),
+         '-s', 'log'])
+
+    # Response function file name generated by evalresp
+    file_response_function_name_suffix = (
+        instrument_information['network']
+        + '.'
+        + instrument_information['station']
+        + '.'
+        + instrument_information['location']
+        + '.'
+        + instrument_information['channel'])
+    file_response_function_amplitude_name = (
+        'AMP.' + file_response_function_name_suffix)
+    file_response_function_phase_name = (
+        'PHASE.' + file_response_function_name_suffix)
+
+    return (instrument_information,
+            file_response_function_amplitude_name,
+            file_response_function_phase_name)
+
+
+def remove_trace(tr,
+                 file_response_text_name,
+                 units,
+                 taper_half_width=None,
+                 **kwargs):
+    """Remove instrument response for a single trace
+
+    Args:
+        tr (obspy.core.trace.Trace): data.
+        file_response_text_name: response text file name, with path if not in
+            './'.
+        units (st): Output units. One of:
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+        taper_half_width (int or float): half taper width (s)
+        kwargs: arguments of obspy.core.trace.Trace.simulate.
+
+    """
+    seedresp = {'filename': file_response_text_name,
+                'units': units[0:3].upper()}
+    if taper_half_width:
+        taper_fraction = (2 * taper_half_width
+                          / (tr.stats.endtime - tr.stats.starttime))
+        tr.simulate(seedresp=seedresp, taper_fraction=taper_fraction, **kwargs)
+    else:
+        tr.simulate(seedresp=seedresp, **kwargs)
+
+
+def remove_stream(st,
+                  file_response_text_name_list,
+                  units,
+                  taper_half_width=None,
+                  **kwargs):
+    """Remove instrument response for a data stream
+
+    Args:
+        st (obspy.core.stream.Stream): data.
+        file_response_text_name_list (list): response text file name list,
+        with path if not in the current folder.
+        units (st): Output units. One of:
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+        taper_half_width (int or float): half taper width (s)
+        kwargs: arguments of obspy.core.trace.Trace.simulate.
+
+    """
+    st.merge()
+    for i_trace in range(len(st)):
+        file_response_text_name = find_file_response_text(
+            st[i_trace], file_response_text_name_list)
+        remove_trace(st[i_trace], file_response_text_name, units,
+                     taper_half_width, **kwargs)
