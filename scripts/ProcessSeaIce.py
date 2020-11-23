@@ -130,7 +130,7 @@ def main():
     savemat(file_dir, mdic)
 
     # Plot representative ice concentration of the selected region
-    plot_representatives(dates, representatives)
+    # plot_representatives(dates, representatives)
 
 if __name__ == '__main__':
     main()
