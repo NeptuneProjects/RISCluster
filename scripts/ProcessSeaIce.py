@@ -127,7 +127,7 @@ def main():
         "C": representatives,
         "date": [dates[i].strftime('%Y-%b-%d %H:%M:%S') for i in range(len(dates))]
     }
-    savemat(f"{file_dir}/{file_dir}", mdic)
+    savemat(f"{file_dir}/NSIDC-0051.mat", mdic)
 
     # Plot representative ice concentration of the selected region
     # plot_representatives(dates, representatives)
