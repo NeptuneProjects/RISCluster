@@ -475,8 +475,8 @@ def view_class_cdf(
 
         plt.rc('text', usetex=True)
         plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
-        plt.xlabel(fr"$d=\Vert\mathbf{{r}} - \boldsymbol{{\mu}}_{l+1}\Vert_{p}$")
-        plt.ylabel(f"$F_{l+1}(d)$", rotation=90, ha="center")
+        plt.xlabel(fr"$d=\Vert\mathbf{{z}} - \boldsymbol{{\mu}}_{l+1}\Vert_{p}$")
+        plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right")
         plt.title(f"Class {l + 1} CDF")
 
     if show:
@@ -556,7 +556,7 @@ def view_class_pdf(
             plt.xlim(X.min(), X.max())
             plt.rc('text', usetex=True)
             plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
-            plt.xlabel(fr"$d=\Vert\mathbf{{r}} - \boldsymbol{{\mu}}_{l+1}\Vert_{p}$", size=14)
+            plt.xlabel(fr"$d=\Vert\mathbf{{z}} - \boldsymbol{{\mu}}_{l+1}\Vert_{p}$", size=14)
             plt.ylim(0.001, 1)
             plt.yscale('log')
             plt.yticks(ticks=[0.001, 0.01, 0.1])
