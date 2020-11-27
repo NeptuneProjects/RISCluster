@@ -475,7 +475,7 @@ def view_class_cdf(
 
         plt.rc('text', usetex=True)
         plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
-        plt.xlabel(fr"$d=\Vert\mathbf{{z}} - \boldsymbol{{\mu}}_{l+1}\Vert_{p}$")
+        plt.xlabel(fr"$d=\Vert\boldsymbol{{z}} - \boldsymbol{{\mu}}_{l+1}\Vert_{p}$")
         plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right")
         plt.title(f"Class {l + 1} CDF")
 
