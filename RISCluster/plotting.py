@@ -1165,7 +1165,7 @@ def view_TSNE(results, labels, title, show=False):
     plt.grid(axis='y', linestyle='--')
     plt.xticks(label_list+1, label_list+1)
     plt.ylim([0, 1.25 * max(counts)])
-    plt.xlabel('Class')
+    ax2.set_xlabel('Class')
     ax2.set_ylabel('Detections')
     plt.title(f'Class Assignments, N = {len(labels)}')
 
@@ -1177,7 +1177,7 @@ def view_TSNE(results, labels, title, show=False):
         return x * N / 100
 
     ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
-    plt.ylabel('\% of N')
+    ax3.set_ylabel('\% of N')
     for i in range(len(np.unique(labels))):
         plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
 
