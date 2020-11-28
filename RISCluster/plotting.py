@@ -269,14 +269,14 @@ def cluster_gallery(
         ax.xaxis.set_label_position('top')
         ax.set_xlabel(f"$j={label+1}$", size=10)
         if l == 0:
-            plt.ylabel(r"$g_\theta(\pmb{\mu_j})$", rotation=0, va="center", ha="right")
+            plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right")
 
         ax = fig.add_subplot(gs_sub[2])
         plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
         plt.xticks([])
         plt.yticks([])
         if l == 0:
-            plt.ylabel(r'$\pmb{\mu_j}$', rotation=0, va="center", ha="right")
+            plt.ylabel(r'$\pmb{\mu}_j$', rotation=0, va="center", ha="right")
 
         for i in range(N):
             gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[i+1,l], hspace=0, wspace=0, height_ratios=heights)
