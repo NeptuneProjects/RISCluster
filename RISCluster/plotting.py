@@ -1148,14 +1148,14 @@ def view_TSNE(results, labels, title, show=False):
 
     colors = cmap_lifeaquatic(len(counts))
     data = np.stack([(labels+1), results[:,0], results[:,1]], axis=1)
-    df = pd.DataFrame(data=data, columns=["Label", "x", "y"])
-    df["Label"] = df["Label"].astype('int').astype('category')
+    df = pd.DataFrame(data=data, columns=["Class", "x", "y"])
+    df["Class"] = df["Class"].astype('int').astype('category')
 
     fig = plt.figure(figsize=(6,8))
     gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
 
     ax = fig.add_subplot(gs[0])
-    sns.scatterplot(data=df, x="x", y="y", hue="Label", palette=colors, alpha=0.2)
+    sns.scatterplot(data=df, x="x", y="y", hue="Class", palette=colors, alpha=0.2)
     plt.axis('off')
     plt.legend(loc='center left', bbox_to_anchor=(0.9, 0.75), ncol=1)
     plt.title(title)

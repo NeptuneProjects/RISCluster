@@ -731,14 +731,15 @@ def pca(labels, model, dataloader, device, tb, counter):
     fig = plotting.view_clusters(pca2d, labels)
     tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
 
-def tsne(data, dataloader):
+def tsne(data):
     print('Running t-SNE...', end="", flush=True)
+    M = len(data)
     np.seterr(under='warn')
     results = TSNE(
         n_components=2,
-        perplexity=int(len(dataloader.dataset)/100),
+        perplexity=int(M/100),
         early_exaggeration=20,
-        learning_rate=int(len(dataloader.dataset)/12),
+        learning_rate=int(M/12),
         n_iter=2000,
         verbose=0,
         random_state=2009
@@ -841,7 +842,7 @@ def analyze_clustering(
     n_clusters = model.n_clusters
     p = 2
     title = f't-SNE Results - Epoch {epoch}'
-    fig1 = plotting.view_TSNE(tsne(data_b, dataloader), labels_b, title, show)
+    fig1 = plotting.view_TSNE(tsne(data_b), labels_b, title, show)
     fig2 = plotting.cluster_gallery(
         model,
         dataloader.dataset,
