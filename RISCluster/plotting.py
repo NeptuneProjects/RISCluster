@@ -208,8 +208,13 @@ def cluster_gallery(
         centroids = model.clustering.weights
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
-    N = 4
-    fig = plt.figure(figsize=(len(label_list),8), dpi=150)
+    N = 7
+    params = {
+        'text.usetex': True,
+        'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
+    }
+    plt.rcParams.update(params)
+    fig = plt.figure(figsize=(len(label_list),2*N), dpi=150)
     heights = [1 for i in range(N+1)] + [0.2]
     gs_sup = gridspec.GridSpec(nrows=N+2, ncols=len(label_list), hspace=0.1, wspace=0.1, height_ratios=heights)
     heights = [1, 4, 0.5]
@@ -218,7 +223,7 @@ def cluster_gallery(
         'color':  'k',
         'weight': 'normal',
         'size': 5,
-        }
+    }
     transform = 'sample_norm_cent'
     cmap_feat = cmo.deep_r
     cmap_spec = cmo.dense
@@ -262,14 +267,16 @@ def cluster_gallery(
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
-        ax.set_xlabel(f"Class {label+1}", size=10)
+        ax.set_xlabel(f"$j={label+1}$", size=10)
         if l == 0:
-            plt.ylabel("Centroids", size=10)
+            plt.ylabel(r"$g_\theta(\pmb{\mu_j})$", rotation=0, va="center", ha="right")
 
         ax = fig.add_subplot(gs_sub[2])
         plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
         plt.xticks([])
         plt.yticks([])
+        if l == 0:
+            plt.ylabel(r'$\pmb{\mu_j}$', rotation=0, va="center", ha="right")
 
         for i in range(N):
             gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[i+1,l], hspace=0, wspace=0, height_ratios=heights)
@@ -285,11 +292,15 @@ def cluster_gallery(
             plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
             plt.xticks([])
             plt.yticks([])
+            if l == 0:
+                plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right")
 
             ax = fig.add_subplot(gs_sub[2])
             plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
             plt.xticks([])
             plt.yticks([])
+            if l == 0:
+                plt.ylabel(fr"$\pmb{{z}}_{i+1}$", rotation=0, va="center", ha="right")
 
     gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=gs_sup[-1,:])
     # Colorbar: Specgram
@@ -807,7 +818,7 @@ def view_latent_space(
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
             plt.ylabel('Before DEC', size=12, y=0.6)
-            plt.title(r'$\boldsymbol{\mu}_j$')
+            plt.title(r'$\pmb{\mu}_j$')
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
