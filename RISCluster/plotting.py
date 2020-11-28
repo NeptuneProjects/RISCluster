@@ -481,14 +481,16 @@ def view_class_cdf(
         distance_b = distance_b[query_b]
         cdf_b = np.cumsum(np.ones(len(query_b))) / len(query_b)
 
-        plt.plot(distance_a, cdf_a, color=colors[0])
-        plt.plot(distance_b, cdf_b, color=colors[1])
+        plt.plot(distance_a, cdf_a, color=colors[0], label="Before DEC")
+        plt.plot(distance_b, cdf_b, color=colors[1], label="After DEC")
 
         plt.rc('text', usetex=True)
         plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
         plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
         plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
         plt.title(f"Class {l + 1} CDF", loc="left", size=14)
+        if l == 0:
+            plt.legend(loc='lower right')
 
     if show:
         plt.show()
