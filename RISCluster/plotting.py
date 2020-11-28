@@ -458,7 +458,7 @@ def view_class_cdf(
     label_list, counts_a = np.unique(labels_a, return_counts=True)
     _, counts_b = np.unique(labels_b, return_counts=True)
 
-    fig = plt.figure(figsize=(6, 2*int(np.ceil(n_clusters/2))), dpi=150)
+    fig = plt.figure(figsize=(7, 2*int(np.ceil(n_clusters/2))), dpi=150)
     gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.9, wspace=0.4)
     colors = cmap_lifeaquatic(n_clusters)
 
@@ -489,8 +489,10 @@ def view_class_cdf(
         plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
         plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
         plt.title(f"Class {l + 1} CDF", loc="left", size=14)
-        if l == 0:
-            plt.legend(loc='lower right')
+
+    handles, labels = ax.get_legend_handles_labels()
+    if len(label_list) % 2 != 0:
+        fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
 
     if show:
         plt.show()
