@@ -1154,19 +1154,19 @@ def view_TSNE(results, labels, title, show=False):
     fig = plt.figure(figsize=(6,8))
     gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
 
-    ax = fig.add_subplot(gs[0])
+    ax1 = fig.add_subplot(gs[0])
     sns.scatterplot(data=df, x="x", y="y", hue="Class", palette=colors, alpha=0.2)
     plt.axis('off')
     plt.legend(loc='center left', bbox_to_anchor=(0.9, 0.75), ncol=1)
     plt.title(title)
 
-    ax = fig.add_subplot(gs[1])
+    ax2 = fig.add_subplot(gs[1])
     arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8, color='k')
     plt.grid(axis='y', linestyle='--')
     plt.xticks(label_list+1, label_list+1)
     plt.ylim([0, 1.25 * max(counts)])
     plt.xlabel('Class')
-    ax.set_ylabel('Detections')
+    ax2.set_ylabel('Detections')
     plt.title(f'Class Assignments, N = {len(labels)}')
 
     N = counts.sum()
@@ -1176,8 +1176,8 @@ def view_TSNE(results, labels, title, show=False):
     def PtC(x):
         return x * N / 100
 
-    ax2 = ax.secondary_yaxis('right', functions=(CtP, PtC))
-    ax2.set_ylabel('% of N')
+    ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
+    ax3.set_ylabel('% of N')
     for i in range(len(np.unique(labels))):
         plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
 
