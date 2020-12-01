@@ -1,13 +1,13 @@
 # Deep Embedded Clustering
-This repository is a PyTorch implementation of deep embedded clustering (DEC) in the unsupervised classification of seismic signals detected on a 34-station passive broadband seismic array on the Ross Ice Shelf from November 2014 to November 2016.  The workflow requires the following elements:
+This repository is a PyTorch implementation of deep embedded clustering (DEC) for unsupervised classification of seismic signals.  The workflow was specifically tailored to data detected on a 34-station passive broadband seismic array on the Ross Ice Shelf, Antarctica from November 2014 to November 2016.  The workflow requires the following elements:
 1. Import modules and set up environment
 2. Load and pre-process data
 3. Construct a convolutional auto-encoder (AEC)
 4. Tune, train, and validate AEC
-5. Determine optimal number of clusters using gap statistic analysis
-6. Incorporate Clustering Layer into AEC model architecture
-7. Simultaneously train the DEC model to maximize clustering while fine tuning AEC parameters.
-8. Feed unseen data to DEC model and evaluate performance.
+5. Incorporate clustering layer into AEC model architecture
+6. Intialize clusters (K-Means, GMM, K-Medioids available)
+7. Train the DEC model: clustering and model training are simultaneous.
+8. Once trained, infer class labels for remainder of the data set.
 
 ## References:
 Master thesis of Dylan Snover: https://github.com/dsnover/

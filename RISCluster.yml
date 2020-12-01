@@ -1,20 +1,26 @@
-name: RISClusterPT
+name: RISCluster
 channels:
   - conda-forge
   - defaults
 dependencies:
+  - python=3.8
+  - cmocean
   - h5py
   - jupyterlab
   - matplotlib
   - numpy
   - obspy
   - pandas
+  - pip
   - pydotplus
   - python-dotenv
   - pytorch::pytorch
-  - pytorch::ignite
   - pytorch::torchvision
   - scikit-learn
-  - scipy
-  - tensorboard=1.15.0
+  - scikit-learn-extra
+  - seaborn
+  - tensorboard
+  - tqdm
   - twilio
+  - pip:
+    - torchsummary

@@ -3,9 +3,7 @@ import os
 import sys
 sys.path.insert(0, '../RISCluster/')
 
-import importlib as imp
 import utils
-imp.reload(utils)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Enter sample number.')
