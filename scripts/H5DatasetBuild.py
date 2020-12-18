@@ -1,6 +1,6 @@
 """Generate Dataset for Machine Learning Applications
 
-William Jenkins, wjenkins@ucsd.edu
+William Jenkins, wjenkins [at] ucsd [dot] edu
 Scripps Institution of Oceanography, UC San Diego
 July 2020
 This script generates samples of traces and spectrograms for use in later

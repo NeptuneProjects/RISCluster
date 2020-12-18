@@ -119,19 +119,20 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
     C_out = np.zeros((len(on), 69, int(T_seg//(tpersnap*(1 - overlap)))))
     # C_out = np.empty((len(on), int(NFFT/2 + 1),
                      # int(T_seg//(tpersnap*(1 - overlap)))))
-    catdict = [{"Network": None,
-                "Station": None,
-                "Channel": None,
-                "StartTime": None,
-                "EndTime": None,
-                "SamplingRate": None,
-                "SamplingInterval": None,
-                "Npts": None,
-                "TriggerOnThreshold": None,
-                "TriggerOffThreshold": None,
-                "TriggerOnTime": None,
-                "TriggerOffTime": None
-                } for i in range(len(on))]
+    catdict = [{
+        "Network": None,
+        "Station": None,
+        "Channel": None,
+        "StartTime": None,
+        "EndTime": None,
+        "SamplingRate": None,
+        "SamplingInterval": None,
+        "Npts": None,
+        "TriggerOnThreshold": None,
+        "TriggerOffThreshold": None,
+        "TriggerOnTime": None,
+        "TriggerOffTime": None
+    } for i in range(len(on))]
 
     for i in range(len(on)):
         # Index is 1 +/- 1/8 sec before trigger:
@@ -144,7 +145,7 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
                        endtime=UTCDateTime(dtvec[i1]))
         # Normalize trace to [-1, 1]:
         tr_data = tr_sample.data
-        tr_data /= np.abs(tr_data).max()
+        # tr_data /= np.abs(tr_data).max()
         tr_out[i, :] = tr_data
         # Calculate spectrogram:
         t_spec, f_spec, S = get_specgram(
@@ -163,19 +164,19 @@ def detector(tr, signal_args, detector_args, detector_type='classic'):
         C_out[i, :, :] = get_cwt(tr_data, fs, cutoff)
         # Save metadata into dictionary:
         catdict[i] = {
-                   "Network": network,
-                   "Station": station,
-                   "Channel": channel,
-                   "StartTime": tr_sample.stats.starttime.isoformat(),
-                   "EndTime": tr_sample.stats.endtime.isoformat(),
-                   "SamplingRate": tr_sample.stats.sampling_rate,
-                   "SamplingInterval": tr_sample.stats.delta,
-                   "Npts": tr_sample.stats.npts,
-                   "TriggerOnThreshold": trigger_on,
-                   "TriggerOffThreshold": trigger_off,
-                   "TriggerOnTime": dtvec[on[i]].isoformat(),
-                   "TriggerOffTime": dtvec[off[i]].isoformat()
-                   }
+           "Network": network,
+           "Station": station,
+           "Channel": channel,
+           "StartTime": tr_sample.stats.starttime.isoformat(),
+           "EndTime": tr_sample.stats.endtime.isoformat(),
+           "SamplingRate": tr_sample.stats.sampling_rate,
+           "SamplingInterval": tr_sample.stats.delta,
+           "Npts": tr_sample.stats.npts,
+           "TriggerOnThreshold": trigger_on,
+           "TriggerOffThreshold": trigger_off,
+           "TriggerOnTime": dtvec[on[i]].isoformat(),
+           "TriggerOffTime": dtvec[off[i]].isoformat()
+        }
 
     return tr_out, S_out, C_out, catdict
 
@@ -380,7 +381,7 @@ def mass_data_downloader(
         station = Station,
         location = "*",
         channel = Channel,
-        reject_channels_with_gaps = False,
+        reject_channels_with_gaps = True,
         minimum_length = 0.0,
         minimum_interstation_distance_in_m = 100.0
     )
