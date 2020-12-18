@@ -8,8 +8,8 @@ This script contains neural network architectures used in the RIS package.
 import torch
 import torch.nn as nn
 
-# Current Method ==============================================================
-# This network is best for data of dimension 65x175 (3.5 s)
+
+# ======== This network is for data of dimension 100x87 (4 s) =================
 class Encoder(nn.Module):
     """
     Description: Encoder layers of autoencoder model; encodes input data
@@ -22,9 +22,9 @@ class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
+            nn.Conv2d(1, 8, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
             nn.ReLU(True),
-            nn.Conv2d(8, 16, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
+            nn.Conv2d(8, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
             nn.ReLU(True),
             nn.Conv2d(16, 32, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
             nn.ReLU(True),
@@ -34,7 +34,7 @@ class Encoder(nn.Module):
             nn.ReLU(True),
 
             nn.Flatten(),
-            nn.Linear(1280, 10),
+            nn.Linear(1152, 9),
             nn.ReLU(True)
         )
 
@@ -42,7 +42,7 @@ class Encoder(nn.Module):
         x = self.encoder(x)
         return x
 
-# Decoder Layers
+
 class Decoder(nn.Module):
     """
     Description: Decoder layers of autoencoder model; reconstructs encoder
@@ -55,27 +55,27 @@ class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()
         self.latent2dec = nn.Sequential(
-            nn.Linear(10, 1280),
+            nn.Linear(9, 1152),
             nn.ReLU(True)
         )
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(2,2), padding=(0,0)), # <---- Experimental
+            nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(2,2), padding=(1,0)), # <---- Experimental
             nn.ReLU(True),  # <---- Experimental
-            nn.ConvTranspose2d(64, 32, kernel_size=(3,3), stride=(2,2), padding=(1,0)),
+            nn.ConvTranspose2d(64, 32, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.ConvTranspose2d(32, 16, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
             nn.ReLU(True),
-            nn.ConvTranspose2d(16, 8, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
+            nn.ConvTranspose2d(16, 8, kernel_size=(3,3), stride=(2,2), padding=(0,0)),
             nn.ReLU(True),
             nn.ConvTranspose2d(8, 1, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
         )
 
     def forward(self, x):
         x = self.latent2dec(x)
-        x = x.view(-1, 128, 2, 5)
+        x = x.view(-1, 128, 3, 3)
         x = self.decoder(x)
-        return x[:,:,1:-1,1:-1]
-        # return x
+        return x[:,:,4:-4,1:]
+
 
 class AEC(nn.Module):
     """
@@ -96,6 +96,7 @@ class AEC(nn.Module):
         x = self.decoder(z)
         return x, z
 
+
 def init_weights(m):
     """
     Description: Initializes weights with the Glorot Uniform distribution.
@@ -107,6 +108,7 @@ def init_weights(m):
     if type(m) in [nn.Linear, nn.Conv2d, nn.ConvTranspose2d]:
         torch.nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
+
 
 class ClusteringLayer(nn.Module):
     """
@@ -122,7 +124,7 @@ class ClusteringLayer(nn.Module):
     Outputs:
         Soft cluster assignments
     """
-    def __init__(self, n_clusters, n_features=10, alpha=1.0, weights=None):
+    def __init__(self, n_clusters, n_features=9, alpha=1.0, weights=None):
         super(ClusteringLayer, self).__init__()
         self.n_features = n_features
         self.n_clusters = n_clusters
@@ -146,6 +148,7 @@ class ClusteringLayer(nn.Module):
         x = torch.t(x) / torch.sum(x, dim=1)
         x = torch.t(x)
         return x
+
 
 class DCM(nn.Module):
     """
