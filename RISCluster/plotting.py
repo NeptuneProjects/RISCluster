@@ -739,15 +739,16 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         ax.set_xticks([])
         plt.ylabel('Frequency (Hz)')
         station = metadata[counter]['station']
-        try:
-            time_on = datetime.strptime(metadata[counter]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        except:
-            time_on = datetime.strptime(metadata[counter]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        plt.title(f'Station {station}\nTrigger: {time_on}; '
+        time_on = metadata[counter]['spec_start']
+        # try:
+        # time_on = datetime.strptime(metadata[counter]['spec_start'],
+        #                             '%Y-%m-%d %H:%M:%S.%f').strftime(
+        #                             '%Y-%m-%d %H:%M:%S.%f')[:-4]
+        # except:
+        #     time_on = datetime.strptime(metadata[counter]['dt_on'],
+        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
+        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        plt.title(f'Station {station}\nTime: {time_on}; '
                   f'Index: {image_index[sample_index[i]]}')
 
         tvec = np.linspace(extent[0], extent[1], tr.shape[1])
@@ -953,14 +954,15 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         plt.xlabel('Time Bin')
         plt.ylabel('Frequency Bin')
         station = metadata[counter]['station']
-        try:
-            time_on = datetime.strptime(metadata[counter]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        except:
-            time_on = datetime.strptime(metadata[counter]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        time_on = metadata[counter]['spec_start']
+        # try:
+        #     time_on = datetime.strptime(metadata[counter]['dt_on'],
+        #                                 '%Y-%m-%dT%H:%M:%S.%f').strftime(
+        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        # except:
+        #     time_on = datetime.strptime(metadata[counter]['dt_on'],
+        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
+        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         plt.title(f'Station {station}\nTrigger: {time_on}\n'
                   f'Index: {sample_index[insp_idx[i]]}')
         # plt.title(f'Station {}'.format(metadata[counter]['station']))
@@ -1000,14 +1002,15 @@ def view_specgram_training(
     counter = 0
     for i in range(x.size()[0]):
         station = metadata[i]['station']
-        try:
-            time_on = datetime.strptime(metadata[i]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        except:
-            time_on = datetime.strptime(metadata[i]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        time_on = metadata[counter]['spec_start']
+        # try:
+        #     time_on = datetime.strptime(metadata[i]['dt_on'],
+        #                                 '%Y-%m-%dT%H:%M:%S.%f').strftime(
+        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        # except:
+        #     time_on = datetime.strptime(metadata[i]['dt_on'],
+        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
+        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
         ax = fig.add_subplot(gs[0,counter])
         plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
@@ -1073,14 +1076,15 @@ def view_specgram_training2(
     counter = 0
     for i in range(x.size()[0]):
         station = metadata[i]['station']
-        try:
-            time_on = datetime.strptime(metadata[i]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S.%f').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        except:
-            time_on = datetime.strptime(metadata[i]['dt_on'],
-                                        '%Y-%m-%dT%H:%M:%S').strftime(
-                                        '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        time_on = metadata[counter]['spec_start']
+        # try:
+        #     time_on = datetime.strptime(metadata[i]['dt_on'],
+        #                                 '%Y-%m-%dT%H:%M:%S.%f').strftime(
+        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+        # except:
+        #     time_on = datetime.strptime(metadata[i]['dt_on'],
+        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
+        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         ax1 = fig.add_subplot(gs[counter,0])
         plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
         plt.colorbar(orientation='vertical', pad=0)
