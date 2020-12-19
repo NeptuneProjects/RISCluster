@@ -28,7 +28,7 @@ class H5SeismicDataset(Dataset):
         self.fname = fname
 
     def __len__(self):
-        m, _, _ = query_dbSize_(self.fname)
+        m, _, _ = query_dbSize(self.fname)
         return m
 
     def __getitem__(self, idx):
@@ -65,7 +65,7 @@ class SpecgramShaper(object):
         if self.n is not None and self.o is not None:
             N, O = X.shape
         else:
-            X = X[:-1, 12:-14]
+            X = X[:-1, 1:]
         if self.transform == "sample_norm":
             X /= np.abs(X).max(axis=(0,1))
         elif self.transform == "sample_norm_cent":
@@ -186,78 +186,78 @@ def init_output_env(savepath, mode, **kwargs):
             )
 
 
-def load_dataset(
-        fname_dataset,
-        index,
-        send_message=False,
-        transform=None,
-        **kwargs
-    ):
-    '''
-    Arguments:
-      fname_dataset: Path to h5 dataset
-      index: List of indices to load
-      send_message: Boolean
-      transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
-    '''
-    M = len(index)
-    if 'notqdm' in kwargs:
-        notqdm = kwargs.get("notqdm")
-    else:
-        notqdm = False
-
-    with h5py.File(fname_dataset, 'r') as f:
-        #samples, frequency bins, time bins, amplitude
-        DataSpec = '/4.0/Spectrogram'
-        dset = f[DataSpec]
-        m, n, o = dset.shape
-        m -= 1
-        if not notqdm:
-            print('-' * 80)
-            print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
-            print(f'Loading {M} samples...')
-        tic = datetime.now()
-
-        np.seterr(all='ignore')
-        # X = np.empty([M, n-2, o-173, 1])
-        # X = np.zeros([M, 1, 65, 175])
-        X = np.zeros([M, 69, 175])
-        idx_sample = np.empty([M,], dtype=np.int)
-        dset_arr = np.zeros([n, o])
-        count = 0
-        for i in tqdm(
-            range(M),
-            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
-            disable=notqdm
-        ):
-            dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
-            if transform == "sample_norm":
-                dset_arr /= np.abs(dset_arr).max() # <---- This one works
-            elif transform == "sample_norm_cent":
-                dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max() # <---- This one works
-            elif transform == "sample_std":
-                dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std() # <---- This one throws NaNs for loss in pre-training
-
-            X[count,:,:] = dset_arr
-            # X[count,:,:,:] = np.expand_dims(dset_arr, axis=0)
-            idx_sample[count,] = int(index[i])
-            count += 1
-
-        if transform == "pixelwise":
-            X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
-
-        X = np.expand_dims(X, axis=1)
-
-        toc = datetime.now()
-        msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
-                     f'\nTime Elapsed = {(toc-tic)}'
-        if not notqdm:
-            print(msgcontent)
-        if send_message:
-            msgsubj = 'Data Loaded'
-            notify(msgsubj, msgcontent)
-
-    return SeismoDataset(X)
+# def load_dataset(
+#         fname_dataset,
+#         index,
+#         send_message=False,
+#         transform=None,
+#         **kwargs
+#     ):
+#     '''
+#     Arguments:
+#       fname_dataset: Path to h5 dataset
+#       index: List of indices to load
+#       send_message: Boolean
+#       transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
+#     '''
+#     M = len(index)
+#     if 'notqdm' in kwargs:
+#         notqdm = kwargs.get("notqdm")
+#     else:
+#         notqdm = False
+#
+#     with h5py.File(fname_dataset, 'r') as f:
+#         #samples, frequency bins, time bins, amplitude
+#         DataSpec = '/4.0/Spectrogram'
+#         dset = f[DataSpec]
+#         m, n, o = dset.shape
+#         m -= 1
+#         if not notqdm:
+#             print('-' * 80)
+#             print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
+#             print(f'Loading {M} samples...')
+#         tic = datetime.now()
+#
+#         np.seterr(all='ignore')
+#         # X = np.empty([M, n-2, o-173, 1])
+#         # X = np.zeros([M, 1, 65, 175])
+#         X = np.zeros([M, 69, 175])
+#         idx_sample = np.empty([M,], dtype=np.int)
+#         dset_arr = np.zeros([n, o])
+#         count = 0
+#         for i in tqdm(
+#             range(M),
+#             bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+#             disable=notqdm
+#         ):
+#             dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
+#             if transform == "sample_norm":
+#                 dset_arr /= np.abs(dset_arr).max() # <---- This one works
+#             elif transform == "sample_norm_cent":
+#                 dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max() # <---- This one works
+#             elif transform == "sample_std":
+#                 dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std() # <---- This one throws NaNs for loss in pre-training
+#
+#             X[count,:,:] = dset_arr
+#             # X[count,:,:,:] = np.expand_dims(dset_arr, axis=0)
+#             idx_sample[count,] = int(index[i])
+#             count += 1
+#
+#         if transform == "pixelwise":
+#             X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
+#
+#         X = np.expand_dims(X, axis=1)
+#
+#         toc = datetime.now()
+#         msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
+#                      f'\nTime Elapsed = {(toc-tic)}'
+#         if not notqdm:
+#             print(msgcontent)
+#         if send_message:
+#             msgsubj = 'Data Loaded'
+#             notify(msgsubj, msgcontent)
+#
+#     return SeismoDataset(X)
 
 
 def load_images(fname_dataset, index):
@@ -265,17 +265,17 @@ def load_images(fname_dataset, index):
         #samples, frequency bins, time bins, amplitude
         DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
-        X = np.zeros((len(index), 70, 201))
+        X = np.zeros((len(index), 88, 101))
         for i, index in enumerate(index):
             dset_arr = dset[index, :, :]
             X[i] = dset_arr
     #         X = dset_arr / np.abs(dset_arr).max()
     #         X = (dset_arr - dset_arr.mean()) / dset_arr.std()
-            fvec = dset[1, 0:68, 0]
-            tvec = dset[1, 69, 1:]
-    X = X[:, :-1, 12:-14]
-    tvec = tvec[12:-14]
-    fvec = fvec[:-1]
+        fvec = dset[1, 0:86, 0]
+        tvec = dset[1, 87, 1:]
+    X = X[:, :-1, 1:]
+    # tvec = tvec[12:-14]
+    # fvec = fvec[:-1]
 
     X = (X - X.mean(axis=(1,2))[:,None,None]) / \
         np.abs(X).max(axis=(1,2))[:,None,None]
@@ -372,69 +372,69 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     return savepath
 
 
-def multi_load(path, index, send_message=False, transform=None, **kwargs):
-    '''
-    Arguments:
-      fname_dataset: Path to h5 dataset
-      index: List of indices to load
-      send_message: Boolean
-      transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
-    '''
-    M = len(index)
-    if 'notqdm' in kwargs:
-        notqdm = kwargs.get("notqdm")
-    else:
-        notqdm = False
-        m, n, o = query_dbSize(path)
-        print('--------------------------------------------------------------')
-        print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
-        print(f'Loading {M} samples...')
-    tic = datetime.now()
-    A = [
-            {
-                'fname_dataset': path,
-                'index': index[i],
-            } for i in range(M)]
-    X = np.zeros((M, 70, 201))
-    with ProcessPoolExecutor(max_workers=16) as exec:
-        futures = [exec.submit(read_h5, **a) for a in A]
-        kwargs = {
-            'total': int(len(futures)),
-            'unit': 'samples',
-            'unit_scale': True,
-            'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}',
-            'leave': True,
-            'disable': notqdm
-        }
-        for i, future in enumerate(tqdm(as_completed(futures), **kwargs)):
-            X[i, :, :] = future.result()
-
-    if not notqdm:
-        print("Transforming data...", end="", flush=True)
-    X = X[:, :-1, 12:-14]
-    if transform == "sample_norm": # <-------------------------- Works
-        X /= np.abs(X).max(axis=(1,2))[:,None,None]
-    elif transform == "sample_norm_cent": # <------------------- Works
-        X = (X - X.mean(axis=(1,2))[:,None,None]) / \
-            np.abs(X).max(axis=(1,2))[:,None,None]
-    elif transform == "sample_std": # <------------------------- Doesn't work
-        X = (X - X.mean(axis=(1,2))[:,None,None]) / \
-            X.std(axis=(1,2))[:,None,None]
-    elif transform == "pixelwise":
-        X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
-    X = np.expand_dims(X, axis=1)
-    if not notqdm:
-        print('complete.')
-
-    toc = datetime.now()
-    msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
-                 f'\nTime Elapsed = {(toc-tic)}'
-    if not notqdm:
-        print(msgcontent)
-    if send_message:
-        msgsubj = 'Data Loaded'
-        notify(msgsubj, msgcontent)
-    return SeismoDataset(X)
+# def multi_load(path, index, send_message=False, transform=None, **kwargs):
+#     '''
+#     Arguments:
+#       fname_dataset: Path to h5 dataset
+#       index: List of indices to load
+#       send_message: Boolean
+#       transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
+#     '''
+#     M = len(index)
+#     if 'notqdm' in kwargs:
+#         notqdm = kwargs.get("notqdm")
+#     else:
+#         notqdm = False
+#         m, n, o = query_dbSize(path)
+#         print('--------------------------------------------------------------')
+#         print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
+#         print(f'Loading {M} samples...')
+#     tic = datetime.now()
+#     A = [
+#             {
+#                 'fname_dataset': path,
+#                 'index': index[i],
+#             } for i in range(M)]
+#     X = np.zeros((M, 88, 101))
+#     with ProcessPoolExecutor(max_workers=16) as exec:
+#         futures = [exec.submit(read_h5, **a) for a in A]
+#         kwargs = {
+#             'total': int(len(futures)),
+#             'unit': 'samples',
+#             'unit_scale': True,
+#             'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}',
+#             'leave': True,
+#             'disable': notqdm
+#         }
+#         for i, future in enumerate(tqdm(as_completed(futures), **kwargs)):
+#             X[i, :, :] = future.result()
+#
+#     if not notqdm:
+#         print("Transforming data...", end="", flush=True)
+#     X = X[:, :-1, 1:]
+#     if transform == "sample_norm": # <-------------------------- Works
+#         X /= np.abs(X).max(axis=(1,2))[:,None,None]
+#     elif transform == "sample_norm_cent": # <------------------- Works
+#         X = (X - X.mean(axis=(1,2))[:,None,None]) / \
+#             np.abs(X).max(axis=(1,2))[:,None,None]
+#     elif transform == "sample_std": # <------------------------- Doesn't work
+#         X = (X - X.mean(axis=(1,2))[:,None,None]) / \
+#             X.std(axis=(1,2))[:,None,None]
+#     elif transform == "pixelwise":
+#         X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
+#     X = np.expand_dims(X, axis=1)
+#     if not notqdm:
+#         print('complete.')
+#
+#     toc = datetime.now()
+#     msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
+#                  f'\nTime Elapsed = {(toc-tic)}'
+#     if not notqdm:
+#         print(msgcontent)
+#     if send_message:
+#         msgsubj = 'Data Loaded'
+#         notify(msgsubj, msgcontent)
+#     return SeismoDataset(X)
 
 
 def notify(msgsubj, msgcontent):
@@ -497,15 +497,6 @@ def parse_nclusters(line):
 
 
 def query_dbSize(path):
-    with h5py.File(path, 'r') as f:
-        #samples, frequency bins, time bins, amplitude
-        DataSpec = '/4.0/Spectrogram'
-        dset = f[DataSpec]
-        m, n, o = dset.shape
-        return m-1, n, o
-
-
-def query_dbSize_(path):
     with h5py.File(path, 'r') as f:
         #samples, frequency bins, time bins, amplitude
         DataSpec = '/4.0/Spectrogram'
@@ -604,7 +595,6 @@ def set_TraVal_index(M, fname_dataset, reserve=0.0):
     with h5py.File(fname_dataset, 'r') as f:
         DataSpec = '/4.0/Spectrogram'
         m, _, _ = f[DataSpec].shape
-        m -= 1
         if M > m:
             print(f'{M} spectrograms requested, but only {m} '
                   f'available in database; setting M to {m}.')
@@ -618,7 +608,6 @@ def set_TraVal_index(M, fname_dataset, reserve=0.0):
     split = int(split_fraction * len(index))
     index_tra = index[0:split]
     index_val = index[split:]
-
     return index_tra, index_val, M
 
 
@@ -635,7 +624,6 @@ def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
         pickle.dump(index, f)
     print(f'{M} training & validation indices saved to:')
     print(savepath)
-
     return index_tra, index_val, savepath
 
 
@@ -644,7 +632,6 @@ def load_TraVal_index(fname_dataset, loadpath):
         data = pickle.load(f)
         index_tra = data['index_tra']
         index_val = data['index_val']
-
     return index_tra, index_val
 
 
@@ -652,20 +639,13 @@ def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
         DataSpec = '/4.0/Spectrogram'
         m, _, _ = f[DataSpec].shape
-        m -= 1
-
-    index = np.arange(1, m+1)
-
+    index = np.arange(0, m)
     if exclude:
         idx_ex = load_TraVal_index(fname_dataset, indexpath)
         idx_ex = sorted(set(np.concatenate(idx_ex).flatten()))
         index_avail = np.setdiff1d(index, idx_ex)
     else:
         index_avail = index
-
-    # print(len(index_avail))
-    # print(M)
-
     index_tst = np.random.choice(
         index_avail,
         size=int(M * (1+reserve)),
@@ -678,10 +658,8 @@ def set_M(fname_dataset, indexpath, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
         DataSpec = '/4.0/Spectrogram'
         m, _, _ = f[DataSpec].shape
-        m -= 1
     print('Determining number of prediction samples...')
     print(f'{m} samples in dataset...')
-
     if exclude:
         idx_tra, idx_val = load_TraVal_index(fname_dataset, indexpath)
         M_TraVal = len(idx_tra) + len(idx_val)
@@ -691,5 +669,4 @@ def set_M(fname_dataset, indexpath, exclude=True):
     else:
         M = m
         print(f'{M} prediction samples to be used.')
-
     return M

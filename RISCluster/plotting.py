@@ -24,6 +24,7 @@ from processing import get_metadata
 import utils
 from networks import AEC, DCM
 
+
 def cmap_lifeaquatic(N=None):
     """
     Returns colormap inspired by Wes Andersen's The Life Aquatic
@@ -46,6 +47,7 @@ def cmap_lifeaquatic(N=None):
         return colors[0:N]
     else:
         return colors
+
 
 def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
     d = z_array.shape[1]
@@ -170,6 +172,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         plt.close()
     return fig
 
+
 def centroid_distances(z_array, labels, centroids, n_clusters, p=2, show=True):
     dist_mat = utils.distance_matrix(centroids, centroids, p)
     fig = plt.figure(dpi=150)
@@ -187,6 +190,7 @@ def centroid_distances(z_array, labels, centroids, n_clusters, p=2, show=True):
     else:
         plt.close()
     return fig
+
 
 def cluster_gallery(
         model,
@@ -248,13 +252,13 @@ def cluster_gallery(
                 M = len(idx)
                 DataSpec = '/4.0/Trace'
                 dset = f[DataSpec]
-                k = 351
+                k = 199
 
                 tr = np.empty([M, k])
                 dset_arr = np.empty([k,])
 
                 for i in range(M):
-                    dset_arr = dset[idx[i], 25:-25]
+                    dset_arr = dset[idx[i]]
                     tr[i,:] = dset_arr
 
         Z = model.encoder(X)
@@ -327,6 +331,7 @@ def cluster_gallery(
         plt.close()
     return fig
 
+
 def compare_images(
         model,
         epoch,
@@ -382,6 +387,7 @@ def compare_images(
         fig.savefig(figname, dpi=300)
     return fig
 
+
 def label_offset(ax, axis="y"):
     if axis == "y":
         fmt = ax.yaxis.get_major_formatter()
@@ -409,12 +415,14 @@ def label_offset(ax, axis="y"):
     update_label(None)
     return
 
+
 def save_DCM_output(x, label, x_rec, z, idx, savepath):
     # print(f'x={type(x)} | label={type(label)} | x_r={type(x_rec)} | z={type(z)} | idx={type(idx)} | path={type(savepath)}')
     fig = view_DCM_output(x, label, x_rec, z, idx, show=False)
     # print(f'{savepath}{idx:07d}.png')
     fig.savefig(f'{savepath}/{idx:07d}.png', dpi=300)
     return None
+
 
 def view_centroid_output(centroids, X_r, figtitle, show=True):
     '''Reconstructs spectrograms from cluster centroids.'''
@@ -443,6 +451,7 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
     else:
         plt.show()
     return fig
+
 
 def view_class_cdf(
         data_a,
@@ -499,6 +508,7 @@ def view_class_cdf(
     else:
         plt.close()
     return fig
+
 
 def view_class_pdf(
         data_a,
@@ -591,6 +601,7 @@ def view_class_pdf(
     else:
         plt.close()
     return fig
+
 
 def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     def _make_patch_spines_invisible(ax):

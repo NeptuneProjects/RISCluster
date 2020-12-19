@@ -117,6 +117,7 @@ def DCM_pretrain(parameters, hyperparameters):
             except KeyboardInterrupt:
                 print('Re-attempt terminated by user, ending program.')
                 torch.cuda.empty_cache()
+                raise
             finally:
                 torch.cuda.empty_cache()
 
