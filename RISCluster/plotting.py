@@ -740,11 +740,11 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         plt.ylabel('Frequency (Hz)')
         station = metadata[counter]['station']
         try:
-            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[counter]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         except:
-            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[counter]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         plt.title(f'Station {station}\nTrigger: {time_on}; '
@@ -954,11 +954,11 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         plt.ylabel('Frequency Bin')
         station = metadata[counter]['station']
         try:
-            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[counter]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         except:
-            time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[counter]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         plt.title(f'Station {station}\nTrigger: {time_on}\n'
@@ -1001,11 +1001,11 @@ def view_specgram_training(
     for i in range(x.size()[0]):
         station = metadata[i]['station']
         try:
-            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[i]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         except:
-            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[i]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
@@ -1074,11 +1074,11 @@ def view_specgram_training2(
     for i in range(x.size()[0]):
         station = metadata[i]['station']
         try:
-            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[i]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         except:
-            time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
+            time_on = datetime.strptime(metadata[i]['dt_on'],
                                         '%Y-%m-%dT%H:%M:%S').strftime(
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         ax1 = fig.add_subplot(gs[counter,0])
