@@ -705,13 +705,13 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
             M = len(idx)
             DataSpec = '/4.0/Trace'
             dset = f[DataSpec]
-            k = 351
+            k = 199
 
             tr = np.empty([M, k])
             dset_arr = np.empty([k,])
 
             for i in range(M):
-                dset_arr = dset[idx[i], 25:-25]
+                dset_arr = dset[idx[i]]
                 tr[i,:] = dset_arr
 
     with h5py.File(fname_dataset, 'r') as f:
@@ -719,11 +719,12 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
         # fvec = dset[1, 0:64, 0]
-        fvec = dset[1, 0:68, 0]
+        fvec = dset[1, 0:86, 0]
         # tvec = dset[1, 65, 12:-14]
-        tvec = dset[1, 69, 25:-25]
+        tvec = dset[1, 87, 1:]
 
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
+    print(extent)
 
     metadata = get_metadata(sample_index, image_index, fname_dataset)
     fig = plt.figure(figsize=figsize, dpi=150)
