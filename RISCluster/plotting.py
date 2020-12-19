@@ -738,7 +738,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         plt.imshow(X[sample_index[i],:,:].squeeze(), extent=extent, aspect='auto', origin='lower', cmap=cmap)
         ax.set_xticks([])
         plt.ylabel('Frequency (Hz)')
-        station = metadata[counter]['Station']
+        station = metadata[counter]['station']
         try:
             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
@@ -952,7 +952,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         plt.gca().invert_yaxis()
         plt.xlabel('Time Bin')
         plt.ylabel('Frequency Bin')
-        station = metadata[counter]['Station']
+        station = metadata[counter]['station']
         try:
             time_on = datetime.strptime(metadata[counter]['TriggerOnTime'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
@@ -963,7 +963,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
                                         '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         plt.title(f'Station {station}\nTrigger: {time_on}\n'
                   f'Index: {sample_index[insp_idx[i]]}')
-        # plt.title(f'Station {}'.format(metadata[counter]['Station']))
+        # plt.title(f'Station {}'.format(metadata[counter]['station']))
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.colorbar(cax=cax)
@@ -999,7 +999,7 @@ def view_specgram_training(
     gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights, wspace=0.3)
     counter = 0
     for i in range(x.size()[0]):
-        station = metadata[i]['Station']
+        station = metadata[i]['station']
         try:
             time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
@@ -1072,7 +1072,7 @@ def view_specgram_training2(
     gs = gridspec.GridSpec(nrows=x.size()[0], ncols=3, height_ratios=heights, width_ratios=widths, wspace=0.2, hspace=0.6)
     counter = 0
     for i in range(x.size()[0]):
-        station = metadata[i]['Station']
+        station = metadata[i]['station']
         try:
             time_on = datetime.strptime(metadata[i]['TriggerOnTime'],
                                         '%Y-%m-%dT%H:%M:%S.%f').strftime(
