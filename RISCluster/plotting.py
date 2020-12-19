@@ -246,7 +246,7 @@ def cluster_gallery(
             X = batch.to(device)
             with h5py.File(fname_dataset, 'r') as f:
                 M = len(idx)
-                DataSpec = '/4s/Trace'
+                DataSpec = '/4.0/Trace'
                 dset = f[DataSpec]
                 k = 351
 
@@ -703,7 +703,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         idx.numpy()
         with h5py.File(fname_dataset, 'r') as f:
             M = len(idx)
-            DataSpec = '/4s/Trace'
+            DataSpec = '/4.0/Trace'
             dset = f[DataSpec]
             k = 351
 
@@ -716,7 +716,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
 
     with h5py.File(fname_dataset, 'r') as f:
         M = len(image_index)
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
         # fvec = dset[1, 0:64, 0]
         fvec = dset[1, 0:68, 0]

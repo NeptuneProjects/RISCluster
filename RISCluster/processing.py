@@ -65,7 +65,7 @@ def _copy_attributes(in_object, out_object):
 
 def _find_indeces(index, source, stations):
     with h5py.File(source, 'r') as f:
-        metadata = json.loads(f['/4s/Catalogue'][index])
+        metadata = json.loads(f['/4.0/Catalogue'][index])
     if metadata["Station"] in stations:
         return index
     else:
@@ -276,7 +276,7 @@ def get_datetime(datetime_index):
 def get_metadata(query_index, sample_index, fname_dataset):
     '''Returns station metadata given sample index.'''
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4s/Catalogue'
+        DataSpec = '/4.0/Catalogue'
         dset = f[DataSpec]
         metadata = dict()
         counter = 0

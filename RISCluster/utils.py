@@ -20,6 +20,7 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 from twilio.rest import Client
 
+
 class H5SeismicDataset(Dataset):
     """Loads samples from H5 dataset for use in native PyTorch dataloader."""
     def __init__(self, fname, transform=None):
@@ -36,6 +37,7 @@ class H5SeismicDataset(Dataset):
             X = self.transform(X)
         return idx, X
 
+
 class SeismoDataset(Dataset):
     "Converts ndarray already in memory to PyTorch dataset."
     def __init__(self, data, transform=None):
@@ -50,6 +52,7 @@ class SeismoDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
+
 
 class SpecgramShaper(object):
     """Crop & reshape data."""
@@ -72,10 +75,12 @@ class SpecgramShaper(object):
         X = np.expand_dims(X, axis=0)
         return X
 
+
 class SpecgramToTensor(object):
     """Convert ndarrays in sample to Tensors."""
     def __call__(self, X):
         return torch.from_numpy(X)
+
 
 def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
@@ -83,6 +88,7 @@ def calc_tuning_runs(hyperparameters):
         tuning_runs *= len(hyperparameters[key])
 
     return(tuning_runs)
+
 
 def config_training(universal, parameters, hyperparameters=None):
     config = configparser.ConfigParser()
@@ -94,6 +100,7 @@ def config_training(universal, parameters, hyperparameters=None):
     with open(fname, 'w') as configfile:
         config.write(configfile)
     return fname
+
 
 def distance_matrix(x, y, f):
     assert len(x) == len(y)
@@ -108,10 +115,12 @@ def distance_matrix(x, y, f):
             )
     return dist
 
+
 def fractional_distance(x, y, f):
     diff = np.fabs(x - y) ** f
     dist = np.sum(diff, axis=1) ** (1 / f)
     return dist
+
 
 def init_exp_env(mode, savepath, **kwargs):
     if mode == 'batch_predict':
@@ -138,6 +147,7 @@ def init_exp_env(mode, savepath, **kwargs):
           f'{savepath_exp}')
 
     return savepath_exp, serial_exp
+
 
 def init_output_env(savepath, mode, **kwargs):
     serial_run = datetime.now().strftime('%Y%m%dT%H%M%S')
@@ -175,6 +185,7 @@ def init_output_env(savepath, mode, **kwargs):
                 'Incorrect mode selected; choose "pretrain", "train", or "eval".'
             )
 
+
 def load_dataset(
         fname_dataset,
         index,
@@ -197,7 +208,7 @@ def load_dataset(
 
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
         m -= 1
@@ -248,10 +259,11 @@ def load_dataset(
 
     return SeismoDataset(X)
 
+
 def load_images(fname_dataset, index):
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
         X = np.zeros((len(index), 70, 201))
         for i, index in enumerate(index):
@@ -271,6 +283,7 @@ def load_images(fname_dataset, index):
     X = np.expand_dims(X, axis=1)
     return X, tvec, fvec
 
+
 def load_labels(exppath):
     csv_file = [f for f in os.listdir(exppath) if f.endswith('.csv')][0]
     csv_file = f'{exppath}/{csv_file}'
@@ -282,11 +295,13 @@ def load_labels(exppath):
     label_list = np.unique(label)
     return label, index, label_list
 
+
 def load_weights(model, fname, device):
     model.load_state_dict(torch.load(fname, map_location=device), strict=False)
     model.eval()
     print(f'Weights loaded to {device}')
     return model
+
 
 def make_dir(savepath_new, savepath_run="."):
     path = f"{savepath_run}/{savepath_new}"
@@ -294,16 +309,16 @@ def make_dir(savepath_new, savepath_run="."):
         os.makedirs(path)
     return path
 
+
 def make_exp(exppath, **kwargs):
     serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
     savepath_exp = f"{exppath}/{serial_exp}"
     savepath_AEC = f"{savepath_exp}/AEC"
     savepath_DCM = f"{savepath_exp}/DCM"
-
-
     if not os.path.exists(savepath_exp):
         os.makedirs(savepath_exp)
     return savepath_exp, serial_exp
+
 
 def make_pred_configs_batch(loadpath, savepath, overwrite=False):
     exper = loadpath.split("/")[-1]
@@ -354,8 +369,8 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
             config.write(configfile)
 
     print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
-
     return savepath
+
 
 def multi_load(path, index, send_message=False, transform=None, **kwargs):
     '''
@@ -421,6 +436,7 @@ def multi_load(path, index, send_message=False, transform=None, **kwargs):
         notify(msgsubj, msgcontent)
     return SeismoDataset(X)
 
+
 def notify(msgsubj, msgcontent):
     '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012
     Scripps Institution of Oceanography, UC San Diego
@@ -464,6 +480,7 @@ def notify(msgsubj, msgcontent):
         print('Unable to send WhatsApp notification upon job completion.')
         pass
 
+
 def parse_nclusters(line):
     """
     Do a regex search against all defined regexes and
@@ -478,26 +495,30 @@ def parse_nclusters(line):
         else:
             raise Exception('Unable to parse filename for n_clusters.')
 
+
 def query_dbSize(path):
     with h5py.File(path, 'r') as f:
         #samples, frequency bins, time bins, amplitude
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
         return m-1, n, o
 
+
 def query_dbSize_(path):
     with h5py.File(path, 'r') as f:
         #samples, frequency bins, time bins, amplitude
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
         m, n, o = dset.shape
         return m, n, o
 
+
 def read_h5(fname_dataset, index):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         return f[DataSpec][index]
+
 
 def save_exp_config(savepath, serial, init_file, parameters, hyperparameters):
     fname = f'{savepath}ExpConfig{serial}'
@@ -510,6 +531,7 @@ def save_exp_config(savepath, serial, init_file, parameters, hyperparameters):
         f.write(str(configs))
     with open(f'{fname}.pkl', 'wb') as f:
         pickle.dump(configs, f)
+
 
 def save_history(training_history, validation_history, savepath, run_serial):
     if validation_history is not None:
@@ -537,6 +559,7 @@ def save_history(training_history, validation_history, savepath, run_serial):
         w.writerow(d2.keys())
         w.writerows(zip(*d2.values()))
 
+
 def save_labels(label_list, savepath, serial=None):
     if serial is not None:
         fname = f'{savepath}/Labels{serial}.csv'
@@ -553,6 +576,7 @@ def save_labels(label_list, savepath, serial=None):
             w = csv.DictWriter(csvfile, keys)
             w.writerows(label_list)
 
+
 def set_device(cuda_device=None):
     if torch.cuda.is_available and (cuda_device is not None):
         device = torch.device(f'cuda:{cuda_device}')
@@ -564,6 +588,7 @@ def set_device(cuda_device=None):
         print('CUDA device not available, using CPU.')
     return device
 
+
 def start_tensorboard(logdir, tbport):
     cmd = f"python -m tensorboard.main --logdir=. --port={tbport} --samples_per_plugin images=1000"
     p = subprocess.Popen(cmd, cwd=logdir, shell=True)
@@ -571,12 +596,13 @@ def start_tensorboard(logdir, tbport):
     print(f"Tensorboard server available at http://localhost:{tbport}; PID={tbpid}")
     return tbpid
 
+
 # =============================================================================
 #  Functions to set/save/get indices of training/validation/prediction samples.
 # =============================================================================
 def set_TraVal_index(M, fname_dataset, reserve=0.0):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
         if M > m:
@@ -595,6 +621,7 @@ def set_TraVal_index(M, fname_dataset, reserve=0.0):
 
     return index_tra, index_val, M
 
+
 def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
     index_tra, index_val, M = set_TraVal_index(M, fname_dataset)
     index = dict(
@@ -611,6 +638,7 @@ def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
 
     return index_tra, index_val, savepath
 
+
 def load_TraVal_index(fname_dataset, loadpath):
     with open(loadpath, 'rb') as f:
         data = pickle.load(f)
@@ -619,9 +647,10 @@ def load_TraVal_index(fname_dataset, loadpath):
 
     return index_tra, index_val
 
+
 def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
 
@@ -644,9 +673,10 @@ def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
     )
     return index_tst
 
+
 def set_M(fname_dataset, indexpath, exclude=True):
     with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4s/Spectrogram'
+        DataSpec = '/4.0/Spectrogram'
         m, _, _ = f[DataSpec].shape
         m -= 1
     print('Determining number of prediction samples...')

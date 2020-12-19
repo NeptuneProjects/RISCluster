@@ -47,7 +47,7 @@ if __name__ == "__main__":
         raise ValueError(f"Source file not found: {source}")
 
     with h5py.File(source, 'r') as rf:
-        M = len(rf['/4s/Trace'])
+        M = len(rf['/4.0/Trace'])
     index = np.arange(1, M)
 
     if include is not None:
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         dset_names = ['Catalogue', 'Trace', 'Spectrogram', 'Scalogram']
         # dset_names = ['Catalogue']
         for dset_name in dset_names:
-            group_path = '/4s'
+            group_path = '/4.0'
             dset = fs[f"{group_path}/{dset_name}"]
             dset_shape = dset.shape[1:]
             dset_shape = (M,) + dset_shape
