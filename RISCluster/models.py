@@ -30,6 +30,7 @@ imp.reload(plotting)
 import utils
 imp.reload(utils)
 
+
 def pretrain(
         model,
         dataloaders,
@@ -329,6 +330,7 @@ def pretrain(
     tb.close()
     return model, tb
 
+
 def train(
         model,
         dataloader,
@@ -599,6 +601,7 @@ def train(
     print(f'Pre-training complete at {toc}; time elapsed = {toc-tic}.')
     return model
 
+
 def predict(model, dataloader, parameters):
     device = parameters['device']
     loadpath = parameters['saved_weights']
@@ -632,6 +635,7 @@ def predict(model, dataloader, parameters):
             savepath
         )
 
+
 # K-means clusters initialisation
 def kmeans(model, dataloader, device):
     '''
@@ -658,6 +662,7 @@ def kmeans(model, dataloader, device):
     labels = km.labels_
     centroids = km.cluster_centers_
     return labels, centroids
+
 
 def kmeds(model, dataloader, device):
     '''
@@ -686,6 +691,7 @@ def kmeds(model, dataloader, device):
     labels = kmed.labels_
     centroids = kmed.cluster_centers_
     return labels, centroids
+
 
 def gmm(model, dataloader, device):
     '''
@@ -720,6 +726,7 @@ def gmm(model, dataloader, device):
     centroids = GMM.means_
     return labels, centroids
 
+
 def pca(labels, model, dataloader, device, tb, counter):
     z_array = infer_z(dataloader, model, device)
     row_max = z_array.max(axis=1)
@@ -729,6 +736,7 @@ def pca(labels, model, dataloader, device, tb, counter):
     pca2d = pca2.transform(z_array)
     fig = plotting.view_clusters(pca2d, labels)
     tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
+
 
 def tsne(data):
     print('Running t-SNE...', end="", flush=True)
@@ -745,6 +753,7 @@ def tsne(data):
     ).fit_transform(data.astype('float64'))
     print('complete.')
     return results
+
 
 def infer_labels(dataloader, model, device):
     '''
@@ -772,13 +781,14 @@ def infer_labels(dataloader, model, device):
     labels = np.argmax(q_array.data, axis=1)
     return np.round(q_array, 5), labels
 
+
 def infer_z(dataloader, model, device, v=False):
     if v:
         notqdm = False
     else:
         notqdm = True
     model.eval()
-    z_array = np.zeros((len(dataloader.dataset), 10), dtype=np.float32)
+    z_array = np.zeros((len(dataloader.dataset), model.clustering.n_features), dtype=np.float32)
     bsz = dataloader.batch_size
     for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
         _, batch = batch
@@ -789,6 +799,7 @@ def infer_z(dataloader, model, device, v=False):
             _, _, z = model(x)
         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
     return z_array
+
 
 def target_distribution(q):
     '''
@@ -808,6 +819,7 @@ def target_distribution(q):
     p = q ** 2 / np.sum(q, axis=0)
     p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
     return np.round(p, 5)
+
 
 def analyze_clustering(
         model,
@@ -905,6 +917,7 @@ def analyze_clustering(
     )
     return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
 
+
 def analyze_clustering2(
         model,
         dataloader,
@@ -985,6 +998,7 @@ def analyze_clustering2(
             figures[i] = future.result()
     return figures
 
+
 def kmeans_metrics(dataloader, model, device, k_list):
     z_array = infer_z(dataloader, model, device)
 
@@ -1045,6 +1059,7 @@ def kmeans_metrics(dataloader, model, device, k_list):
     gap_g = np.log(np.asarray(inertiag)) - np.log(np.asarray(inertia))
     gap_u = np.log(np.asarray(inertiau)) - np.log(np.asarray(inertia))
     return inertia, silh, gap_g, gap_u
+
 
 def measure_class_inertia(data, centroids, n_clusters):
     inertia = np.empty(n_clusters)
