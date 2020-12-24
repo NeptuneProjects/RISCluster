@@ -392,7 +392,7 @@ def train(
         'PDF'
     ]
     figpaths = [utils.make_dir(fignames[i], savepath_run) for i in range(len(fignames))]
-    mp.set_start_method("spawn")
+
     model.load_state_dict(
         torch.load(loadpath, map_location=device), strict=False
     )
@@ -456,9 +456,10 @@ def train(
             epoch,
             show
     )
-
+    mp.set_start_method("spawn")
     plot_process = mp.Process(target=plotter_mp, args=plotargs)
     plot_process.start()
+    mp.set_start_method("fork")
     # figures = analyze_clustering(
     #     model,
     #     dataloader,
@@ -603,8 +604,10 @@ def train(
                     epoch,
                     show
             )
+            mp.set_start_method("spawn")
             plot_process = mp.Process(target=plotter_mp, args=plotargs)
             plot_process.start()
+            mp.set_start_method("fork")
             # figures = analyze_clustering(
             #     model,
             #     dataloader,
