@@ -1021,14 +1021,6 @@ def kmeans_metrics(dataloader, model, device, k_list):
     return inertia, silh, gap_g, gap_u
 
 
-def measure_class_inertia(data, centroids, n_clusters):
-    inertia = np.empty(n_clusters)
-    for j in range(n_clusters):
-        mu = centroids[j]
-        inertia[j] = np.sum(np.sqrt(np.sum((data - mu) ** 2, axis=1)) ** 2)
-    return inertia
-
-
 def plotter_mp(
         fignames,
         figpaths,
@@ -1054,12 +1046,12 @@ def plotter_mp(
         device,
         fname_dataset,
         index_tra,
-        z_array0,
-        z_array0,
-        labels_prev,
-        labels_prev,
-        centroids,
-        centroids,
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
         epoch,
         show
     )

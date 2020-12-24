@@ -437,6 +437,14 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
 #     return SeismoDataset(X)
 
 
+def measure_class_inertia(data, centroids, n_clusters):
+    inertia = np.empty(n_clusters)
+    for j in range(n_clusters):
+        mu = centroids[j]
+        inertia[j] = np.sum(np.sqrt(np.sum((data - mu) ** 2, axis=1)) ** 2)
+    return inertia
+
+
 def notify(msgsubj, msgcontent):
     '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012
     Scripps Institution of Oceanography, UC San Diego
