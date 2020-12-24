@@ -415,11 +415,11 @@ def train(
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     # Initialize Clusters:
     # -- K-Means Initialization:
-    # print('Initiating clusters with k-means...', end="", flush=True)
-    # labels_prev, centroids = kmeans(model, dataloader, device)
+    print('Initiating clusters with k-means...', end="", flush=True)
+    labels_prev, centroids = kmeans(model, dataloader, device)
     # -- GMM Initialization:
-    print('Initiating clusters with GMM...', end="", flush=True)
-    labels_prev, centroids = gmm(model, dataloader, device)
+    # print('Initiating clusters with GMM...', end="", flush=True)
+    # labels_prev, centroids = gmm(model, dataloader, device)
     # -- K-Medoids Initialization:
     # print('Initiating clusters with k-medoids...', end="", flush=True)
     # labels_prev, centroids = kmeds(model, dataloader, device)
