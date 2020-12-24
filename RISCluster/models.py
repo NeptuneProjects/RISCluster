@@ -457,7 +457,7 @@ def train(
             show
     )
     plot_process = Process(target=plotter_mp, args=plotargs)
-    plot_process.start()
+    plot_process.spawn()
     # figures = analyze_clustering(
     #     model,
     #     dataloader,
@@ -603,7 +603,7 @@ def train(
                     show
             )
             plot_process = Process(target=plotter_mp, args=plotargs)
-            plot_process.start()
+            plot_process.spawn()
             # figures = analyze_clustering(
             #     model,
             #     dataloader,
