@@ -1,7 +1,7 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
 from datetime import datetime
-from mulmultiprocessing import Process
+from multiprocessing import Process
 import os
 import random
 import shutil
