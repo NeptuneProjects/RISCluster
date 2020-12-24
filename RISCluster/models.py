@@ -1,7 +1,7 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
 from datetime import datetime
-import multiprocessing as mp
+import threading
 import os
 import random
 import shutil
@@ -456,10 +456,8 @@ def train(
             epoch,
             show
     )
-    mp.set_start_method("spawn")
-    plot_process = mp.Process(target=plotter_mp, args=plotargs)
+    plot_process = threading.Thread(target=plotter_mp, args=plotargs)
     plot_process.start()
-    mp.set_start_method("fork")
     # figures = analyze_clustering(
     #     model,
     #     dataloader,
@@ -604,10 +602,8 @@ def train(
                     epoch,
                     show
             )
-            mp.set_start_method("spawn")
-            plot_process = mp.Process(target=plotter_mp, args=plotargs)
+            plot_process = threading.Thread(target=plotter_mp, args=plotargs)
             plot_process.start()
-            mp.set_start_method("fork")
             # figures = analyze_clustering(
             #     model,
             #     dataloader,
