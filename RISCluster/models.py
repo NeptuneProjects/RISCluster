@@ -1,7 +1,7 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
 from datetime import datetime
-from multiprocessing import Process
+import multiprocessing as mp
 import os
 import random
 import shutil
@@ -392,7 +392,7 @@ def train(
         'PDF'
     ]
     figpaths = [utils.make_dir(fignames[i], savepath_run) for i in range(len(fignames))]
-    multiprocessing.set_start_method("spawn")
+    mp.set_start_method("spawn")
     model.load_state_dict(
         torch.load(loadpath, map_location=device), strict=False
     )
@@ -457,7 +457,7 @@ def train(
             show
     )
 
-    plot_process = Process(target=plotter_mp, args=plotargs)
+    plot_process = mp.Process(target=plotter_mp, args=plotargs)
     plot_process.start()
     # figures = analyze_clustering(
     #     model,
@@ -603,7 +603,7 @@ def train(
                     epoch,
                     show
             )
-            plot_process = Process(target=plotter_mp, args=plotargs)
+            plot_process = mp.Process(target=plotter_mp, args=plotargs)
             plot_process.start()
             # figures = analyze_clustering(
             #     model,
