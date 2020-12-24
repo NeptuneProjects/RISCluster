@@ -1,6 +1,7 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
 from datetime import datetime
+from mulmultiprocessing import Process
 import os
 import random
 import shutil
@@ -434,25 +435,45 @@ def train(
     z_array0 = infer_z(dataloader, model, device)
     p = target_distribution(q)
     epoch = 0
-    figures = analyze_clustering(
-        model,
-        dataloader,
-        device,
-        fname_dataset,
-        index_tra,
-        z_array0,
-        z_array0,
-        labels_prev,
-        labels_prev,
-        centroids,
-        centroids,
-        epoch,
-        show
+    plotargs = (
+            fignames,
+            figpaths,
+            tb,
+            model,
+            dataloader,
+            device,
+            fname_dataset,
+            index_tra,
+            z_array0,
+            z_array0,
+            labels_prev,
+            labels_prev,
+            centroids,
+            centroids,
+            epoch,
+            show
     )
-    [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
-        for i, fig in enumerate(figures)]
-    [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
-        for i, fig in enumerate(figures)]
+    plot_process = Process(target=plotter_mp, args=plotargs)
+    plot_process.start()
+    # figures = analyze_clustering(
+    #     model,
+    #     dataloader,
+    #     device,
+    #     fname_dataset,
+    #     index_tra,
+    #     z_array0,
+    #     z_array0,
+    #     labels_prev,
+    #     labels_prev,
+    #     centroids,
+    #     centroids,
+    #     epoch,
+    #     show
+    # )
+    # [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
+    #     for i, fig in enumerate(figures)]
+    # [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
+    #     for i, fig in enumerate(figures)]
 
     n_iter = 1
     finished = False
@@ -555,25 +576,45 @@ def train(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            figures = analyze_clustering(
-                model,
-                dataloader,
-                device,
-                fname_dataset,
-                index_tra,
-                z_array0,
-                infer_z(dataloader, model, device),
-                labels_prev,
-                labels,
-                centroids,
-                model.clustering.weights.detach().cpu().numpy(),
-                epoch,
-                show
+            plotargs = (
+                    fignames,
+                    figpaths,
+                    tb,
+                    model,
+                    dataloader,
+                    device,
+                    fname_dataset,
+                    index_tra,
+                    z_array0,
+                    infer_z(dataloader, model, device),
+                    labels_prev,
+                    labels,
+                    centroids,
+                    model.clustering.weights.detach().cpu().numpy(),
+                    epoch,
+                    show
             )
-            [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
-                for i, fig in enumerate(figures)]
-            [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
-                for i, fig in enumerate(figures)]
+            plot_process = Process(target=plotter_mp, args=plotargs)
+            plot_process.start()
+            # figures = analyze_clustering(
+            #     model,
+            #     dataloader,
+            #     device,
+            #     fname_dataset,
+            #     index_tra,
+            #     z_array0,
+            #     infer_z(dataloader, model, device),
+            #     labels_prev,
+            #     labels,
+            #     centroids,
+            #     model.clustering.weights.detach().cpu().numpy(),
+            #     epoch,
+            #     show
+            # )
+            # [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
+            #     for i, fig in enumerate(figures)]
+            # [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
+            #     for i, fig in enumerate(figures)]
 
         if finished:
             break
@@ -918,87 +959,6 @@ def analyze_clustering(
     return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
 
 
-def analyze_clustering2(
-        model,
-        dataloader,
-        device,
-        fname_dataset,
-        index_tra,
-        data_a,
-        data_b,
-        labels_a,
-        labels_b,
-        centroids_a,
-        centroids_b,
-        epoch,
-        show=False
-    ):
-    '''
-    Function displays reconstructions using the centroids of the latent feature
-    space.
-    # Arguments
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        labels: Vector of cluster assignments
-        device: PyTorch device object ('cpu' or 'gpu')
-        epoch: Training epoch, used for title.
-    # Input:
-        2D array of shape [n_samples, n_features]
-    # Output:
-        Figures displaying centroids and their associated reconstructions.
-    '''
-    n_clusters = model.n_clusters
-    p = 2
-    # title = f't-SNE Results - Epoch {epoch}'
-    # fig1 = plotting.view_TSNE(tsne(data_b, dataloader), labels_b, title, show)
-    fns = [
-        plotting.cluster_gallery,
-        plotting.centroid_dashboard,
-        plotting.centroid_distances,
-        plotting.view_latent_space,
-        plotting.view_class_cdf,
-        plotting.view_class_pdf
-    ]
-    A = [{
-        'model': model,
-        'dataset': dataloader.dataset,
-        'fname_dataset': fname_dataset,
-        'index_tra': index_tra,
-        'device': device,
-        'z_array': data_b,
-        'labels': labels_b,
-        'centroids': centroids_b,
-        'p': p,
-        'show': show
-    }]
-    A = A + [{
-        'z_array': data_b,
-        'labels': labels_b,
-        'centroids': centroids_b,
-        'n_clusters': n_clusters,
-        'p': p,
-        'show': show
-    } for i in range(2)]
-    A = A + [{
-        'data_a': data_a,
-        'data_b': data_b,
-        'labels_a': labels_a,
-        'labels_b': labels_b,
-        'centroids_a': centroids_a,
-        'centroids_b': centroids_b,
-        'n_clusters': n_clusters,
-        'p': p,
-        'show': show
-    } for i in range(3)]
-
-    figures = []
-    with ProcessPoolExecutor(max_workers=len(fns)) as exec:
-        futures = [exec.submit(fns[i], **args) for i, args in enumerate(A)]
-        for i, future in enumerate(as_completed(futures)):
-            figures[i] = future.result()
-    return figures
-
-
 def kmeans_metrics(dataloader, model, device, k_list):
     z_array = infer_z(dataloader, model, device)
 
@@ -1067,3 +1027,43 @@ def measure_class_inertia(data, centroids, n_clusters):
         mu = centroids[j]
         inertia[j] = np.sum(np.sqrt(np.sum((data - mu) ** 2, axis=1)) ** 2)
     return inertia
+
+
+def plotter_mp(
+        fignames,
+        figpaths,
+        tb,
+        model,
+        dataloader,
+        device,
+        fname_dataset,
+        index_tra,
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        epoch,
+        show
+    ):
+
+    figures = analyze_clustering(
+        model,
+        dataloader,
+        device,
+        fname_dataset,
+        index_tra,
+        z_array0,
+        z_array0,
+        labels_prev,
+        labels_prev,
+        centroids,
+        centroids,
+        epoch,
+        show
+    )
+    [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
+        for i, fig in enumerate(figures)]
+    [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
+        for i, fig in enumerate(figures)]
