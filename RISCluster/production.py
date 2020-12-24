@@ -17,6 +17,7 @@ import models
 from networks import AEC, DCM, init_weights
 import utils
 
+
 def DCM_pretrain(parameters, hyperparameters):
     print('==============================================================')
     print('Executing Pre-training Mode')
@@ -147,6 +148,7 @@ def DCM_pretrain(parameters, hyperparameters):
     print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
 
+
 def DCM_train(parameters, hyperparameters):
     print('==============================================================')
     print('Executing Training Mode')
@@ -240,6 +242,7 @@ def DCM_train(parameters, hyperparameters):
     print('To view results in Tensorboard, run the following command:')
     print(f'cd {savepath_exp} && tensorboard --logdir=.')
     print('==============================================================')
+
 
 def DCM_predict(parameters):
     print('==============================================================')
