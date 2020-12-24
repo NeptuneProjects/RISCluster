@@ -431,10 +431,12 @@ def train(
     torch.save(model.state_dict(), fname)
     print('complete.')
     # Initialize Target Distribution:
-    q, _ = infer_labels(dataloader, model, device)
-    z_array0 = infer_z(dataloader, model, device)
+    # q, _ = infer_labels(dataloader, model, device)
+    # z_array0 = infer_z(dataloader, model, device)
+    q, _, z_array0 = infer(dataloader, model, device)
     p = target_distribution(q)
     epoch = 0
+    tsne_results = tsne(z_array0)
     plotargs = (
             fignames,
             figpaths,
@@ -450,6 +452,7 @@ def train(
             labels_prev,
             centroids,
             centroids,
+            tsne_results,
             epoch,
             show
     )
@@ -510,10 +513,11 @@ def train(
         for batch_num, batch in enumerate(pbar):
             _, batch = batch
             x = batch.to(device)
-            # Uptade target distribution, check performance
+            # Update target distribution, check performance
             if (batch_num % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
-                q, labels = infer_labels(dataloader, model, device)
+                # q, labels = infer_labels(dataloader, model, device)
+                q, labels, _ = infer(dataloader, model, device)
                 p = target_distribution(q)
                 # check stop criterion
                 delta_label = np.sum(labels != labels_prev).astype(np.float32)\
@@ -576,6 +580,9 @@ def train(
             n_iter += 1
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
+            _, _, z_array1 = infer(dataloader, model, device)
+            # z_array1 = infer_z(dataloader, model, device)
+            tsne_results = tsne(z_array1)
             plotargs = (
                     fignames,
                     figpaths,
@@ -586,11 +593,12 @@ def train(
                     fname_dataset,
                     index_tra,
                     z_array0,
-                    infer_z(dataloader, model, device),
+                    z_array1,
                     labels_prev,
                     labels,
                     centroids,
                     model.clustering.weights.detach().cpu().numpy(),
+                    tsne_results,
                     epoch,
                     show
             )
@@ -698,7 +706,8 @@ def kmeans(model, dataloader, device):
         n_init=500,
         random_state=2009
     )
-    z_array = infer_z(dataloader, model, device)
+    # z_array = infer_z(dataloader, model, device)
+    _, _, z_array = infer(dataloader, model, device)
     km.fit_predict(z_array)
     labels = km.labels_
     centroids = km.cluster_centers_
@@ -727,7 +736,8 @@ def kmeds(model, dataloader, device):
         max_iter=10000,
         random_state=2009
     )
-    z_array = infer_z(dataloader, model, device)
+    # z_array = infer_z(dataloader, model, device)
+    _, _, z_array = infer(dataloader, model, device)
     kmed.fit_predict(z_array)
     labels = kmed.labels_
     centroids = kmed.cluster_centers_
@@ -761,7 +771,8 @@ def gmm(model, dataloader, device):
         weights_init=gmm_weights,
         means_init=centroids
     )
-    z_array = infer_z(dataloader, model, device)
+    # z_array = infer_z(dataloader, model, device)
+    _, _, z_array = infer(dataloader, model, device)
     np.seterr(under='ignore')
     labels = GMM.fit_predict(z_array)
     centroids = GMM.means_
@@ -769,7 +780,8 @@ def gmm(model, dataloader, device):
 
 
 def pca(labels, model, dataloader, device, tb, counter):
-    z_array = infer_z(dataloader, model, device)
+    # z_array = infer_z(dataloader, model, device)
+    _, _, z_array = infer(dataloader, model, device)
     row_max = z_array.max(axis=1)
     z_array /= row_max[:, np.newaxis]
 
@@ -842,6 +854,39 @@ def infer_z(dataloader, model, device, v=False):
     return z_array
 
 
+def infer(dataloader, model, device, v=False):
+    if v:
+        notqdm = False
+    else:
+        notqdm = True
+
+    if not hasattr(model, 'n_clusters'):
+        cflag = False
+    else:
+        cflag = True
+
+    model.eval()
+    bsz = dataloader.batch_size
+    z_array = np.zeros((len(dataloader.dataset), model.clustering.n_features), dtype=np.float32)
+
+    if cflag:
+        q_array = np.zeros((len(dataloader.dataset), model.n_clusters),dtype=np.float32)
+        for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+            _, batch = batch
+            x = batch.to(device)
+            q, _, z = model(x)
+            q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
+            z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+        labels = np.argmax(q_array.data, axis=1)
+        return np.round(q_array, 5), labels, z_array
+    else:
+        for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+            x = batch.to(device)
+            _, z = model(x)
+            z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+        return z_array
+
+
 def target_distribution(q):
     '''
     From Xie/Girshick/Farhadi (2016). Computes the target distribution p, given
@@ -874,6 +919,7 @@ def analyze_clustering(
         labels_b,
         centroids_a,
         centroids_b,
+        tsne_results,
         epoch,
         show=False
     ):
@@ -894,7 +940,10 @@ def analyze_clustering(
     n_clusters = model.n_clusters
     p = 2
     title = f't-SNE Results - Epoch {epoch}'
-    fig1 = plotting.view_TSNE(tsne(data_b), labels_b, title, show)
+    if tsne_results is not None:
+        fig1 = plotting.view_TSNE(tsne_results, labels_b, title, show)
+    else:
+        fig1 = plotting.view_TSNE(tsne(data_b), labels_b, title, show)
     fig2 = plotting.cluster_gallery(
         model,
         dataloader.dataset,
@@ -960,7 +1009,8 @@ def analyze_clustering(
 
 
 def kmeans_metrics(dataloader, model, device, k_list):
-    z_array = infer_z(dataloader, model, device)
+    # z_array = infer_z(dataloader, model, device)
+    _, _, z_array = infer(dataloader, model, device)
 
     feat_min = np.min(z_array, axis=0)
     feat_max = np.max(z_array, axis=0)
@@ -1036,6 +1086,7 @@ def plotter_mp(
         labels_b,
         centroids_a,
         centroids_b,
+        tsne_results,
         epoch,
         show
     ):
@@ -1052,6 +1103,7 @@ def plotter_mp(
         labels_b,
         centroids_a,
         centroids_b,
+        tsne_results,
         epoch,
         show
     )
