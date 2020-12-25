@@ -598,13 +598,18 @@ def view_class_cdf(
 
         plt.rc('text', usetex=True)
         plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
-        plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
-        plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
-        plt.title(f"Class {l + 1} CDF", loc="left", size=14)
+        # plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
+        if l == 0:
+            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
+            # plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
+            plt.ylabel("CDF")
+        plt.title(f"$j={l+1}$", loc="left", size=14)
 
     handles, labels = ax.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
         fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
+    else:
+        pass
 
     if show:
         plt.show()
@@ -854,14 +859,6 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         plt.ylabel('Frequency (Hz)')
         station = metadata[counter]['station']
         time_on = metadata[counter]['spec_start']
-        # try:
-        # time_on = datetime.strptime(metadata[counter]['spec_start'],
-        #                             '%Y-%m-%d %H:%M:%S.%f').strftime(
-        #                             '%Y-%m-%d %H:%M:%S.%f')[:-4]
-        # except:
-        #     time_on = datetime.strptime(metadata[counter]['dt_on'],
-        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
-        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         plt.title(f'Station {station}\nTime: {time_on}; '
                   f'Index: {image_index[sample_index[i]]}')
 
