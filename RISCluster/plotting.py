@@ -630,7 +630,7 @@ def view_class_cdf(
         fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
     else:
         # fig.legend(handles, labels, loc=(0.5, 0), ncol=2, fontsize=14)
-        fig.legend(handles, labels, loc="bottom", ncol=2, fontsize=14)
+        fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=14)
 
     if show:
         plt.show()
