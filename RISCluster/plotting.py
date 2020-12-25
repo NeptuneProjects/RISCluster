@@ -612,6 +612,7 @@ def view_class_cdf(
             # plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
             plt.ylabel("CDF", size=14)
         else:
+            ax.set_xticklabels([])
             plt.yticks(ticks=np.linspace(0,1,3), labels=[])
             # plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
         plt.title(f"$j={l+1}$", loc="left", size=14)
@@ -619,10 +620,10 @@ def view_class_cdf(
     allaxes = fig.get_axes()
     for j, ax in enumerate(allaxes):
         ax.set_xlim(0, max_dist)
-        if j == 0:
-            ax.xticks(ticks=np.linspace(0, max_dist, max_dist/5+1))
-        else:
-            ax.xticks(ticks=np.linspace(0, max_dist, max_dist/5+1), labels=[])
+        # if j == 0:
+        #     ax.xticks(ticks=np.linspace(0, max_dist, max_dist/5+1))
+        # else:
+        #     ax.xticks(ticks=np.linspace(0, max_dist, max_dist/5+1), labels=[])
 
     handles, labels = ax.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
