@@ -593,23 +593,25 @@ def view_class_cdf(
         distance_b = distance_b[query_b]
         cdf_b = np.cumsum(np.ones(len(query_b))) / len(query_b)
 
-        plt.plot(distance_a, cdf_a, color=colors[0], label="Before DEC")
-        plt.plot(distance_b, cdf_b, color=colors[1], label="After DEC")
+        plt.plot(distance_a, cdf_a, color=colors[0], label="K-means")
+        plt.plot(distance_b, cdf_b, color=colors[1], label="DEC")
 
         plt.rc('text', usetex=True)
         plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
         # plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
         if l == 0:
-            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
+            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=14)
             # plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
-            plt.ylabel("CDF")
+            plt.ylabel("CDF", size=14)
         plt.title(f"$j={l+1}$", loc="left", size=14)
 
     handles, labels = ax.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
         fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
     else:
-        pass
+        fig.add_axes([0.9, 0.67, 0.1, 0.1]).axis('off')
+        handles, labels = axa.get_legend_handles_labels()
+        leg = plt.legend(handles, labels, fontsize=14, loc="right")
 
     if show:
         plt.show()
