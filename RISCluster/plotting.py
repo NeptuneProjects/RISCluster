@@ -574,7 +574,7 @@ def view_class_cdf(
     _, counts_b = np.unique(labels_b, return_counts=True)
 
     fig = plt.figure(figsize=(7, 2*int(np.ceil(n_clusters/2))), dpi=150)
-    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.7, wspace=0.2)
+    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.5, wspace=0.1)
     colors = cmap_lifeaquatic(n_clusters)
     max_dist = 0
     for l in range(n_clusters):
