@@ -574,7 +574,7 @@ def view_class_cdf(
     _, counts_b = np.unique(labels_b, return_counts=True)
 
     fig = plt.figure(figsize=(7, 2*int(np.ceil(n_clusters/2))), dpi=150)
-    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.9, wspace=0.4)
+    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.7, wspace=0.2)
     colors = cmap_lifeaquatic(n_clusters)
     max_dist = 0
     for l in range(n_clusters):
@@ -621,7 +621,7 @@ def view_class_cdf(
     if len(label_list) % 2 != 0:
         fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
     else:
-        fig.add_axes([0.9, 0.67, 0.1, 0.1]).axis('off')
+        fig.add_axes([0.5, 0.5, 0.1, 0.1]).axis('off')
         handles, labels = ax.get_legend_handles_labels()
         leg = plt.legend(handles, labels, fontsize=14, loc="right")
 
