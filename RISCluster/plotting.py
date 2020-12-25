@@ -25,6 +25,108 @@ import utils
 from networks import AEC, DCM
 
 
+def analyze_clustering(
+        model,
+        dataloader,
+        device,
+        fname_dataset,
+        index_tra,
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        tsne_results,
+        epoch,
+        show=False
+    ):
+    '''
+    Function displays reconstructions using the centroids of the latent feature
+    space.
+    # Arguments
+        model: PyTorch model instance
+        dataloader: PyTorch dataloader instance
+        labels: Vector of cluster assignments
+        device: PyTorch device object ('cpu' or 'gpu')
+        epoch: Training epoch, used for title.
+    # Input:
+        2D array of shape [n_samples, n_features]
+    # Output:
+        Figures displaying centroids and their associated reconstructions.
+    '''
+    n_clusters = model.n_clusters
+    p = 2
+    title = f't-SNE Results - Epoch {epoch}'
+    if tsne_results is not None:
+        fig1 = view_TSNE(tsne_results, labels_b, title, show)
+    else:
+        raise("TSNE within function not implemented.")
+        # fig1 = view_TSNE(tsne(data_b), labels_b, title, show)
+    fig2 = cluster_gallery(
+        model,
+        dataloader.dataset,
+        fname_dataset,
+        index_tra,
+        device,
+        data_b,
+        labels_b,
+        centroids_b,
+        p,
+        show
+    )
+    fig3 = centroid_dashboard(
+        data_b,
+        labels_b,
+        centroids_b,
+        n_clusters,
+        p,
+        show
+    )
+    fig4 = centroid_distances(
+        data_b,
+        labels_b,
+        centroids_b,
+        n_clusters,
+        p,
+        show
+    )
+    fig5 = view_latent_space(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p,
+        show
+    )
+    fig6 = view_class_cdf(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p,
+        show
+    )
+    fig7 = view_class_pdf(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p,
+        show
+    )
+    return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
+
+
 def cmap_lifeaquatic(N=None):
     """
     Returns colormap inspired by Wes Andersen's The Life Aquatic
@@ -105,6 +207,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], ll+1, str(labels_not[ll]+1), backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=0.5, edgecolor='w'))
         plt.xticks([])
+        # To-do: Fix yticks
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
@@ -147,6 +250,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         plt.imshow(np.concatenate((tmp, np.zeros((tmp.shape[0], counts.max() - tmp.shape[1]))), axis=1), cmap=cmap, extent=extent, aspect='auto', vmax=vmax)
         plt.xticks([])
         # plt.yticks([])
+        # To-do: Fix yticks
         plt.yticks(ticks=np.linspace(0,d-1,d)+0.5, labels=np.linspace(1,d,d, dtype='int'))
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
@@ -293,7 +397,7 @@ def cluster_gallery(
             ax = fig.add_subplot(gs_sub[1])
             plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower')
             # plt.text(0, 60, f"{load_index[i]}", fontdict=font)
-            plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
+            # plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
             plt.xticks([])
             plt.yticks([])
             if l == 0:
@@ -778,6 +882,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         plt.close()
     return fig
 
+
 def view_latent_space(
         data_a,
         data_b,
@@ -846,6 +951,7 @@ def view_latent_space(
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         plt.xticks([])
+        # To-do: Fix yticks
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
             plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
@@ -888,6 +994,7 @@ def view_latent_space(
             xlabels = [item.get_text() for item in ax3.get_xticklabels()]
             empty_string_labels = ['']*len(xlabels)
             ax3.set_xticklabels(empty_string_labels)
+        # To-do: Fix yticks
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
 
     # Colorbar

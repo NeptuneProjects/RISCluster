@@ -371,6 +371,7 @@ def train(
     loadpath = parameters['saved_weights']
     fname_dataset = parameters['fname_dataset']
     tbpid = parameters['tbpid']
+    init = parameters['init']
     savepath_run, serial_run = utils.init_output_env(
         savepath_exp,
         mode,
@@ -414,16 +415,15 @@ def train(
         )
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     # Initialize Clusters:
-    # -- K-Means Initialization:
-    print('Initiating clusters with k-means...', end="", flush=True)
-    labels_prev, centroids = kmeans(model, dataloader, device)
-    # -- GMM Initialization:
-    # print('Initiating clusters with GMM...', end="", flush=True)
-    # labels_prev, centroids = gmm(model, dataloader, device)
-    # -- K-Medoids Initialization:
-    # print('Initiating clusters with k-medoids...', end="", flush=True)
-    # labels_prev, centroids = kmeds(model, dataloader, device)
-
+    if init == "kmeans": # K-Means Initialization:
+        print('Initiating clusters with k-means...', end="", flush=True)
+        labels_prev, centroids = kmeans(model, dataloader, device)
+    elif init == "gmm": # GMM Initialization:
+        print('Initiating clusters with GMM...', end="", flush=True)
+        labels_prev, centroids = gmm(model, dataloader, device)
+    elif init == "kmeds": # K-Medoids Initialization:
+        print('Initiating clusters with k-medoids...', end="", flush=True)
+        labels_prev, centroids = kmeds(model, dataloader, device)
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -431,8 +431,6 @@ def train(
     torch.save(model.state_dict(), fname)
     print('complete.')
     # Initialize Target Distribution:
-    # q, _ = infer_labels(dataloader, model, device)
-    # z_array0 = infer_z(dataloader, model, device)
     q, _, z_array0 = infer(dataloader, model, device)
     p = target_distribution(q)
     epoch = 0
@@ -458,25 +456,6 @@ def train(
     )
     plot_process = threading.Thread(target=plotter_mp, args=plotargs)
     plot_process.start()
-    # figures = analyze_clustering(
-    #     model,
-    #     dataloader,
-    #     device,
-    #     fname_dataset,
-    #     index_tra,
-    #     z_array0,
-    #     z_array0,
-    #     labels_prev,
-    #     labels_prev,
-    #     centroids,
-    #     centroids,
-    #     epoch,
-    #     show
-    # )
-    # [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
-    #     for i, fig in enumerate(figures)]
-    # [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
-    #     for i, fig in enumerate(figures)]
 
     n_iter = 1
     finished = False
@@ -516,7 +495,6 @@ def train(
             # Update target distribution, check performance
             if (batch_num % update_interval == 0) and not \
                 (batch_num == 0 and epoch == 0):
-                # q, labels = infer_labels(dataloader, model, device)
                 q, labels, _ = infer(dataloader, model, device)
                 p = target_distribution(q)
                 # check stop criterion
@@ -581,7 +559,6 @@ def train(
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
             _, _, z_array1 = infer(dataloader, model, device)
-            # z_array1 = infer_z(dataloader, model, device)
             tsne_results = tsne(z_array1)
             plotargs = (
                     fignames,
@@ -604,25 +581,6 @@ def train(
             )
             plot_process = threading.Thread(target=plotter_mp, args=plotargs)
             plot_process.start()
-            # figures = analyze_clustering(
-            #     model,
-            #     dataloader,
-            #     device,
-            #     fname_dataset,
-            #     index_tra,
-            #     z_array0,
-            #     infer_z(dataloader, model, device),
-            #     labels_prev,
-            #     labels,
-            #     centroids,
-            #     model.clustering.weights.detach().cpu().numpy(),
-            #     epoch,
-            #     show
-            # )
-            # [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
-            #     for i, fig in enumerate(figures)]
-            # [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
-            #     for i, fig in enumerate(figures)]
 
         if finished:
             break
@@ -706,7 +664,6 @@ def kmeans(model, dataloader, device):
         n_init=500,
         random_state=2009
     )
-    # z_array = infer_z(dataloader, model, device)
     _, _, z_array = infer(dataloader, model, device)
     km.fit_predict(z_array)
     labels = km.labels_
@@ -736,7 +693,6 @@ def kmeds(model, dataloader, device):
         max_iter=10000,
         random_state=2009
     )
-    # z_array = infer_z(dataloader, model, device)
     _, _, z_array = infer(dataloader, model, device)
     kmed.fit_predict(z_array)
     labels = kmed.labels_
@@ -771,7 +727,6 @@ def gmm(model, dataloader, device):
         weights_init=gmm_weights,
         means_init=centroids
     )
-    # z_array = infer_z(dataloader, model, device)
     _, _, z_array = infer(dataloader, model, device)
     np.seterr(under='ignore')
     labels = GMM.fit_predict(z_array)
@@ -780,7 +735,6 @@ def gmm(model, dataloader, device):
 
 
 def pca(labels, model, dataloader, device, tb, counter):
-    # z_array = infer_z(dataloader, model, device)
     _, _, z_array = infer(dataloader, model, device)
     row_max = z_array.max(axis=1)
     z_array /= row_max[:, np.newaxis]
@@ -907,105 +861,105 @@ def target_distribution(q):
     return np.round(p, 5)
 
 
-def analyze_clustering(
-        model,
-        dataloader,
-        device,
-        fname_dataset,
-        index_tra,
-        data_a,
-        data_b,
-        labels_a,
-        labels_b,
-        centroids_a,
-        centroids_b,
-        tsne_results,
-        epoch,
-        show=False
-    ):
-    '''
-    Function displays reconstructions using the centroids of the latent feature
-    space.
-    # Arguments
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        labels: Vector of cluster assignments
-        device: PyTorch device object ('cpu' or 'gpu')
-        epoch: Training epoch, used for title.
-    # Input:
-        2D array of shape [n_samples, n_features]
-    # Output:
-        Figures displaying centroids and their associated reconstructions.
-    '''
-    n_clusters = model.n_clusters
-    p = 2
-    title = f't-SNE Results - Epoch {epoch}'
-    if tsne_results is not None:
-        fig1 = plotting.view_TSNE(tsne_results, labels_b, title, show)
-    else:
-        fig1 = plotting.view_TSNE(tsne(data_b), labels_b, title, show)
-    fig2 = plotting.cluster_gallery(
-        model,
-        dataloader.dataset,
-        fname_dataset,
-        index_tra,
-        device,
-        data_b,
-        labels_b,
-        centroids_b,
-        p,
-        show
-    )
-    fig3 = plotting.centroid_dashboard(
-        data_b,
-        labels_b,
-        centroids_b,
-        n_clusters,
-        p,
-        show
-    )
-    fig4 = plotting.centroid_distances(
-        data_b,
-        labels_b,
-        centroids_b,
-        n_clusters,
-        p,
-        show
-    )
-    fig5 = plotting.view_latent_space(
-        data_a,
-        data_b,
-        labels_a,
-        labels_b,
-        centroids_a,
-        centroids_b,
-        n_clusters,
-        p,
-        show
-    )
-    fig6 = plotting.view_class_cdf(
-        data_a,
-        data_b,
-        labels_a,
-        labels_b,
-        centroids_a,
-        centroids_b,
-        n_clusters,
-        p,
-        show
-    )
-    fig7 = plotting.view_class_pdf(
-        data_a,
-        data_b,
-        labels_a,
-        labels_b,
-        centroids_a,
-        centroids_b,
-        n_clusters,
-        p,
-        show
-    )
-    return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
+# def analyze_clustering(
+#         model,
+#         dataloader,
+#         device,
+#         fname_dataset,
+#         index_tra,
+#         data_a,
+#         data_b,
+#         labels_a,
+#         labels_b,
+#         centroids_a,
+#         centroids_b,
+#         tsne_results,
+#         epoch,
+#         show=False
+#     ):
+#     '''
+#     Function displays reconstructions using the centroids of the latent feature
+#     space.
+#     # Arguments
+#         model: PyTorch model instance
+#         dataloader: PyTorch dataloader instance
+#         labels: Vector of cluster assignments
+#         device: PyTorch device object ('cpu' or 'gpu')
+#         epoch: Training epoch, used for title.
+#     # Input:
+#         2D array of shape [n_samples, n_features]
+#     # Output:
+#         Figures displaying centroids and their associated reconstructions.
+#     '''
+#     n_clusters = model.n_clusters
+#     p = 2
+#     title = f't-SNE Results - Epoch {epoch}'
+#     if tsne_results is not None:
+#         fig1 = plotting.view_TSNE(tsne_results, labels_b, title, show)
+#     else:
+#         fig1 = plotting.view_TSNE(tsne(data_b), labels_b, title, show)
+#     fig2 = plotting.cluster_gallery(
+#         model,
+#         dataloader.dataset,
+#         fname_dataset,
+#         index_tra,
+#         device,
+#         data_b,
+#         labels_b,
+#         centroids_b,
+#         p,
+#         show
+#     )
+#     fig3 = plotting.centroid_dashboard(
+#         data_b,
+#         labels_b,
+#         centroids_b,
+#         n_clusters,
+#         p,
+#         show
+#     )
+#     fig4 = plotting.centroid_distances(
+#         data_b,
+#         labels_b,
+#         centroids_b,
+#         n_clusters,
+#         p,
+#         show
+#     )
+#     fig5 = plotting.view_latent_space(
+#         data_a,
+#         data_b,
+#         labels_a,
+#         labels_b,
+#         centroids_a,
+#         centroids_b,
+#         n_clusters,
+#         p,
+#         show
+#     )
+#     fig6 = plotting.view_class_cdf(
+#         data_a,
+#         data_b,
+#         labels_a,
+#         labels_b,
+#         centroids_a,
+#         centroids_b,
+#         n_clusters,
+#         p,
+#         show
+#     )
+#     fig7 = plotting.view_class_pdf(
+#         data_a,
+#         data_b,
+#         labels_a,
+#         labels_b,
+#         centroids_a,
+#         centroids_b,
+#         n_clusters,
+#         p,
+#         show
+#     )
+#     return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
 
 
 def kmeans_metrics(dataloader, model, device, k_list):
@@ -1091,7 +1045,7 @@ def plotter_mp(
         show
     ):
 
-    figures = analyze_clustering(
+    figures = plotting.analyze_clustering(
         model,
         dataloader,
         device,
