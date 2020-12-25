@@ -939,7 +939,7 @@ def view_latent_space(
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('Before DEC', size=12, y=0.6)
+            plt.ylabel('K-means', size=12, y=0.6)
             plt.title(r'$\pmb{\mu}_j$')
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
@@ -952,7 +952,7 @@ def view_latent_space(
             plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         plt.xticks([])
         # To-do: Fix yticks
-        plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
+        plt.yticks(ticks=np.linspace(0,d,d), labels=[])
         if l == 0:
             plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
         plt.title(f"$j={l+1}$", size=14)
@@ -977,7 +977,7 @@ def view_latent_space(
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('After DEC', size=12, y=0.4)
+            plt.ylabel('DEC', size=12, y=0.4)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
