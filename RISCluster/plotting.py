@@ -203,11 +203,10 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         # Dataset Latent Features
         ax = fig.add_subplot(gs_sub[0,1])
         plt.imshow(z_array[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
-        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', linestyles='dotted')
+        plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', linestyles='dotted')
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], ll+1, str(labels_not[ll]+1), backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=0.5, edgecolor='w'))
         plt.xticks([])
-        # To-do: Fix yticks
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
@@ -251,7 +250,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         plt.xticks([])
         # plt.yticks([])
         # To-do: Fix yticks
-        plt.yticks(ticks=np.linspace(0,d-1,d)+0.5, labels=np.linspace(1,d,d, dtype='int'))
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         ax.yaxis.tick_right()
         plt.ylabel('Latent Feature')
         ax.yaxis.set_label_position('right')
@@ -951,7 +950,6 @@ def view_latent_space(
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         plt.xticks([])
-        # To-do: Fix yticks
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
             plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
@@ -994,7 +992,6 @@ def view_latent_space(
             xlabels = [item.get_text() for item in ax3.get_xticklabels()]
             empty_string_labels = ['']*len(xlabels)
             ax3.set_xticklabels(empty_string_labels)
-        # To-do: Fix yticks
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
 
     # Colorbar
