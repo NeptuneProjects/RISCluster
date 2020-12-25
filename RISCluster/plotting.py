@@ -569,14 +569,14 @@ def view_class_cdf(
     ):
     def _roundup(x):
         return int(np.ceil(x / 100.0)) * 100
-        
+
     label_list, counts_a = np.unique(labels_a, return_counts=True)
     _, counts_b = np.unique(labels_b, return_counts=True)
 
     fig = plt.figure(figsize=(7, 2*int(np.ceil(n_clusters/2))), dpi=150)
     gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.9, wspace=0.4)
     colors = cmap_lifeaquatic(n_clusters)
-
+    max_dist = 0
     for l in range(n_clusters):
         ax = fig.add_subplot(gs[l])
 
