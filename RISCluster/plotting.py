@@ -629,7 +629,7 @@ def view_class_cdf(
     if len(label_list) % 2 != 0:
         fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
     else:
-        fig.legend(handles, labels, loc=(0.5, 0.1), fontsize=14)
+        fig.legend(handles, labels, loc=(0.5, 0), fontsize=14)
         # fig.add_axes([0.5, 0.1, 0.1, 0.1]).axis('off')
         # leg = plt.legend(handles, labels, fontsize=14, loc="right")
 
