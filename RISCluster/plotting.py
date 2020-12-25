@@ -568,7 +568,7 @@ def view_class_cdf(
         show=True
     ):
     def _roundup(x):
-        return int(np.ceil(x / 100.0)) * 100
+        return int(np.ceil(x / 10.0)) * 10
 
     label_list, counts_a = np.unique(labels_a, return_counts=True)
     _, counts_b = np.unique(labels_b, return_counts=True)
