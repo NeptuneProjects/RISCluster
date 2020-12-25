@@ -939,7 +939,7 @@ def view_latent_space(
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('K-means', size=12, y=0.6)
+            plt.ylabel('K-means', size=12)
             plt.title(r'$\pmb{\mu}_j$')
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
@@ -977,7 +977,7 @@ def view_latent_space(
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('DEC', size=12, y=0.4)
+            plt.ylabel('DEC', size=12)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
