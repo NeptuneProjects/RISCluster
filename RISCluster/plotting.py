@@ -616,7 +616,8 @@ def view_class_cdf(
             # plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
             plt.ylabel("CDF", size=14)
         else:
-            plt.yticks(labels=[])
+            plt.yticks(ticks=np.linspace(0,1,4), labels=[])
+            # plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
         plt.title(f"$j={l+1}$", loc="left", size=14)
 
     handles, labels = ax.get_legend_handles_labels()
