@@ -593,6 +593,15 @@ def view_class_cdf(
         distance_b = distance_b[query_b]
         cdf_b = np.cumsum(np.ones(len(query_b))) / len(query_b)
 
+        max_dist_ = np.max([distance_a.max(), distance_b.max()])
+        max_dist_ = _roundup(max_dist_)
+        if max_dist_ > max_dist:
+            max_dist = max_dist_
+
+        allaxes = fig.get_axes()
+        for ax in allaxes:
+            ax.set_xlim(0, max_dist)
+
         plt.plot(distance_a, cdf_a, color=colors[0], label="K-means")
         plt.plot(distance_b, cdf_b, color=colors[1], label="DEC")
 
@@ -610,7 +619,7 @@ def view_class_cdf(
         fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
     else:
         fig.add_axes([0.9, 0.67, 0.1, 0.1]).axis('off')
-        handles, labels = axa.get_legend_handles_labels()
+        handles, labels = ax.get_legend_handles_labels()
         leg = plt.legend(handles, labels, fontsize=14, loc="right")
 
     if show:
