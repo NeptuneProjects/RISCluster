@@ -947,12 +947,12 @@ def view_latent_space(
         # Latent Space A
         ax1 = fig.add_subplot(gs_sub[0,1])
         plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
-        plt.vlines(centroids_ind, -0.5, 9.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
+        plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         plt.xticks([])
         # To-do: Fix yticks
-        plt.yticks(ticks=np.linspace(0,d,d), labels=[])
+        plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
             plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
         plt.title(f"$j={l+1}$", size=14)
