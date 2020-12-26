@@ -894,7 +894,8 @@ def plotter_mp(
         centroids_b,
         tsne_results,
         epoch,
-        show
+        show,
+        latex=False
     ):
 
     figures = plotting.analyze_clustering(
@@ -911,7 +912,8 @@ def plotter_mp(
         centroids_b,
         tsne_results,
         epoch,
-        show
+        show,
+        latex
     )
     [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
         for i, fig in enumerate(figures)]

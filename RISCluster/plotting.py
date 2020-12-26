@@ -39,7 +39,8 @@ def analyze_clustering(
         centroids_b,
         tsne_results,
         epoch,
-        show=False
+        show=False,
+        latex=False
     ):
     '''
     Function displays reconstructions using the centroids of the latent feature
@@ -73,7 +74,8 @@ def analyze_clustering(
         labels_b,
         centroids_b,
         p,
-        show
+        show,
+        latex
     )
     # fig3 = centroid_dashboard(
     #     data_b,
@@ -100,7 +102,8 @@ def analyze_clustering(
         centroids_b,
         n_clusters,
         p,
-        show
+        show,
+        latex
     )
     fig5 = view_class_cdf(
         data_a,
@@ -111,7 +114,8 @@ def analyze_clustering(
         centroids_b,
         n_clusters,
         p,
-        show
+        show,
+        latex
     )
     fig6 = view_class_pdf(
         data_a,
@@ -122,7 +126,8 @@ def analyze_clustering(
         centroids_b,
         n_clusters,
         p,
-        show
+        show,
+        latex
     )
     return [fig1, fig2, fig3, fig4, fig5, fig6]
 
@@ -305,7 +310,8 @@ def cluster_gallery(
         labels,
         centroids=None,
         p=2,
-        show=True
+        show=True,
+        latex=False
     ):
     model.eval()
     label_list, counts = np.unique(labels, return_counts=True)
@@ -316,11 +322,12 @@ def cluster_gallery(
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
     N = 7
-    params = {
-        'text.usetex': True,
-        'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
-    }
-    plt.rcParams.update(params)
+    if latex:
+        params = {
+            'text.usetex': True,
+            'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
+        }
+        plt.rcParams.update(params)
     fig = plt.figure(figsize=(len(label_list),2*N), dpi=150)
     heights = [1 for i in range(N+1)] + [0.2]
     gs_sup = gridspec.GridSpec(nrows=N+2, ncols=len(label_list), hspace=0.1, wspace=0.1, height_ratios=heights)
@@ -376,14 +383,20 @@ def cluster_gallery(
         ax.xaxis.set_label_position('top')
         ax.set_xlabel(f"$j={label+1}$", size=10)
         if l == 0:
-            plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right")
+            if latex:
+                plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right")
+            else:
+                plt.ylabel("$g(mu)", rotation=0, va="center", ha="right")
 
         ax = fig.add_subplot(gs_sub[2])
         plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
         plt.xticks([])
         plt.yticks([])
         if l == 0:
-            plt.ylabel(r'$\pmb{\mu}_j$', rotation=0, va="center", ha="right")
+            if latex:
+                plt.ylabel(r'$\pmb{\mu}_j$', rotation=0, va="center", ha="right")
+            else:
+                plt.ylabel("mu", rotation=0, va="center", ha="right")
 
         for i in range(N):
             gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[i+1,l], hspace=0, wspace=0, height_ratios=heights)
@@ -400,14 +413,20 @@ def cluster_gallery(
             plt.xticks([])
             plt.yticks([])
             if l == 0:
-                plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right")
+                if latex:
+                    plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right")
+                else:
+                    plt.ylabel(f"x_{i+1}", rotation=0, va="center", ha="right")
 
             ax = fig.add_subplot(gs_sub[2])
             plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
             plt.xticks([])
             plt.yticks([])
             if l == 0:
-                plt.ylabel(fr"$\pmb{{z}}_{i+1}$", rotation=0, va="center", ha="right")
+                if latex:
+                    plt.ylabel(fr"$\pmb{{z}}_{i+1}$", rotation=0, va="center", ha="right")
+                else:
+                    plt.ylabel(f"z_{i+1}", rotation=0, va="center", ha="right")
 
     gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=gs_sup[-1,:])
     # Colorbar: Specgram
@@ -567,7 +586,8 @@ def view_class_cdf(
         centroids_b,
         n_clusters,
         p=2,
-        show=True
+        show=True,
+        latex=False
     ):
     def _roundup(x):
         return int(np.ceil(x / 5.0)) * 5
@@ -577,8 +597,9 @@ def view_class_cdf(
 
     fig = plt.figure(figsize=(7, 2*int(np.ceil(n_clusters/2))), dpi=150)
     fontsize = 16
-    plt.rc('text', usetex=True)
-    plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
+    if latex:
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
     plt.rc('xtick', labelsize=fontsize)
     plt.rc('ytick', labelsize=fontsize)
     colors = cmap_lifeaquatic(n_clusters)
@@ -613,7 +634,10 @@ def view_class_cdf(
         ax.set_yticks([0., 0.5, 1.])
 
         if ((n_clusters % 2 == 0) and (l == n_clusters - 2)) or ((n_clusters % 2 != 0) and (l == n_clusters - 1)):
-            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+            if latex:
+                plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+            else:
+                plt.xlabel(f"d_{p}", size=fontsize)
             plt.ylabel("CDF", size=fontsize)
         else:
             ax.set_xticklabels([])
@@ -647,7 +671,8 @@ def view_class_pdf(
         centroids_b,
         n_clusters,
         p=2,
-        show=True
+        show=True,
+        latex=False
     ):
     def _roundup(x):
         return int(np.ceil(x / 10.0)) * 10
@@ -660,8 +685,9 @@ def view_class_pdf(
 
     fig = plt.figure(figsize=(12, 2.5*int(np.ceil(n_clusters/2))), dpi=150)
     fontsize = 16
-    plt.rc('text', usetex=True)
-    plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
+    if latex:
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
     gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.3, wspace=0.05)
     colors = cmap_lifeaquatic(n_clusters)
     max_dist = 0
@@ -695,7 +721,10 @@ def view_class_pdf(
             plt.ylim(0, 1)
             plt.yticks([0., 0.5, 1.])
             plt.text(1, 0.9, 'K-means', ha='right', va='top', transform=axa.transAxes, fontsize=fontsize)
-            plt.title(fr"Class PDFs relative to $\pmb{{\mu}}_{l+1}$", loc="left", size=fontsize)
+            if latex:
+                plt.title(fr"Class PDFs relative to $\pmb{{\mu}}_{l+1}$", loc="left", size=fontsize)
+            else:
+                plt.title(f"Class PDFs relative to mu_{l+1}", loc="left", size=fontsize)
 
         axb = fig.add_subplot(gs_sub[1])
         for ll in range(n_clusters):
@@ -711,7 +740,10 @@ def view_class_pdf(
             plt.text(1, 0.9, 'DEC', ha='right', va='top', transform=axb.transAxes, fontsize=fontsize)
 
         if ((n_clusters % 2 == 0) and (l == n_clusters - 2)) or ((n_clusters % 2 != 0) and (l == n_clusters - 1)):
-            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+            if latex:
+                plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+            else:
+                plt.xlabel(f"d_{p}", size=fontsize)
             plt.ylabel("PDF", size=fontsize)
             axa.set_xticklabels([])
             axa.set_yticklabels([])
@@ -731,7 +763,7 @@ def view_class_pdf(
     else:
         leg = fig.legend(handles, labels, loc="lower center", ncol=n_clusters, fontsize=fontsize)
         plt.subplots_adjust(bottom=0.2)
-    leg.set_title("Classes", prop = {'size':'x-large'})
+    leg.set_title("Classes", prop={'size':'x-large'})
 
     if show:
         plt.show()
@@ -916,7 +948,8 @@ def view_latent_space(
         centroids_b,
         n_clusters,
         p,
-        show=True
+        show=True,
+        latex=False
     ):
     d = data_a.shape[1]
     dist_mat_a = utils.distance_matrix(centroids_a, centroids_a, p)
@@ -928,12 +961,12 @@ def view_latent_space(
     vmax = np.max([centroids_a.max(), centroids_b.max()])
     nrows = int(np.ceil(n_clusters/2))
     heights = [1 for i in range(nrows)]
-
-    params = {
-        'text.usetex': True,
-        'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
-    }
-    plt.rcParams.update(params)
+    if latex:
+        params = {
+            'text.usetex': True,
+            'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
+        }
+        plt.rcParams.update(params)
     fig = plt.figure(figsize=(8, 2.5*nrows), dpi=150)
 
     gs = gridspec.GridSpec(nrows=nrows, ncols=2, height_ratios=heights, hspace=0.3, wspace=0.05)
@@ -964,7 +997,10 @@ def view_latent_space(
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
             plt.ylabel('K-means', size=12)
-            plt.title(r'$\pmb{\mu}_j$')
+            if latex:
+                plt.title(r'$\pmb{\mu}_j$')
+            else:
+                plt.title('mu_j')
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
@@ -973,11 +1009,17 @@ def view_latent_space(
         plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
-            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+            if latex:
+                plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+            else:
+                plt.text(centroids_ind[ll], 1.2*(ll+1), f"u{labels_not[ll]+1}", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
-            plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
+            if latex:
+                plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
+            else:
+                plt.text(0.03, 1.1, f"z", size=14, transform=ax1.transAxes)
         plt.title(f"$j={l+1}$", size=14)
 
         distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
@@ -1009,7 +1051,10 @@ def view_latent_space(
         plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
-            plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+            if latex:
+                plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+            else:
+                plt.text(centroids_ind[ll], 1.2*(ll+1), f"u{labels_not[ll]+1}", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         if l == 0:
             label = ax3.set_xlabel("$i$", size=14)
             ax3.xaxis.set_label_coords(-0.03, 0)
@@ -1026,8 +1071,10 @@ def view_latent_space(
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
     cbar.set_label('Latent Feature Value', size=14)
-
-    fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{z}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
+    if latex:
+        fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{z}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
+    else:
+        fig.suptitle(f"Latent space sorted by d_{p}", size=18)
     fig.subplots_adjust(top=0.91)
 
     if show:
