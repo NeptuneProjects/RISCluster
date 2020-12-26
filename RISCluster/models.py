@@ -762,50 +762,50 @@ def tsne(data):
     return results
 
 
-def infer_labels(dataloader, model, device):
-    '''
-    Function takes input data from dataloader, feeds through encoder layers,
-    and returns predicted soft- and hard-assigned cluster labels.
-    # Arguments:
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        device: PyTorch device object ('cpu' or 'gpu')
-    # Returns:
-        q_array [n_samples, n_clusters]: Soft assigned label probabilities
-        labels [n_samples,]: Hard assigned label based on max of q_array
-    '''
-    model.eval()
-    q_array = np.zeros(
-        (len(dataloader.dataset), model.n_clusters),
-        dtype=np.float32
-    )
-    bsz = dataloader.batch_size
-    for b, batch in enumerate(dataloader):
-        _, batch = batch
-        x = batch.to(device)
-        q, _, _ = model(x)
-        q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
-    labels = np.argmax(q_array.data, axis=1)
-    return np.round(q_array, 5), labels
+# def infer_labels(dataloader, model, device):
+#     '''
+#     Function takes input data from dataloader, feeds through encoder layers,
+#     and returns predicted soft- and hard-assigned cluster labels.
+#     # Arguments:
+#         model: PyTorch model instance
+#         dataloader: PyTorch dataloader instance
+#         device: PyTorch device object ('cpu' or 'gpu')
+#     # Returns:
+#         q_array [n_samples, n_clusters]: Soft assigned label probabilities
+#         labels [n_samples,]: Hard assigned label based on max of q_array
+#     '''
+#     model.eval()
+#     q_array = np.zeros(
+#         (len(dataloader.dataset), model.n_clusters),
+#         dtype=np.float32
+#     )
+#     bsz = dataloader.batch_size
+#     for b, batch in enumerate(dataloader):
+#         _, batch = batch
+#         x = batch.to(device)
+#         q, _, _ = model(x)
+#         q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
+#     labels = np.argmax(q_array.data, axis=1)
+#     return np.round(q_array, 5), labels
 
 
-def infer_z(dataloader, model, device, v=False):
-    if v:
-        notqdm = False
-    else:
-        notqdm = True
-    model.eval()
-    z_array = np.zeros((len(dataloader.dataset), model.clustering.n_features), dtype=np.float32)
-    bsz = dataloader.batch_size
-    for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
-        _, batch = batch
-        x = batch.to(device)
-        if not hasattr(model, 'n_clusters'):
-            _, z = model(x)
-        else:
-            _, _, z = model(x)
-        z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
-    return z_array
+# def infer_z(dataloader, model, device, v=False):
+#     if v:
+#         notqdm = False
+#     else:
+#         notqdm = True
+#     model.eval()
+#     z_array = np.zeros((len(dataloader.dataset), model.clustering.n_features), dtype=np.float32)
+#     bsz = dataloader.batch_size
+#     for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+#         _, batch = batch
+#         x = batch.to(device)
+#         if not hasattr(model, 'n_clusters'):
+#             _, z = model(x)
+#         else:
+#             _, _, z = model(x)
+#         z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+#     return z_array
 
 
 def infer(dataloader, model, device, v=False):
