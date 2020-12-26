@@ -418,6 +418,7 @@ def cluster_gallery(
     norm = mpl.colors.Normalize(vmin=0, vmax=1)
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_spec), cax=axins, orientation='horizontal')
     cbar.set_label('Normalized Spectrogram Value')
+    cbar.ax.tick_params(labelsize=10)
 
     # Colorbar: Latent Space
     ax = fig.add_subplot(gs_sub[1])
@@ -427,6 +428,7 @@ def cluster_gallery(
     norm = mpl.colors.Normalize(vmin=z_array.min(), vmax=vmax)
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_feat), cax=axins, orientation='horizontal')
     cbar.set_label('Latent Feature Value')
+    cbar.ax.tick_params(labelsize=10)
 
     if show:
         plt.show()
@@ -574,8 +576,13 @@ def view_class_cdf(
     _, counts_b = np.unique(labels_b, return_counts=True)
 
     fig = plt.figure(figsize=(7, 2*int(np.ceil(n_clusters/2))), dpi=150)
-    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.5, wspace=0.1)
+    fontsize = 16
+    plt.rc('text', usetex=True)
+    plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
+    plt.rc('xtick', labelsize=fontsize)
+    plt.rc('ytick', labelsize=fontsize)
     colors = cmap_lifeaquatic(n_clusters)
+    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0, wspace=0)
     max_dist = 0
     for l in range(n_clusters):
         ax = fig.add_subplot(gs[l])
@@ -603,34 +610,26 @@ def view_class_cdf(
 
         plt.plot(distance_a, cdf_a, color=colors[0], label="K-means")
         plt.plot(distance_b, cdf_b, color=colors[1], label="DEC")
+        ax.set_yticks([0., 0.5, 1.])
 
-        plt.rc('text', usetex=True)
-        plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
-        # plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
-        if l == 0:
-            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=14)
-            # plt.ylabel(f"$F_{l+1}(d)$", rotation=0, ha="right", size=14)
-            plt.ylabel("CDF", size=14)
+        if ((n_clusters % 2 == 0) and (l == n_clusters - 2)) or ((n_clusters % 2 != 0) and (l == n_clusters - 1)):
+            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+            plt.ylabel("CDF", size=fontsize)
         else:
             ax.set_xticklabels([])
-            plt.yticks(ticks=np.linspace(0,1,3), labels=[])
-            # plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
-        plt.title(f"$j={l+1}$", loc="left", size=14)
+            ax.set_yticklabels([])
 
     allaxes = fig.get_axes()
     for j, ax in enumerate(allaxes):
         ax.set_xlim(0, max_dist)
-        # if j == 0:
-        #     ax.xticks(ticks=np.linspace(0, max_dist, max_dist/5+1))
-        # else:
-        #     ax.xticks(ticks=np.linspace(0, max_dist, max_dist/5+1), labels=[])
+        ax.text(0.9*max_dist, 0.15, f"$j={j+1}$", ha="right", va="bottom", fontsize=fontsize)
 
     handles, labels = ax.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
-        fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=14)
+        fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=fontsize)
     else:
-        # fig.legend(handles, labels, loc=(0.5, 0), ncol=2, fontsize=14)
-        fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=14)
+        fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=fontsize)
+        plt.subplots_adjust(bottom=0.2)
 
     if show:
         plt.show()
@@ -651,16 +650,19 @@ def view_class_pdf(
         show=True
     ):
     def _roundup(x):
-        return int(np.ceil(x / 100.0)) * 100
+        return int(np.ceil(x / 10.0)) * 10
 
     label_list, counts_a = np.unique(labels_a, return_counts=True)
     _, counts_b = np.unique(labels_b, return_counts=True)
     dx = 1
-    nbins = 100
-    X = np.linspace(0, 301, nbins)
+    nbins = 200
+    X = np.linspace(0, 201, nbins)
 
-    fig = plt.figure(figsize=(12, 2*int(np.ceil(n_clusters/2))), dpi=150)
-    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=1, wspace=0.25)
+    fig = plt.figure(figsize=(12, 2.5*int(np.ceil(n_clusters/2))), dpi=150)
+    fontsize = 16
+    plt.rc('text', usetex=True)
+    plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
+    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.3, wspace=0.05)
     colors = cmap_lifeaquatic(n_clusters)
     max_dist = 0
     for l in range(n_clusters):
@@ -678,7 +680,7 @@ def view_class_pdf(
         max_dist_ = np.max([distance_a.max(), distance_b.max()])
         max_dist_ = _roundup(max_dist_)
         if max_dist_ > max_dist:
-            max_dist = max_dist_ - 50
+            max_dist = max_dist_
 
         axa = fig.add_subplot(gs_sub[0])
         for ll in range(n_clusters):
@@ -690,14 +692,10 @@ def view_class_pdf(
             plt.fill_between(X[:-1], 0, hist_a, color=colors[ll], alpha=0.2)
             plt.xlim(X.min(), X.max())
             plt.xticks([])
-            plt.ylim(0.001, 1)
-            plt.yscale('log')
-            plt.yticks([0.001, 0.01, 0.1])
-            plt.text(1, 0.9, 'Before DEC', ha='right', va='top', transform=axa.transAxes)
-            plt.rc('text', usetex=True)
-            plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
-            plt.ylabel(f"$f_j(d)$", rotation=0, ha="right", y=-0.2, size=14)
-            plt.title(fr"Class PDFs relative to $\pmb{{\mu}}_{l+1}$", loc="left", size=14)
+            plt.ylim(0, 1)
+            plt.yticks([0., 0.5, 1.])
+            plt.text(1, 0.9, 'K-means', ha='right', va='top', transform=axa.transAxes, fontsize=fontsize)
+            plt.title(fr"Class PDFs relative to $\pmb{{\mu}}_{l+1}$", loc="left", size=fontsize)
 
         axb = fig.add_subplot(gs_sub[1])
         for ll in range(n_clusters):
@@ -708,21 +706,31 @@ def view_class_pdf(
             plt.plot(X[:-1], hist_b, color=colors[ll], label=f"{ll+1}")
             plt.fill_between(X[:-1], 0, hist_b, color=colors[ll], alpha=0.2)
             plt.xlim(X.min(), X.max())
-            plt.rc('text', usetex=True)
-            plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
-            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_{l+1}\Vert_{p}$", size=14)
-            plt.ylim(0.001, 1)
-            plt.yscale('log')
-            plt.yticks(ticks=[0.001, 0.01, 0.1])
-            plt.text(1, 0.9, 'After DEC', ha='right', va='top', transform=axb.transAxes)
+            plt.ylim(0, 1)
+            plt.yticks([0., 0.5, 1.])
+            plt.text(1, 0.9, 'DEC', ha='right', va='top', transform=axb.transAxes, fontsize=fontsize)
+
+        if ((n_clusters % 2 == 0) and (l == n_clusters - 2)) or ((n_clusters % 2 != 0) and (l == n_clusters - 1)):
+            plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+            plt.ylabel("PDF", size=fontsize)
+            axa.set_xticklabels([])
+            axa.set_yticklabels([])
+        else:
+            axa.set_xticklabels([])
+            axa.set_yticklabels([])
+            axb.set_xticklabels([])
+            axb.set_yticklabels([])
 
     allaxes = fig.get_axes()
     for ax in allaxes:
         ax.set_xlim(0, max_dist)
 
-    fig.add_axes([0.9, 0.67, 0.1, 0.1]).axis('off')
-    handles, labels = axa.get_legend_handles_labels()
-    leg = plt.legend(handles, labels, fontsize=14, loc="right")
+    handles, labels = ax.get_legend_handles_labels()
+    if len(label_list) % 2 != 0:
+        leg = fig.legend(handles, labels, loc=(0.54, 0.1), ncol=int(np.ceil(n_clusters/2)), fontsize=fontsize)
+    else:
+        leg = fig.legend(handles, labels, loc="lower center", ncol=n_clusters, fontsize=fontsize)
+        plt.subplots_adjust(bottom=0.2)
     leg.set_title("Classes", prop = {'size':'x-large'})
 
     if show:
@@ -739,7 +747,6 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
         for sp in ax.spines.values():
             sp.set_visible(False)
 
-    # fig = plt.figure(figsize=(12,9), dpi=300)
     fig, host = plt.subplots(figsize=(6,4), dpi=150)
 
     par1 = host.twinx()
