@@ -75,7 +75,15 @@ def analyze_clustering(
         p,
         show
     )
-    fig3 = centroid_dashboard(
+    # fig3 = centroid_dashboard(
+    #     data_b,
+    #     labels_b,
+    #     centroids_b,
+    #     n_clusters,
+    #     p,
+    #     show
+    # )
+    fig3 = centroid_distances(
         data_b,
         labels_b,
         centroids_b,
@@ -83,15 +91,7 @@ def analyze_clustering(
         p,
         show
     )
-    fig4 = centroid_distances(
-        data_b,
-        labels_b,
-        centroids_b,
-        n_clusters,
-        p,
-        show
-    )
-    fig5 = view_latent_space(
+    fig4 = view_latent_space(
         data_a,
         data_b,
         labels_a,
@@ -102,7 +102,7 @@ def analyze_clustering(
         p,
         show
     )
-    fig6 = view_class_cdf(
+    fig5 = view_class_cdf(
         data_a,
         data_b,
         labels_a,
@@ -113,7 +113,7 @@ def analyze_clustering(
         p,
         show
     )
-    fig7 = view_class_pdf(
+    fig6 = view_class_pdf(
         data_a,
         data_b,
         labels_a,
@@ -124,7 +124,7 @@ def analyze_clustering(
         p,
         show
     )
-    return [fig1, fig2, fig3, fig4, fig5, fig6, fig7]
+    return [fig1, fig2, fig3, fig4, fig5, fig6]
 
 
 def cmap_lifeaquatic(N=None):
