@@ -597,7 +597,7 @@ def view_class_cdf(
         cdf_b = np.cumsum(np.ones(len(query_b))) / len(query_b)
 
         max_dist_ = np.max([distance_a.max(), distance_b.max()])
-        max_dist_ = _roundup(max_dist_)
+        # max_dist_ = _roundup(max_dist_)
         if max_dist_ > max_dist:
             max_dist = max_dist_
 
