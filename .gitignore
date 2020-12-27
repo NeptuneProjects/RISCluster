@@ -5,7 +5,6 @@ test/
 *.ipynb_checkpoints/
 *.pyo
 *.pyc
-*.ipynb
 *~
 *.swp
 *.ini
