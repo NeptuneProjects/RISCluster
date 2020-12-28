@@ -321,7 +321,7 @@ def cluster_gallery(
         centroids = model.clustering.weights
         X_c = model.decoder(centroids)
         centroids = centroids.detach().cpu().numpy()
-    N = 7
+    N = 6
     if latex:
         params = {
             'text.usetex': True,
@@ -338,6 +338,7 @@ def cluster_gallery(
         'weight': 'normal',
         'size': 5,
     }
+    fontsize = 16
     transform = 'sample_norm_cent'
     cmap_feat = cmo.deep_r
     cmap_spec = cmo.dense
@@ -381,10 +382,10 @@ def cluster_gallery(
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
-        ax.set_xlabel(f"$j={label+1}$", size=10)
+        ax.set_xlabel(f"$j={label+1}$", va="bottom", size=fontsize)
         if l == 0:
             if latex:
-                plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right")
+                plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right", size=fontsize)
             else:
                 plt.ylabel("$g(mu)", rotation=0, va="center", ha="right")
 
@@ -394,7 +395,7 @@ def cluster_gallery(
         plt.yticks([])
         if l == 0:
             if latex:
-                plt.ylabel(r'$\pmb{\mu}_j$', rotation=0, va="center", ha="right")
+                plt.ylabel(r'$\pmb{\mu}_j$', rotation=0, va="center", ha="right", size=fontsize)
             else:
                 plt.ylabel("mu", rotation=0, va="center", ha="right")
 
@@ -414,7 +415,7 @@ def cluster_gallery(
             plt.yticks([])
             if l == 0:
                 if latex:
-                    plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right")
+                    plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
                     plt.ylabel(f"x_{i+1}", rotation=0, va="center", ha="right")
 
@@ -424,7 +425,7 @@ def cluster_gallery(
             plt.yticks([])
             if l == 0:
                 if latex:
-                    plt.ylabel(fr"$\pmb{{z}}_{i+1}$", rotation=0, va="center", ha="right")
+                    plt.ylabel(fr"$\pmb{{z}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
                     plt.ylabel(f"z_{i+1}", rotation=0, va="center", ha="right")
 
@@ -653,7 +654,7 @@ def view_class_cdf(
         fig.legend(handles, labels, loc=(0.65, 0.1), fontsize=fontsize)
     else:
         fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=fontsize)
-        plt.subplots_adjust(bottom=0.2)
+        plt.subplots_adjust(bottom=0.15)
 
     if show:
         plt.show()
@@ -684,7 +685,7 @@ def view_class_pdf(
     X = np.linspace(0, 201, nbins)
 
     fig = plt.figure(figsize=(12, 2.5*int(np.ceil(n_clusters/2))), dpi=150)
-    fontsize = 16
+    fontsize = 20
     if latex:
         plt.rc('text', usetex=True)
         plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
@@ -759,11 +760,11 @@ def view_class_pdf(
 
     handles, labels = ax.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
-        leg = fig.legend(handles, labels, loc=(0.54, 0.1), ncol=int(np.ceil(n_clusters/2)), fontsize=fontsize)
+        leg = fig.legend(handles, labels, loc=(0.54, 0.1), ncol=int(np.ceil(n_clusters/2)), fontsize=fontsize-2)
     else:
-        leg = fig.legend(handles, labels, loc="lower center", ncol=n_clusters, fontsize=fontsize)
-        plt.subplots_adjust(bottom=0.2)
-    leg.set_title("Classes", prop={'size':'x-large'})
+        leg = fig.legend(handles, labels, loc=(0.13, 0.005), ncol=n_clusters, fontsize=fontsize-4)
+        plt.subplots_adjust(bottom=0.15)
+    leg.set_title("Classes", prop={'size':'xx-large'})
 
     if show:
         plt.show()
@@ -893,6 +894,9 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
                 dset_arr = dset[idx[i]]
                 tr[i,:] = dset_arr
 
+    factor = 1e-8
+    tr_max = np.max(np.abs(tr)) / factor
+
     with h5py.File(fname_dataset, 'r') as f:
         M = len(image_index)
         DataSpec = '/4.0/Spectrogram'
@@ -903,12 +907,11 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         tvec = dset[1, 87, 1:]
 
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
-    print(extent)
-
     metadata = get_metadata(sample_index, image_index, fname_dataset)
+    fontsize = 20
     fig = plt.figure(figsize=figsize, dpi=150)
     cmap = 'cmo.ice_r'
-    gs_sup = gridspec.GridSpec(nrows=2, ncols=2, hspace=0.4, wspace=0.25)
+    gs_sup = gridspec.GridSpec(nrows=2, ncols=2, hspace=0.35, wspace=0.15)
     counter = 0
     for i in range(len(sample_index)):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_sup[i], hspace=0)
@@ -916,19 +919,24 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         ax = fig.add_subplot(gs_sub[0])
         plt.imshow(X[sample_index[i],:,:].squeeze(), extent=extent, aspect='auto', origin='lower', cmap=cmap)
         ax.set_xticks([])
-        plt.ylabel('Frequency (Hz)')
+        ax.set_yticks([5, 10, 15, 20])
+        if i == 0:
+            plt.ylabel('Frequency\n(Hz)', size=fontsize)
         station = metadata[counter]['station']
         time_on = metadata[counter]['spec_start']
-        plt.title(f'Station {station}\nTime: {time_on}; '
-                  f'Index: {image_index[sample_index[i]]}')
+        plt.title(f'Station {station}, {time_on[:-4]}', size=fontsize)
+                  # f'Index: {image_index[sample_index[i]]}')
 
         tvec = np.linspace(extent[0], extent[1], tr.shape[1])
 
         ax = fig.add_subplot(gs_sub[1])
-        plt.plot(tvec, tr[i,:])
+        plt.plot(tvec, tr[i,:] / factor)
         plt.xlim(min(tvec), max(tvec))
-        plt.xlabel('Time (s)')
-        plt.ylabel('Velocity (1e-6 m/s)')
+        plt.ylim(-tr_max, tr_max)
+        ax.set_xticks(np.arange(5))
+        if i == 0:
+            plt.xlabel('Time (s)', size=fontsize)
+            plt.ylabel('Acceleration\n($10^{-8}$ m$^2$/s)', size=fontsize)
 
         counter += 1
 
@@ -967,6 +975,7 @@ def view_latent_space(
             'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
         }
         plt.rcParams.update(params)
+    fontsize = 18
     fig = plt.figure(figsize=(8, 2.5*nrows), dpi=150)
 
     gs = gridspec.GridSpec(nrows=nrows, ncols=2, height_ratios=heights, hspace=0.3, wspace=0.05)
@@ -996,7 +1005,7 @@ def view_latent_space(
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('K-means', size=12)
+            plt.ylabel('K-means', size=fontsize)
             if latex:
                 plt.title(r'$\pmb{\mu}_j$')
             else:
@@ -1010,16 +1019,16 @@ def view_latent_space(
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
             if latex:
-                plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+                plt.text(centroids_ind[ll], 1.1*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
             else:
-                plt.text(centroids_ind[ll], 1.2*(ll+1), f"u{labels_not[ll]+1}", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+                plt.text(centroids_ind[ll], 1.1*(ll+1), f"u{labels_not[ll]+1}", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
             if latex:
-                plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=14, transform=ax1.transAxes)
+                plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=fontsize, transform=ax1.transAxes)
             else:
-                plt.text(0.03, 1.1, f"z", size=14, transform=ax1.transAxes)
+                plt.text(0.03, 1.1, f"z", size=fontsize, transform=ax1.transAxes)
         plt.title(f"$j={l+1}$", size=14)
 
         distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
@@ -1042,7 +1051,7 @@ def view_latent_space(
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('DEC', size=12)
+            plt.ylabel('DEC', size=fontsize)
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
@@ -1052,9 +1061,9 @@ def view_latent_space(
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
             if latex:
-                plt.text(centroids_ind[ll], 1.2*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+                plt.text(centroids_ind[ll], 1.1*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
             else:
-                plt.text(centroids_ind[ll], 1.2*(ll+1), f"u{labels_not[ll]+1}", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+                plt.text(centroids_ind[ll], 1.1*(ll+1), f"u{labels_not[ll]+1}", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
         if l == 0:
             label = ax3.set_xlabel("$i$", size=14)
             ax3.xaxis.set_label_coords(-0.03, 0)
@@ -1070,7 +1079,7 @@ def view_latent_space(
     axins = inset_axes(ax4, width="50%", height="15%", loc="center")
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
-    cbar.set_label('Latent Feature Value', size=14)
+    cbar.set_label('Latent Feature Value', size=fontsize)
     if latex:
         fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{z}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
     else:
