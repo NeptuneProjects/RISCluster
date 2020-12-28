@@ -2,6 +2,7 @@
 .DS_STORE
 test/
 **/__pycache__
+*.ipynb
 *.ipynb_checkpoints/
 *.pyo
 *.pyc
