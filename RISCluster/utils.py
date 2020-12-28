@@ -38,20 +38,20 @@ class H5SeismicDataset(Dataset):
         return idx, X
 
 
-class SeismoDataset(Dataset):
-    "Converts ndarray already in memory to PyTorch dataset."
-    def __init__(self, data, transform=None):
-        self.data = torch.from_numpy(data).float()
-        self.transform = transform
-
-    def __getitem__(self, index):
-        x = self.data[index]
-        if self.transform:
-            x = self.transform(x)
-        return x
-
-    def __len__(self):
-        return len(self.data)
+# class SeismoDataset(Dataset):
+#     "Converts ndarray already in memory to PyTorch dataset."
+#     def __init__(self, data, transform=None):
+#         self.data = torch.from_numpy(data).float()
+#         self.transform = transform
+#
+#     def __getitem__(self, index):
+#         x = self.data[index]
+#         if self.transform:
+#             x = self.transform(x)
+#         return x
+#
+#     def __len__(self):
+#         return len(self.data)
 
 
 class SpecgramShaper(object):
