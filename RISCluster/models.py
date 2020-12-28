@@ -627,12 +627,11 @@ def predict(model, dataloader, parameters):
     for batch in pbar:
         idx, batch = batch
         x = batch.to(device)
-        q, _, _ = model(x)
-        label = torch.argmax(q, dim=1)
+        _, labels, _ = infer(x)
 
         A = [{
             'idx': idx[i].cpu().detach().numpy(),
-            'label': label[i].cpu().detach().numpy()
+            'label': labels[i].cpu().detach().numpy()
         } for i in range(x.size(0))]
 
         utils.save_labels(
@@ -642,7 +641,6 @@ def predict(model, dataloader, parameters):
         )
 
 
-# K-means clusters initialisation
 def kmeans(model, dataloader, device):
     '''
     Initiate clusters using K-means algorithm.
