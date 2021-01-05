@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import glob
 import json
 import logging
 import os
@@ -319,16 +320,29 @@ def get_specgram(tr, fs, i0, i1, NFFT, overlap, tpersnap):
     return t, f, S
 
 
-def get_station(station_index):
-    '''Input: Integer station index (0-33).
-       Output: Station name string'''
+def get_station(station):
+    '''Returns station index or station name, depending on whether input is a
+    name (string) or index (integer).
+
+    Parameters
+    ----------
+    station : str, int
+        Station name (str), Station index (int)
+
+    Returns
+    -------
+    station: int, str
+        Station index (int), Station name (str)
+    '''
     station_list = ['DR01', 'DR02', 'DR03', 'DR04', 'DR05', 'DR06', 'DR07',
-                    'DR08', 'DR09', 'DR10', 'DR11', 'DR12', 'DR13', 'DR14',
-                    'DR15', 'DR16', 'RS01', 'RS02', 'RS03', 'RS04', 'RS05',
-                    'RS06', 'RS07', 'RS08', 'RS09', 'RS10', 'RS11', 'RS12',
-                    'RS13', 'RS14', 'RS15', 'RS16', 'RS17', 'RS18']
-    station_name = station_list[station_index]
-    return station_name
+                   'DR08', 'DR09', 'DR10', 'DR11', 'DR12', 'DR13', 'DR14',
+                   'DR15', 'DR16', 'RS01', 'RS02', 'RS03', 'RS04', 'RS05',
+                   'RS06', 'RS07', 'RS08', 'RS09', 'RS10', 'RS11', 'RS12',
+                   'RS13', 'RS14', 'RS15', 'RS16', 'RS17', 'RS18']
+    if isinstance(station, int):
+        return station_list[station]
+    elif isinstance(station, str):
+        return station_list.index(station)
 
 
 def mass_data_downloader(
@@ -396,6 +410,52 @@ def mass_data_downloader(
 
     logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
     logger.setLevel(logging.DEBUG)
+
+
+def read_meteo(path):
+    '''Reads AWS data from tab-separated .txt file to Pandas dataframe.
+
+    Parameters
+    ----------
+    path : str
+        Path to AWS files
+
+    Returns
+    -------
+    dataframe : Pandas dataframe
+        Dataframe whose index is datetime, and whose columns are temperature
+        (C) and wind speed (m/s).
+    
+    Notes
+    -----
+    Antarctica AWS data accessed from https://amrc.ssec.wisc.edu.
+    '''
+    file_list = glob.glob(path)
+    first = True
+    for file in file_list:
+        df = pd.read_csv(
+            file,
+            sep=" ",
+            header=0,
+            names=["Year","Month","Day","Time","temp","wind_spd"],
+            usecols=[0, 2, 3, 4, 5, 7],
+            dtype={"Year": str, "Month": str, "Day": str, "Time": str},
+            skipinitialspace=True,
+            skiprows=1,
+            na_values=444.0
+        )
+        df["Hour"] = df.Time.str.slice(0, 2)
+        df["Minute"] = df.Time.str.slice(2, 4)
+        dti = pd.to_datetime(df[["Year", "Month", "Day", "Hour", "Minute"]])
+        df.drop(columns=["Year", "Month", "Day", "Time", "Hour", "Minute"], inplace=True)
+        df.index = dti
+        if first:
+            df_meteo = df
+            first = False
+        else:
+            df_meteo = df_meteo.append(df)
+            del df
+    return df_meteo.sort_index()[datetime(2014,12,1):datetime(2016,12,1)]
 
 
 def read_stationXML(signal_args):
