@@ -201,13 +201,13 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l+1,0], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
         # Centroid Plot
         ax = fig.add_subplot(gs_sub[0,0])
-        plt.imshow(centroids[l][None].T, cmap=cmap, vmax=vmax)
+        plt.imshow(centroids[l][None].T, cmap=cmap, vmax=vmax, interpolation="none")
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         plt.ylabel('Centroid Feature')
         # Dataset Latent Features
         ax = fig.add_subplot(gs_sub[0,1])
-        plt.imshow(z_array[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+        plt.imshow(z_array[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax, interpolation="none")
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', linestyles='dotted')
         for ll in range(n_clusters-1):
             plt.text(centroids_ind[ll], ll+1, str(labels_not[ll]+1), backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=0.5, edgecolor='w'))
@@ -244,14 +244,14 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l+1,1], hspace=0, wspace=0, height_ratios=heights, width_ratios=widths)
         # Centroid Plot
         ax = fig.add_subplot(gs_sub[0,0])
-        plt.imshow(centroids[l][None].T, cmap=cmap, vmax=vmax)
+        plt.imshow(centroids[l][None].T, cmap=cmap, vmax=vmax, interpolation="none")
         plt.xticks([])
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'))
         plt.ylabel('Centroid Feature')
         # Cluster Latent Features
         ax = fig.add_subplot(gs_sub[0,1])
         tmp = z_sub.T
-        plt.imshow(np.concatenate((tmp, np.zeros((tmp.shape[0], counts.max() - tmp.shape[1]))), axis=1), cmap=cmap, extent=extent, aspect='auto', vmax=vmax)
+        plt.imshow(np.concatenate((tmp, np.zeros((tmp.shape[0], counts.max() - tmp.shape[1]))), axis=1), cmap=cmap, extent=extent, aspect='auto', vmax=vmax, interpolation="none")
         plt.xticks([])
         # plt.yticks([])
         # To-do: Fix yticks
@@ -284,7 +284,7 @@ def centroid_dashboard(z_array, labels, centroids, n_clusters, p=2, show=True):
 def centroid_distances(z_array, labels, centroids, n_clusters, p=2, show=True):
     dist_mat = utils.distance_matrix(centroids, centroids, p)
     fig = plt.figure(dpi=150)
-    plt.imshow(dist_mat, cmap='cmo.solar_r', origin='lower')
+    plt.imshow(dist_mat, cmap='cmo.solar_r', origin='lower', interpolation="none")
     plt.xticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     plt.yticks(ticks=np.arange(0, n_clusters), labels=np.arange(1, n_clusters + 1))
     for i in range(n_clusters):
@@ -378,7 +378,7 @@ def cluster_gallery(
         ax = fig.add_subplot(gs_sub[0])
         plt.axis('off')
         ax = fig.add_subplot(gs_sub[1])
-        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap=cmap_spec, aspect='auto', origin='lower')
+        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
         plt.xticks([])
         plt.yticks([])
         ax.xaxis.set_label_position('top')
@@ -390,7 +390,7 @@ def cluster_gallery(
                 plt.ylabel("$g(mu)", rotation=0, va="center", ha="right")
 
         ax = fig.add_subplot(gs_sub[2])
-        plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
+        plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="none")
         plt.xticks([])
         plt.yticks([])
         if l == 0:
@@ -408,7 +408,7 @@ def cluster_gallery(
             plt.yticks([])
 
             ax = fig.add_subplot(gs_sub[1])
-            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower')
+            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
             # plt.text(0, 60, f"{load_index[i]}", fontdict=font)
             # plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
             plt.xticks([])
@@ -420,7 +420,7 @@ def cluster_gallery(
                     plt.ylabel(f"x_{i+1}", rotation=0, va="center", ha="right")
 
             ax = fig.add_subplot(gs_sub[2])
-            plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax)
+            plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="none")
             plt.xticks([])
             plt.yticks([])
             if l == 0:
@@ -560,12 +560,12 @@ def view_centroid_output(centroids, X_r, figtitle, show=True):
 
     for i in range(len(centroids)):
         ax = fig.add_subplot(gs[i,0])
-        plt.imshow(torch.reshape(X_r[i,:,:,:], (n,o)).cpu().detach().numpy(), aspect='auto')
+        plt.imshow(torch.reshape(X_r[i,:,:,:], (n,o)).cpu().detach().numpy(), aspect='auto', interpolation="none")
         plt.gca().invert_yaxis()
         plt.title(f'Class {i}')
 
         ax = fig.add_subplot(gs[i,1])
-        plt.imshow(np.expand_dims(centroids[i].cpu().detach().numpy(), 1), cmap='viridis', aspect='auto')
+        plt.imshow(np.expand_dims(centroids[i].cpu().detach().numpy(), 1), cmap='viridis', aspect='auto', interpolation="none")
         plt.xticks([])
         plt.yticks([])
 
@@ -826,12 +826,13 @@ def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
         plt.close()
     return fig
 
+
 def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     fig = plt.figure(figsize=figsize, dpi=150)
     gs = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1,0.1,1])
     # Original Spectrogram
     ax = fig.add_subplot(gs[0])
-    plt.imshow(np.squeeze(x), aspect='auto')
+    plt.imshow(np.squeeze(x), aspect='auto', interpolation="none")
     plt.ylabel('Frequency Bin')
     plt.xlabel('Time Bin')
     plt.gca().invert_yaxis()
@@ -839,7 +840,7 @@ def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     plt.title('Original Spectrogram')
     # Latent Space Representation:
     ax = fig.add_subplot(gs[1])
-    plt.imshow(np.expand_dims(z, 1), cmap='viridis', aspect='auto')
+    plt.imshow(np.expand_dims(z, 1), cmap='viridis', aspect='auto', interpolation="none")
     plt.gca().invert_yaxis()
     plt.title('Latent Space')
     plt.tick_params(
@@ -851,7 +852,7 @@ def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     )
     # Reconstructed Spectrogram:
     ax = fig.add_subplot(gs[2])
-    plt.imshow(np.squeeze(x_rec), aspect='auto')
+    plt.imshow(np.squeeze(x_rec), aspect='auto', interpolation="none")
     plt.ylabel('Frequency Bin')
     plt.xlabel('Time Bin')
     plt.gca().invert_yaxis()
@@ -865,6 +866,7 @@ def view_DCM_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     else:
         plt.show()
     return fig
+
 
 def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
     '''Plots selected spectrograms & traces.'''
@@ -917,7 +919,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         gs_sub = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_sup[i], hspace=0)
 
         ax = fig.add_subplot(gs_sub[0])
-        plt.imshow(X[sample_index[i],:,:].squeeze(), extent=extent, aspect='auto', origin='lower', cmap=cmap)
+        plt.imshow(X[sample_index[i],:,:].squeeze(), extent=extent, aspect='auto', origin='lower', cmap=cmap, interpolation="none")
         ax.set_xticks([])
         ax.set_yticks([5, 10, 15, 20])
         if i == 0:
@@ -1001,7 +1003,7 @@ def view_latent_space(
 
         # Centroid A
         ax0 = fig.add_subplot(gs_sub[0,0])
-        plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax)
+        plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax, interpolation="none")
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
@@ -1015,7 +1017,7 @@ def view_latent_space(
 
         # Latent Space A
         ax1 = fig.add_subplot(gs_sub[0,1])
-        plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+        plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax, interpolation="none")
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
             if latex:
@@ -1047,7 +1049,7 @@ def view_latent_space(
 
         # Centroid B
         ax2 = fig.add_subplot(gs_sub[1,0])
-        plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax)
+        plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax, interpolation="none")
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
@@ -1057,7 +1059,7 @@ def view_latent_space(
 
         # Latent Space B
         ax3 = fig.add_subplot(gs_sub[1,1])
-        plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax)
+        plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax, interpolation="none")
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
             if latex:
@@ -1091,6 +1093,7 @@ def view_latent_space(
     else:
         plt.close()
     return fig
+
 
 def view_learningcurve(training_history, validation_history, show=True):
     epochs = len(training_history['mse'])
@@ -1127,6 +1130,157 @@ def view_PCA(pca2d, labels):
     fig.tight_layout()
     return fig
 
+
+def view_series(
+        station,
+        aws,
+        path_to_data,
+        path_to_catalogue,
+        path_to_labels,
+        env_vars=["tide","sea_ice_conc","temp","wind_spd"],
+        times=None,
+        vlines=None,
+        freq="month",
+        label_list=[i for i in range(8)],
+        log=False,
+        maxcounts=False,
+        figsize=(12,9),
+        title=None,
+        showlabels=True,
+        show=False
+    ):
+    df_env = utils.EnvironmentCatalogue(station, aws, path_to_data).df
+    catalogue = utils.LabelCatalogue([path_to_catalogue, path_to_labels])
+    counts = catalogue.gather_counts(station=station, freq=freq, label_list=label_list)
+    if times is not None:
+        mask = (df_env.index >= times[0]) & (df_env.index <= times[1])
+        df_env = df_env.loc[mask]
+        mask = (counts.index >= times[0]) & (counts.index <= times[1])
+        counts = counts.loc[mask]
+    # =======================================
+    fig = plt.figure(figsize=figsize)
+
+    fontsize = 16
+    if times is not None:
+        duration = times[1] - times[0]
+        if duration.days >= 28:
+            xticks = pd.date_range(df_env.index[0], df_env.index[-1], freq="7D")
+            xlabels = xticks.strftime("%d %b\n%Y")
+            xlabelrotation = 0
+            xlabelalignment = "center"
+        elif duration.days > 7:
+            xticks = pd.date_range(df_env.index[0], df_env.index[-1], freq="D")
+            xlabels = xticks.strftime("%Y-%b-%d")[::2]
+            xlabelrotation = 45
+            xlabelalignment = "right"
+        else:
+            xticks = pd.date_range(df_env.index[0], df_env.index[-1], freq="D")
+            xlabels = xticks.strftime("%Y-%b-%d")
+            xlabelrotation = 45
+            xlabelalignment = "right"
+    else:
+        xticks = pd.date_range(df_env.index[0], df_env.index[-1], freq="3MS")
+        xlabels = xticks.strftime("%b\n%Y")
+        xlabelrotation = 0
+        xlabelalignment = "center"
+
+    linewidth = 0.75
+    colors = cmap_lifeaquatic()
+
+    env_keys = df_env.keys().tolist()
+    labels = counts.keys()
+    if not maxcounts:
+        maxcounts = counts.max().max()
+    heights = [1 for i in range(len(env_vars))] + [0.5 for i in range(len(label_list))]
+
+    letters = "abcdefghijklmnop"
+
+    gs = fig.add_gridspec(len(env_vars) + len(labels), 1, height_ratios=heights, hspace=0.4)
+
+    params = dict(
+        env_key=env_keys,
+        ylabels=[
+            "Tide (m)",
+            "% Sea Ice\n    Coverage",
+            "Temperature\n          ($^\degree$C)",
+            "Wind Speed\n         (m/s)"],
+        ylims=[(-1, 1), (0, 100), (-60, 0), (0, 25)],
+        colors=[colors[i] for i in [0,4,5,3]]
+    )
+    sel_ind = [env_keys.index(key) for key in env_vars]
+    params = dict(
+        env_key=[params["env_key"][i] for i in sel_ind],
+        ylabels=[params["ylabels"][i] for i in sel_ind],
+        ylims=[params["ylims"][i] for i in sel_ind],
+        colors=[params["colors"][i] for i in sel_ind]
+    )
+
+    for i, key in enumerate(env_vars):
+        ax = fig.add_subplot(gs[i])
+        plt.plot(df_env[key], color=params["colors"][i], linewidth=linewidth)
+        if vlines is not None:
+            [plt.axvline(pd.Timestamp(dt), color="r") for dt in vlines]
+        plt.grid(axis="x")
+        ax.set_xlim(df_env.index[0], df_env.index[-1])
+        ax.set_xticks(xticks)
+        ax.set_xticklabels([])
+        ax.spines["top"].set_visible(False)
+        ax.set_ylim(params["ylims"][i])
+        plt.setp(ax.get_yticklabels(), fontsize=fontsize-2)
+        if showlabels:
+            plt.ylabel(f"{letters[i]}) {params['ylabels'][i]}", rotation=0, ha="left", va="center", fontsize=fontsize)
+            ax.yaxis.set_label_coords(-0.22, 0.5)
+        if i == 0 and title is not None:
+            plt.title(title, fontsize=fontsize+2)
+
+    for j, key in enumerate(labels):
+        ax = fig.add_subplot(gs[i + j + 1])
+        plt.plot(counts[key], color="navy")
+        if vlines is not None:
+            [plt.axvline(pd.Timestamp(dt), color="r") for dt in vlines]
+        ax.grid(axis="x")
+        ax.set_xlim(df_env.index[0], df_env.index[-1])
+        if j == len(labels)-1:
+            ax.set_xticklabels(xlabels, rotation=xlabelrotation, ha=xlabelalignment, size=fontsize)
+            ax.spines["bottom"].set_visible(True)
+            ax.set_xticks(xticks)
+        else:
+            ax.set_xticklabels([])
+            ax.set_xticks(xticks)
+        ax.spines["top"].set_visible(False)
+        if log:
+            plt.yscale("log")
+            ax.set_ylim(1, 100)
+            ax.set_yticks([1, 10, 100])
+        else:
+            ymax = maxcounts
+            ax.set_ylim(0, ymax)
+            ax.set_yticks([0, ymax/2, ymax])
+        if j == 0:
+            if log:
+                ax.set_yticklabels([1, 10, 100], size=fontsize-2)
+            else:
+                ax.set_yticklabels([0, int(ymax/2), ymax], size=fontsize-2)
+        else:
+            ax.set_yticklabels([])
+        if showlabels:
+            plt.ylabel(f"{letters[i + j + 1]}) Class {j + 1}", rotation=0, ha="left", va="center", fontsize=fontsize)
+            ax.yaxis.set_label_coords(-0.17, 0.5)
+
+    if showlabels:
+        ax = fig.add_subplot(111, frame_on=False)
+        plt.tick_params(labelcolor="none", bottom=False, left=False)
+        plt.ylabel(f"Detections/{catalogue.freq}", fontsize=fontsize)
+        ax.yaxis.set_label_coords(-0.2, 0.3)
+        plt.subplots_adjust(left=0.2, right=0.95)
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+
 def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
                   nrows=2, ncols=2, figsize=(12,9), show=True):
     '''Plots selected spectrograms from input data.'''
@@ -1145,7 +1299,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         # print(tvec)
 
         ax = fig.add_subplot(gs[i])
-        plt.imshow(torch.reshape(X[insp_idx[i],:,:,:], (n,o)), aspect='auto')
+        plt.imshow(torch.reshape(X[insp_idx[i],:,:,:], (n,o)), aspect='auto', interpolation="none")
         plt.gca().invert_yaxis()
         plt.xlabel('Time Bin')
         plt.ylabel('Frequency Bin')
@@ -1174,6 +1328,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
     else:
         plt.close()
     return fig
+
 
 def view_specgram_training(
         x, x_r, z, n, o,
@@ -1209,19 +1364,19 @@ def view_specgram_training(
         #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
         ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
         plt.title(f'Station {station}; Index: {disp_idx[i]}\nTrigger: {time_on}', fontsize=8)
 
         ax = fig.add_subplot(gs[1,counter])
-        plt.imshow(np.expand_dims(z[i], 0), cmap=cmo.deep_r, aspect='auto')
+        plt.imshow(np.expand_dims(z[i], 0), cmap=cmo.deep_r, aspect='auto', interpolation="none")
         plt.xticks([])
         plt.yticks([])
 
         ax = fig.add_subplot(gs[2,counter])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
         plt.xlabel('Time (s)')
         if i == 0:
             plt.ylabel('Frequency (Hz)')
@@ -1239,6 +1394,7 @@ def view_specgram_training(
     else:
         plt.close()
     return fig
+
 
 def view_specgram_training2(
         x, x_r, z, n, o,
@@ -1282,7 +1438,7 @@ def view_specgram_training2(
         #                                 '%Y-%m-%dT%H:%M:%S').strftime(
         #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         ax1 = fig.add_subplot(gs[counter,0])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
         plt.colorbar(orientation='vertical', pad=0)
         plt.clim(0,1)
         plt.xlabel('Time (s)')
@@ -1292,7 +1448,7 @@ def view_specgram_training2(
         xy1 = (0.67, arrow_yloc)
 
         ax2 = fig.add_subplot(gs[counter,1])
-        plt.imshow(np.expand_dims(z[i], 1), cmap=cmo.deep_r, aspect='auto')
+        plt.imshow(np.expand_dims(z[i], 1), cmap=cmo.deep_r, aspect='auto', interpolation="none")
         for j in range(z.shape[1]):
             plt.text(
                 0,
@@ -1321,7 +1477,7 @@ def view_specgram_training2(
         ax2.add_artist(con)
 
         ax3 = fig.add_subplot(gs[counter,2])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower')
+        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
         plt.colorbar(orientation='vertical', pad=0)
         plt.clim(0,1)
         plt.title("Output\n" + r"$\bm{x}'$", x=0.55)
@@ -1347,6 +1503,7 @@ def view_specgram_training2(
     else:
         plt.close()
     return fig
+
 
 def view_TSNE(results, labels, title, show=False):
     label_list, counts = np.unique(labels, return_counts=True)
