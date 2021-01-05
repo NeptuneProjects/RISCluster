@@ -22,5 +22,6 @@ dependencies:
   - tensorboard
   - tqdm
   - twilio
+  - xlrd
   - pip:
     - torchsummary
