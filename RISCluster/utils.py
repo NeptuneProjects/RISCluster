@@ -15,10 +15,14 @@ import sys
 from dotenv import load_dotenv
 import h5py
 import numpy as np
+import pandas as pd
+from scipy.io import loadmat
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 from twilio.rest import Client
+
+from processing import get_station, read_meteo
 
 
 class H5SeismicDataset(Dataset):
@@ -27,9 +31,11 @@ class H5SeismicDataset(Dataset):
         self.transform = transform
         self.fname = fname
 
+
     def __len__(self):
         m, _, _ = query_dbSize(self.fname)
         return m
+
 
     def __getitem__(self, idx):
         X = torch.from_numpy(read_h5(self.fname, idx))
@@ -54,12 +60,105 @@ class H5SeismicDataset(Dataset):
 #         return len(self.data)
 
 
+class EnvironmentCatalogue(object):
+    def __init__(self, station, aws, path):
+        self.station = station
+        self.aws = aws
+        self.path = path
+        self.df = self.build_df(self.station, self.aws, self.path)
+
+
+    def build_df(self, station, aws, path):
+        # Load tidal data:
+        sta_ind = get_station(station)
+        if station == "RS08" or station == "RS11":
+            sta_ind -= 1
+        elif station == "RS09":
+            sta_ind += 1
+        elif station == "RS17":
+            sta_ind -= 2
+        data = loadmat(f"{path}/RIS_Tides.mat")["z"][sta_ind,:]
+        df_tide = pd.DataFrame(data={"tide": data}, index=pd.date_range("2014-12-01", "2016-12-01", freq="10min"), columns=["tide"])
+        # Load sea ice concentration:
+        data = loadmat(f"{path}/NSIDC-0051.mat")
+        df_ice = pd.DataFrame(data={"sea_ice_conc": data["C"].squeeze()*100}, index=pd.to_datetime(data["date"]), columns=['sea_ice_conc'])
+        # Load meteo data:
+        df_meteo = read_meteo(f"{path}/RIS_Meteo/{aws}*.txt")
+        # Combine datasets into one dataframe:
+        df = pd.concat([df_tide, df_ice, df_meteo], axis=1)
+        df["sea_ice_conc"] = df["sea_ice_conc"].interpolate()
+        return df
+
+
+class LabelCatalogue(object):
+    def __init__(self, paths, label_list=None):
+        self.paths = paths
+        self.freq = None
+        self.df = self.build_df(self.paths)
+        if label_list is not None:
+            self.label_list = label_list
+        else:
+            self.label_list = pd.unique(self.df["label"])
+
+
+    def build_df(self, paths):
+        data1 = pd.read_csv(paths[0]).drop(columns=["Index"])
+        data2 = pd.read_csv(self.paths[1]).drop(columns=["idx"])
+        df = pd.concat(
+            [data1, data2],
+            axis=1
+        ).drop(
+            columns=[
+                "channel",
+                "dt_on",
+                "dt_off",
+                "fs",
+                "delta",
+                "npts",
+                "STA",
+                "LTA",
+                "on",
+                "off",
+                "spec_start",
+                "spec_stop"
+            ]
+        ).rename(columns={"dt_peak": "time"})
+        df["time"] = df["time"].astype("datetime64")
+        df.set_index("time", inplace=True)
+        df.sort_index(inplace=True)
+        return df
+
+
+    def gather_counts(self, station, freq="month", label_list=None):
+        if freq == "month":
+            freqcode = "1M"
+        elif freq == "day":
+            freqcode = "1D"
+        elif freq == "hour":
+            freqcode = "1H"
+        self.freq = freq
+        if (label_list is not None) and (max(label_list) > max(self.label_list)):
+            raise ValueError("label_list includes impossibly high label.")
+        else:
+            label_list = self.label_list
+        for i, label in enumerate(label_list):
+            mask = (self.df["station"] == station) & (self.df['label'] == label)
+            subset = self.df.loc[mask].drop(columns=["network","station","peak","unit"])
+            counts = subset.resample(freqcode).count().rename(columns={"label": f"{label+1}"})
+            if i == 0:
+                df = counts
+            else:
+                df = pd.concat([df, counts], axis=1)
+        return df.fillna(0).astype("int").sort_index()
+
+
 class SpecgramShaper(object):
     """Crop & reshape data."""
     def __init__(self, n=None, o=None, transform='sample_norm_cent'):
         self.n = n
         self.o = o
         self.transform = transform
+
 
     def __call__(self, X):
         if self.n is not None and self.o is not None:
@@ -120,6 +219,23 @@ def fractional_distance(x, y, f):
     diff = np.fabs(x - y) ** f
     dist = np.sum(diff, axis=1) ** (1 / f)
     return dist
+
+
+def get_amplitude_statistics(path_to_labels, path_to_catalogue):
+    labels = pd.read_csv(path_to_labels, index_col=0)
+    amp_pk = pd.read_csv(path_to_catalogue, usecols=["peak"])
+
+    data = pd.concat([labels, amp_pk], axis=1)
+    label_list = pd.unique(labels["label"])
+
+    columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
+    stats = []
+    for label in label_list:
+        subset = data["peak"].loc[data["label"] == label].abs()
+        stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
+
+    amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
+    return amp_stats.set_index("Class")
 
 
 def init_exp_env(mode, savepath, **kwargs):
