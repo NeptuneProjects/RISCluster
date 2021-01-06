@@ -17,6 +17,7 @@ from obspy.signal.trigger import classic_sta_lta, recursive_sta_lta, \
     trigger_onset
 import pandas as pd
 from scipy import signal
+from scipy.io import loadmat
 from tqdm import tqdm
 
 
@@ -26,6 +27,40 @@ class DetectorParam():
         self.LTA = LTA
         self.trigger_on = trigger_on
         self.trigger_off = trigger_off
+
+
+class EnvironmentCatalogue(object):
+    def __init__(self, station, aws, path):
+        self.station = station
+        self.aws = aws
+        self.path = path
+        self.df = self.build_df(self.station, self.aws, self.path)
+
+
+    def build_df(self, station, aws, path):
+        # Load tidal data:
+        sta_ind = get_station(station)
+        if station == "RS08" or station == "RS11":
+            sta_ind -= 1
+        elif station == "RS09":
+            sta_ind += 1
+        elif station == "RS17":
+            sta_ind -= 2
+        data = loadmat(f"{path}/RIS_Tides.mat")["z"][sta_ind,:]
+        df_tide = pd.DataFrame(data={"tide": data}, index=pd.date_range("2014-12-01", "2016-12-01", freq="10min"), columns=["tide"])
+        # Load sea ice concentration:
+        data = loadmat(f"{path}/NSIDC-0051.mat")
+        df_ice = pd.DataFrame(data={"sea_ice_conc": data["C"].squeeze()*100}, index=pd.to_datetime(data["date"]), columns=['sea_ice_conc'])
+        # Load meteo data:
+        df_meteo = read_meteo(f"{path}/RIS_Meteo/{aws}*.txt")
+        # Load ERA5 data:
+        df_energy = read_ERA5(f"{path}/SDM_jan2016_ERA5.csv")
+
+        # Combine datasets into one dataframe:
+        df = pd.concat([df_tide, df_ice, df_meteo, df_energy], axis=1)
+        df["sea_ice_conc"] = df["sea_ice_conc"].interpolate()
+        df["net_sfc_melt_energy"] = df["net_sfc_melt_energy"].interpolate()
+        return df
 
 
 class SigParam():
@@ -412,6 +447,44 @@ def mass_data_downloader(
     logger.setLevel(logging.DEBUG)
 
 
+def read_ERA5(path):
+    '''Reads ERA5 data from .csv file to Pandas dataframe.
+
+    Parameters
+    ----------
+    path : str
+        Path to ERA5 files
+
+    Returns
+    -------
+    dataframe : Pandas dataframe
+        Dataframe whose index is datetime, and whose columns are net surface
+        melting energy (units).
+
+    Notes
+    -----
+    Antarctica AWS data accessed from
+    https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5.
+    '''
+    file_list = glob.glob(path)
+    first = True
+    for file in file_list:
+        df = pd.read_csv(
+            file,
+            index_col=[0],
+            usecols=["time","net_sfc_melt_energy"],
+            parse_dates=True,
+            infer_datetime_format=True
+        )
+        if first:
+            df_energy = df
+            first = False
+        else:
+            df_energy = df_energy.append(df)
+    return df_energy
+
+
+
 def read_meteo(path):
     '''Reads AWS data from tab-separated .txt file to Pandas dataframe.
 
@@ -425,7 +498,7 @@ def read_meteo(path):
     dataframe : Pandas dataframe
         Dataframe whose index is datetime, and whose columns are temperature
         (C) and wind speed (m/s).
-    
+
     Notes
     -----
     Antarctica AWS data accessed from https://amrc.ssec.wisc.edu.
@@ -454,7 +527,6 @@ def read_meteo(path):
             first = False
         else:
             df_meteo = df_meteo.append(df)
-            del df
     return df_meteo.sort_index()[datetime(2014,12,1):datetime(2016,12,1)]
 
 

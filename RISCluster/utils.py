@@ -16,13 +16,10 @@ from dotenv import load_dotenv
 import h5py
 import numpy as np
 import pandas as pd
-from scipy.io import loadmat
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 from twilio.rest import Client
-
-from processing import get_station, read_meteo
 
 
 class H5SeismicDataset(Dataset):
@@ -58,36 +55,6 @@ class H5SeismicDataset(Dataset):
 #
 #     def __len__(self):
 #         return len(self.data)
-
-
-class EnvironmentCatalogue(object):
-    def __init__(self, station, aws, path):
-        self.station = station
-        self.aws = aws
-        self.path = path
-        self.df = self.build_df(self.station, self.aws, self.path)
-
-
-    def build_df(self, station, aws, path):
-        # Load tidal data:
-        sta_ind = get_station(station)
-        if station == "RS08" or station == "RS11":
-            sta_ind -= 1
-        elif station == "RS09":
-            sta_ind += 1
-        elif station == "RS17":
-            sta_ind -= 2
-        data = loadmat(f"{path}/RIS_Tides.mat")["z"][sta_ind,:]
-        df_tide = pd.DataFrame(data={"tide": data}, index=pd.date_range("2014-12-01", "2016-12-01", freq="10min"), columns=["tide"])
-        # Load sea ice concentration:
-        data = loadmat(f"{path}/NSIDC-0051.mat")
-        df_ice = pd.DataFrame(data={"sea_ice_conc": data["C"].squeeze()*100}, index=pd.to_datetime(data["date"]), columns=['sea_ice_conc'])
-        # Load meteo data:
-        df_meteo = read_meteo(f"{path}/RIS_Meteo/{aws}*.txt")
-        # Combine datasets into one dataframe:
-        df = pd.concat([df_tide, df_ice, df_meteo], axis=1)
-        df["sea_ice_conc"] = df["sea_ice_conc"].interpolate()
-        return df
 
 
 class LabelCatalogue(object):
@@ -150,6 +117,42 @@ class LabelCatalogue(object):
             else:
                 df = pd.concat([df, counts], axis=1)
         return df.fillna(0).astype("int").sort_index()
+
+
+    # def get_amplitude_statistics(self, path_to_labels, path_to_catalogue):
+    #     labels = pd.read_csv(path_to_labels, index_col=0)
+    #     amp_pk = pd.read_csv(path_to_catalogue, usecols=["peak"])
+    #
+    #     data = pd.concat([labels, amp_pk], axis=1)
+    #     label_list = pd.unique(labels["label"])
+    #
+    #     columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
+    #     stats = []
+    #     for label in label_list:
+    #         subset = data["peak"].loc[data["label"] == label].abs()
+    #         stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
+    #
+    #     amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
+    #     return amp_stats.set_index("Class")
+
+
+    def seasonal_statistics(self):
+        count_winter = np.empty((len(self.label_list)),)
+        count_summer = np.empty((len(self.label_list)),)
+        for j, label in enumerate(self.label_list):
+            mask_label = self.df["label"] == label
+            subset = self.df.loc[mask_label]
+            total_count = len(subset.index)
+            mask_winter = ((subset.index >= datetime(2015,1,1)) & (subset.index < datetime(2015,4,1))) | \
+                ((subset.index >= datetime(2016,1,1)) & (subset.index < datetime(2016,4,1)))
+            mask_summer = ((subset.index >= datetime(2015,6,1)) & (subset.index < datetime(2015,9,1))) | \
+                ((subset.index >= datetime(2016,6,1)) & (subset.index < datetime(2016,9,1)))
+
+            count_winter[j] = 100 * len(subset.loc[mask_winter].index) / total_count
+            count_summer[j] = 100 * len(subset.loc[mask_summer].index) / total_count
+
+        counts = pd.DataFrame({"JFM": count_winter, "JJA": count_summer})
+        return counts
 
 
 class SpecgramShaper(object):
