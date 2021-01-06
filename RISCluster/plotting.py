@@ -20,7 +20,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import transforms
 
-from processing import get_metadata
+from processing import get_metadata, EnvironmentCatalogue
 import utils
 from networks import AEC, DCM
 
@@ -148,6 +148,8 @@ def cmap_lifeaquatic(N=None):
         (1, 170, 233),
         (195, 206, 208),
         (229, 195, 158),
+        (56, 2, 130),
+        (0, 0, 0)
     ]
     colors = [tuple([v / 256 for v in c]) for c in colors]
     if colors is not None:
@@ -1149,7 +1151,7 @@ def view_series(
         showlabels=True,
         show=False
     ):
-    df_env = utils.EnvironmentCatalogue(station, aws, path_to_data).df
+    df_env = EnvironmentCatalogue(station, aws, path_to_data).df
     catalogue = utils.LabelCatalogue([path_to_catalogue, path_to_labels])
     counts = catalogue.gather_counts(station=station, freq=freq, label_list=label_list)
     if times is not None:
@@ -1193,7 +1195,7 @@ def view_series(
         maxcounts = counts.max().max()
     heights = [1 for i in range(len(env_vars))] + [0.5 for i in range(len(label_list))]
 
-    letters = "abcdefghijklmnop"
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
 
     gs = fig.add_gridspec(len(env_vars) + len(labels), 1, height_ratios=heights, hspace=0.4)
 
@@ -1203,9 +1205,10 @@ def view_series(
             "Tide (m)",
             "% Sea Ice\n    Coverage",
             "Temperature\n          ($^\degree$C)",
-            "Wind Speed\n         (m/s)"],
-        ylims=[(-1, 1), (0, 100), (-60, 0), (0, 25)],
-        colors=[colors[i] for i in [0,4,5,3]]
+            "Wind Speed\n         (m/s)",
+            "Net Surf.\n Melt Energy"],
+        ylims=[(-1, 1), (0, 100), (-60, 10), (0, 25), (-50, 50)],
+        colors=[colors[i] for i in [11, 10, 0, 3, 1]]
     )
     sel_ind = [env_keys.index(key) for key in env_vars]
     params = dict(
@@ -1228,7 +1231,7 @@ def view_series(
         ax.set_ylim(params["ylims"][i])
         plt.setp(ax.get_yticklabels(), fontsize=fontsize-2)
         if showlabels:
-            plt.ylabel(f"{letters[i]}) {params['ylabels'][i]}", rotation=0, ha="left", va="center", fontsize=fontsize)
+            plt.ylabel(f"{alphabet[i]}) {params['ylabels'][i]}", rotation=0, ha="left", va="center", fontsize=fontsize)
             ax.yaxis.set_label_coords(-0.22, 0.5)
         if i == 0 and title is not None:
             plt.title(title, fontsize=fontsize+2)
@@ -1264,7 +1267,7 @@ def view_series(
         else:
             ax.set_yticklabels([])
         if showlabels:
-            plt.ylabel(f"{letters[i + j + 1]}) Class {j + 1}", rotation=0, ha="left", va="center", fontsize=fontsize)
+            plt.ylabel(f"{alphabet[i + j + 1]}) Class {j + 1}", rotation=0, ha="left", va="center", fontsize=fontsize)
             ax.yaxis.set_label_coords(-0.17, 0.5)
 
     if showlabels:
