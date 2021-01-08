@@ -17,7 +17,8 @@ import h5py
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
+from torchvision import transforms
 from tqdm import tqdm
 from twilio.rest import Client
 
@@ -66,6 +67,7 @@ class LabelCatalogue(object):
             self.label_list = label_list
         else:
             self.label_list = pd.unique(self.df["label"])
+        self.station_list = pd.unique(self.df["station"])
 
 
     def build_df(self, paths):
@@ -119,6 +121,48 @@ class LabelCatalogue(object):
         return df.fillna(0).astype("int").sort_index()
 
 
+    def seasonal_statistics(self):
+        count_winter = np.empty((len(self.label_list),))
+        count_summer = np.empty((len(self.label_list),))
+        for j, label in enumerate(self.label_list):
+            mask_label = self.df["label"] == label
+            subset = self.df.loc[mask_label]
+            total_count = len(subset.index)
+            mask_winter = ((subset.index >= datetime(2015,1,1)) & (subset.index < datetime(2015,4,1))) | \
+                ((subset.index >= datetime(2016,1,1)) & (subset.index < datetime(2016,4,1)))
+            mask_summer = ((subset.index >= datetime(2015,6,1)) & (subset.index < datetime(2015,9,1))) | \
+                ((subset.index >= datetime(2016,6,1)) & (subset.index < datetime(2016,9,1)))
+
+            count_winter[j] = 100 * len(subset.loc[mask_winter].index) / total_count
+            count_summer[j] = 100 * len(subset.loc[mask_summer].index) / total_count
+
+        return pd.DataFrame({"JFM": count_winter, "JJA": count_summer})
+
+
+    def station_statistics(self):
+        count = np.empty((len(self.station_list),))
+        percent = np.empty((len(self.station_list),))
+        total_count = len(self.df.index)
+        label_matrix = np.empty((len(self.station_list),len(self.label_list)))
+        for i, station in enumerate(self.station_list):
+            mask_station = self.df["station"] == station
+            subset_station = self.df.loc[mask_station]
+            count[i] = len(subset_station.index)
+            percent[i] = 100 * len(subset_station.index) / total_count
+            for j, label in enumerate(self.label_list):
+                mask_label = subset_station["label"] == label
+                subset_label = subset_station.loc[mask_label]
+                label_matrix[i, j] = len(subset_label.index)
+
+        label_matrix_dict = []
+
+        df = pd.DataFrame({"station": self.station_list, "N": count, "percent": percent})
+        df = pd.concat([df, pd.DataFrame(label_matrix)], axis=1)
+        for col in [1, range(3, 3 + len(self.label_list))]:
+            df.iloc[:, col] = df.iloc[:, col].astype("int")
+        return df.sort_values(by="station", ignore_index=True)
+
+
     # def get_amplitude_statistics(self, path_to_labels, path_to_catalogue):
     #     labels = pd.read_csv(path_to_labels, index_col=0)
     #     amp_pk = pd.read_csv(path_to_catalogue, usecols=["peak"])
@@ -136,23 +180,49 @@ class LabelCatalogue(object):
     #     return amp_stats.set_index("Class")
 
 
-    def seasonal_statistics(self):
-        count_winter = np.empty((len(self.label_list)),)
-        count_summer = np.empty((len(self.label_list)),)
-        for j, label in enumerate(self.label_list):
-            mask_label = self.df["label"] == label
-            subset = self.df.loc[mask_label]
-            total_count = len(subset.index)
-            mask_winter = ((subset.index >= datetime(2015,1,1)) & (subset.index < datetime(2015,4,1))) | \
-                ((subset.index >= datetime(2016,1,1)) & (subset.index < datetime(2016,4,1)))
-            mask_summer = ((subset.index >= datetime(2015,6,1)) & (subset.index < datetime(2015,9,1))) | \
-                ((subset.index >= datetime(2016,6,1)) & (subset.index < datetime(2016,9,1)))
-
-            count_winter[j] = 100 * len(subset.loc[mask_winter].index) / total_count
-            count_summer[j] = 100 * len(subset.loc[mask_summer].index) / total_count
-
-        counts = pd.DataFrame({"JFM": count_winter, "JJA": count_summer})
-        return counts
+    # def get_peak_frequency(
+    #         path_to_labels,
+    #         path_to_catalogue,
+    #         fname_dataset,
+    #         batch_size=2048,
+    #         workers=12
+    #     ):
+    #     labels = pd.read_csv(path_to_labels, index_col=0)
+    #     label_list = pd.unique(labels["label"])
+    #     _, _, fvec = load_images(fname_dataset, [[0]])
+    #
+    #     class_avg_maxfreq = np.zeros(len(label_list))
+    #     for j, label in enumerate(label_list):
+    #         mask = labels.label == label
+    #         labels_subset = labels.loc[mask]
+    #         dataset = H5SeismicDataset(
+    #             fname_dataset,
+    #             transform = transforms.Compose(
+    #                 [SpecgramShaper(), SpecgramToTensor()]
+    #             )
+    #         )
+    #         subset = Subset(dataset, labels_subset.index)
+    #         dataloader = DataLoader(subset, batch_size=batch_size, num_workers=workers)
+    #         batch_avg_maxfreq = np.zeros(len(dataloader))
+    #         pbar = tqdm(
+    #             dataloader,
+    #             bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+    #             desc=f"Label {j+1}/{len(label_list)} (Class {label})",
+    #             leave=True,
+    #             position=0
+    #         )
+    #         for i, batch in enumerate(pbar):
+    #             _, X = batch
+    #             maxfreqind = torch.max(torch.sum(X, 3) / X.size(3), 2).indices
+    #             maxfreqind = maxfreqind.detach().cpu().numpy()
+    #             maxfreq = fvec[maxfreqind]
+    #             batch_avg_maxfreq[i] = maxfreq.mean()
+    #
+    #         class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
+    #         print(f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz", flush=True)
+    #
+    #     peak_freqs = pd.DataFrame({"Class": label_list, "Avg_Peak_Freq": class_avg_maxfreq}).sort_values(by=["Class"], ignore_index=True)
+    #     return peak_freqs.set_index("Class")
 
 
 class SpecgramShaper(object):
@@ -168,12 +238,18 @@ class SpecgramShaper(object):
             N, O = X.shape
         else:
             X = X[:-1, 1:]
-        if self.transform == "sample_norm":
-            X /= np.abs(X).max(axis=(0,1))
-        elif self.transform == "sample_norm_cent":
-            # X = (X - X.mean(axis=(0,1))) / \
-            # np.abs(X).max(axis=(0,1))
-            X = (X - X.mean()) / np.abs(X).max()
+        if self.transform is not None:
+            if self.transform == "sample_norm":
+                X /= np.abs(X).max(axis=(0,1))
+            elif self.transform == "sample_norm_cent":
+                # X = (X - X.mean(axis=(0,1))) / \
+                # np.abs(X).max(axis=(0,1))
+                X = (X - X.mean()) / np.abs(X).max()
+            else:
+                raise ValueError("Unsupported transform.")
+        else:
+            print("Test failed.")
+
         X = np.expand_dims(X, axis=0)
         return X
 
@@ -239,6 +315,51 @@ def get_amplitude_statistics(path_to_labels, path_to_catalogue):
 
     amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
     return amp_stats.set_index("Class")
+
+
+def get_peak_frequency(
+        path_to_labels,
+        path_to_catalogue,
+        fname_dataset,
+        batch_size=2048,
+        workers=12
+    ):
+    labels = pd.read_csv(path_to_labels, index_col=0)
+    label_list = pd.unique(labels["label"])
+    _, _, fvec = load_images(fname_dataset, [[0]])
+
+    class_avg_maxfreq = np.zeros(len(label_list))
+    for j, label in enumerate(label_list):
+        mask = labels.label == label
+        labels_subset = labels.loc[mask]
+        dataset = H5SeismicDataset(
+            fname_dataset,
+            transform = transforms.Compose(
+                [SpecgramShaper(), SpecgramToTensor()]
+            )
+        )
+        subset = Subset(dataset, labels_subset.index)
+        dataloader = DataLoader(subset, batch_size=batch_size, num_workers=workers)
+        batch_avg_maxfreq = np.zeros(len(dataloader))
+        pbar = tqdm(
+            dataloader,
+            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+            desc=f"Label {j+1}/{len(label_list)} (Class {label})",
+            leave=True,
+            position=0
+        )
+        for i, batch in enumerate(pbar):
+            _, X = batch
+            maxfreqind = torch.max(torch.sum(X, 3) / X.size(3), 2).indices
+            maxfreqind = maxfreqind.detach().cpu().numpy()
+            maxfreq = fvec[maxfreqind]
+            batch_avg_maxfreq[i] = maxfreq.mean()
+
+        class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
+        print(f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz", flush=True)
+
+    peak_freqs = pd.DataFrame({"Class": label_list, "Avg_Peak_Freq": class_avg_maxfreq}).sort_values(by=["Class"], ignore_index=True)
+    return peak_freqs.set_index("Class")
 
 
 def init_exp_env(mode, savepath, **kwargs):
@@ -390,11 +511,9 @@ def load_images(fname_dataset, index):
             X[i] = dset_arr
     #         X = dset_arr / np.abs(dset_arr).max()
     #         X = (dset_arr - dset_arr.mean()) / dset_arr.std()
-        fvec = dset[1, 0:86, 0]
-        tvec = dset[1, 87, 1:]
+        fvec = dset[0, 0:87, 0]
+        tvec = dset[0, 87, 1:]
     X = X[:, :-1, 1:]
-    # tvec = tvec[12:-14]
-    # fvec = fvec[:-1]
 
     X = (X - X.mean(axis=(1,2))[:,None,None]) / \
         np.abs(X).max(axis=(1,2))[:,None,None]
