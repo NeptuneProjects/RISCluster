@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - python=3.8
+  - cuml::rapidsai
   - cmocean
   - h5py
   - jupyterlab
