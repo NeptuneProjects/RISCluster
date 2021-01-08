@@ -55,9 +55,11 @@ class EnvironmentCatalogue(object):
         df_meteo = read_meteo(f"{path}/RIS_Meteo/{aws}*.txt")
         # Load ERA5 data:
         df_energy = read_ERA5(f"{path}/SDM_jan2016_ERA5.csv")
+        # Load Wave Amplitude data:
+        df_wave = read_KPDR(f"{path}/RIS_Seismic/KPDR_0.001_0.04.mat")
 
         # Combine datasets into one dataframe:
-        df = pd.concat([df_tide, df_ice, df_meteo, df_energy], axis=1)
+        df = pd.concat([df_tide, df_ice, df_meteo, df_energy, df_wave], axis=1)
         df["sea_ice_conc"] = df["sea_ice_conc"].interpolate()
         df["net_sfc_melt_energy"] = df["net_sfc_melt_energy"].interpolate()
         return df
@@ -483,6 +485,14 @@ def read_ERA5(path):
             df_energy = df_energy.append(df)
     return df_energy
 
+
+def read_KPDR(path):
+    data = loadmat("/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/KPDR_0.001_0.04.mat")
+    datenums = data["t"].squeeze()
+    timestamps = pd.to_datetime(datenums-719529, unit='D').round("S")
+    ampl = data["a"].squeeze()
+    df_wave = pd.DataFrame(data={"wave_ampl": ampl}, index=timestamps).resample("10T").interpolate()
+    return df_wave
 
 
 def read_meteo(path):
