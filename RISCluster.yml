@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   - python=3.8
-  - rapidsai::cuml
+  - cudatoolkit=11.0
   - cmocean
   - h5py
   - jupyterlab
@@ -17,6 +17,7 @@ dependencies:
   - python-dotenv
   - pytorch::pytorch
   - pytorch::torchvision
+  - rapidsai::cuml=0.17
   - scikit-learn
   - scikit-learn-extra
   - seaborn
