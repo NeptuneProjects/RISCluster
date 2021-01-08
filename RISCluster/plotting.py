@@ -898,21 +898,19 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
                 dset_arr = dset[idx[i]]
                 tr[i,:] = dset_arr
 
-    factor = 1e-8
+    factor = 1e-9
     tr_max = np.max(np.abs(tr)) / factor
 
     with h5py.File(fname_dataset, 'r') as f:
         M = len(image_index)
         DataSpec = '/4.0/Spectrogram'
         dset = f[DataSpec]
-        # fvec = dset[1, 0:64, 0]
-        fvec = dset[1, 0:86, 0]
-        # tvec = dset[1, 65, 12:-14]
+        fvec = dset[1, 0:87, 0]
         tvec = dset[1, 87, 1:]
 
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
     metadata = get_metadata(sample_index, image_index, fname_dataset)
-    fontsize = 20
+    fontsize = 16
     fig = plt.figure(figsize=figsize, dpi=150)
     cmap = 'cmo.ice_r'
     gs_sup = gridspec.GridSpec(nrows=2, ncols=2, hspace=0.35, wspace=0.15)
@@ -940,7 +938,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         ax.set_xticks(np.arange(5))
         if i == 0:
             plt.xlabel('Time (s)', size=fontsize)
-            plt.ylabel('Acceleration\n($10^{-8}$ m$^2$/s)', size=fontsize)
+            plt.ylabel('Acceleration\n(nm/s$^2$)', size=fontsize)
 
         counter += 1
 
@@ -1172,7 +1170,7 @@ def view_series(
             xlabelalignment = "center"
         elif duration.days > 7:
             xticks = pd.date_range(df_env.index[0], df_env.index[-1], freq="D")
-            xlabels = xticks.strftime("%Y-%b-%d")[::2]
+            xlabels = xticks.strftime("%Y-%b-%d")
             xlabelrotation = 45
             xlabelalignment = "right"
         else:
@@ -1206,10 +1204,12 @@ def view_series(
             "% Sea Ice\n    Coverage",
             "Temperature\n          ($^\degree$C)",
             "Wind Speed\n         (m/s)",
-            "Net Surf.\n Melt Energy"],
-        ylims=[(-1, 1), (0, 100), (-60, 10), (0, 25), (-50, 50)],
-        colors=[colors[i] for i in [11, 10, 0, 3, 1]]
+            "Net Surf.\n Melt Energy",
+            "Wave\nAmplitude"],
+        ylims=[(-1, 1), (0, 100), (-60, 10), (0, 25), (-50, 50), (0, 0.008)],
+        colors=[colors[i] for i in [11, 10, 0, 3, 1, 2]]
     )
+    print(env_vars, env_keys)
     sel_ind = [env_keys.index(key) for key in env_vars]
     params = dict(
         env_key=[params["env_key"][i] for i in sel_ind],
@@ -1294,13 +1294,6 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
     gs = gridspec.GridSpec(nrows=nrows, ncols=ncols)
     counter = 0
     for i in range(len(insp_idx)):
-
-        # starttime = metadata[counter]['StartTime']
-        # npts = int(metadata[counter]['Npts'])
-        # freq = str(1000 * metadata[counter]['SamplingInterval']) + 'ms'
-        # tvec = pd.date_range(starttime, periods=npts, freq=freq)
-        # print(tvec)
-
         ax = fig.add_subplot(gs[i])
         plt.imshow(torch.reshape(X[insp_idx[i],:,:,:], (n,o)), aspect='auto', interpolation="none")
         plt.gca().invert_yaxis()
@@ -1308,17 +1301,8 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
         plt.ylabel('Frequency Bin')
         station = metadata[counter]['station']
         time_on = metadata[counter]['spec_start']
-        # try:
-        #     time_on = datetime.strptime(metadata[counter]['dt_on'],
-        #                                 '%Y-%m-%dT%H:%M:%S.%f').strftime(
-        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        # except:
-        #     time_on = datetime.strptime(metadata[counter]['dt_on'],
-        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
-        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
         plt.title(f'Station {station}\nTrigger: {time_on}\n'
                   f'Index: {sample_index[insp_idx[i]]}')
-        # plt.title(f'Station {}'.format(metadata[counter]['station']))
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.colorbar(cax=cax)
@@ -1357,14 +1341,6 @@ def view_specgram_training(
     for i in range(x.size()[0]):
         station = metadata[i]['station']
         time_on = metadata[counter]['spec_start']
-        # try:
-        #     time_on = datetime.strptime(metadata[i]['dt_on'],
-        #                                 '%Y-%m-%dT%H:%M:%S.%f').strftime(
-        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        # except:
-        #     time_on = datetime.strptime(metadata[i]['dt_on'],
-        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
-        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
 
         ax = fig.add_subplot(gs[0,counter])
         plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
@@ -1432,14 +1408,7 @@ def view_specgram_training2(
     for i in range(x.size()[0]):
         station = metadata[i]['station']
         time_on = metadata[counter]['spec_start']
-        # try:
-        #     time_on = datetime.strptime(metadata[i]['dt_on'],
-        #                                 '%Y-%m-%dT%H:%M:%S.%f').strftime(
-        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
-        # except:
-        #     time_on = datetime.strptime(metadata[i]['dt_on'],
-        #                                 '%Y-%m-%dT%H:%M:%S').strftime(
-        #                                 '%Y-%m-%dT%H:%M:%S.%f')[:-4]
+
         ax1 = fig.add_subplot(gs[counter,0])
         plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
         plt.colorbar(orientation='vertical', pad=0)
