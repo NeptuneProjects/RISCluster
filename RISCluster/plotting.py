@@ -1188,7 +1188,7 @@ def view_series(
     colors = cmap_lifeaquatic()
 
     env_keys = df_env.keys().tolist()
-    labels = counts.keys()
+    labels = counts.keys().sort_values()
     if not maxcounts:
         maxcounts = counts.max().max()
     heights = [1 for i in range(len(env_vars))] + [0.5 for i in range(len(label_list))]
@@ -1209,7 +1209,6 @@ def view_series(
         ylims=[(-1, 1), (0, 100), (-60, 10), (0, 25), (-50, 50), (0, 0.008)],
         colors=[colors[i] for i in [11, 10, 0, 3, 1, 2]]
     )
-    print(env_vars, env_keys)
     sel_ind = [env_keys.index(key) for key in env_vars]
     params = dict(
         env_key=[params["env_key"][i] for i in sel_ind],
