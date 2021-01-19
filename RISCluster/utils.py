@@ -64,9 +64,9 @@ class LabelCatalogue(object):
         self.freq = None
         self.df = self.build_df(self.paths)
         if label_list is not None:
-            self.label_list = label_list
+            self.label_list = label_list.sort()
         else:
-            self.label_list = pd.unique(self.df["label"])
+            self.label_list = np.sort(pd.unique(self.df["label"]))
         self.station_list = pd.unique(self.df["station"])
 
 
@@ -121,22 +121,45 @@ class LabelCatalogue(object):
         return df.fillna(0).astype("int").sort_index()
 
 
-    def seasonal_statistics(self):
-        count_winter = np.empty((len(self.label_list),))
-        count_summer = np.empty((len(self.label_list),))
-        for j, label in enumerate(self.label_list):
-            mask_label = self.df["label"] == label
-            subset = self.df.loc[mask_label]
-            total_count = len(subset.index)
-            mask_winter = ((subset.index >= datetime(2015,1,1)) & (subset.index < datetime(2015,4,1))) | \
-                ((subset.index >= datetime(2016,1,1)) & (subset.index < datetime(2016,4,1)))
-            mask_summer = ((subset.index >= datetime(2015,6,1)) & (subset.index < datetime(2015,9,1))) | \
-                ((subset.index >= datetime(2016,6,1)) & (subset.index < datetime(2016,9,1)))
+    def seasonal_statistics(self, mode=None):
+        if mode is not None:
+            count_summer15 = np.empty((len(self.label_list),))
+            count_winter15 = np.empty((len(self.label_list),))
+            count_summer16 = np.empty((len(self.label_list),))
+            count_winter16 = np.empty((len(self.label_list),))
+            total = np.empty((len(self.label_list),))
 
-            count_winter[j] = 100 * len(subset.loc[mask_winter].index) / total_count
-            count_summer[j] = 100 * len(subset.loc[mask_summer].index) / total_count
+            for j, label in enumerate(self.label_list):
+                mask_label = self.df["label"] == label
+                subset = self.df.loc[mask_label]
+                total_count = len(subset.index)
+                mask_summer15 = (subset.index >= datetime(2015,1,1)) & (subset.index < datetime(2015,4,1))
+                mask_winter15 = (subset.index >= datetime(2015,6,1)) & (subset.index < datetime(2015,9,1))
+                mask_summer16 = (subset.index >= datetime(2016,1,1)) & (subset.index < datetime(2016,4,1))
+                mask_winter16 = (subset.index >= datetime(2016,6,1)) & (subset.index < datetime(2016,9,1))
 
-        return pd.DataFrame({"JFM": count_winter, "JJA": count_summer})
+                count_summer15[j] = 100 * len(subset.loc[mask_summer15].index) / total_count
+                count_winter15[j] = 100 * len(subset.loc[mask_winter15].index) / total_count
+                count_summer16[j] = 100 * len(subset.loc[mask_summer16].index) / total_count
+                count_winter16[j] = 100 * len(subset.loc[mask_winter16].index) / total_count
+                total[j] = total_count
+
+            return pd.DataFrame({"total": total, "JFMTotal": count_summer15 + count_summer16, "JFM15": count_summer15, "JFM16": count_summer16, "JJATotal": count_winter15 + count_winter16, "JJA15": count_winter15, "JJA16": count_winter16})
+        else:
+            count_summer = np.empty((len(self.label_list),))
+            count_winter = np.empty((len(self.label_list),))
+            for j, label in enumerate(self.label_list):
+                mask_label = self.df["label"] == label
+                subset = self.df.loc[mask_label]
+                total_count = len(subset.index)
+                mask_summer = ((subset.index >= datetime(2015,1,1)) & (subset.index < datetime(2015,4,1))) | \
+                    ((subset.index >= datetime(2016,1,1)) & (subset.index < datetime(2016,4,1)))
+                mask_winter = ((subset.index >= datetime(2015,6,1)) & (subset.index < datetime(2015,9,1))) | \
+                    ((subset.index >= datetime(2016,6,1)) & (subset.index < datetime(2016,9,1)))
+
+                count_winter[j] = 100 * len(subset.loc[mask_winter].index) / total_count
+                count_summer[j] = 100 * len(subset.loc[mask_summer].index) / total_count
+            return pd.DataFrame({"JFM": count_summer, "JJA": count_winter})
 
 
     def station_statistics(self):
@@ -163,21 +186,15 @@ class LabelCatalogue(object):
         return df.sort_values(by="station", ignore_index=True)
 
 
-    # def get_amplitude_statistics(self, path_to_labels, path_to_catalogue):
-    #     labels = pd.read_csv(path_to_labels, index_col=0)
-    #     amp_pk = pd.read_csv(path_to_catalogue, usecols=["peak"])
-    #
-    #     data = pd.concat([labels, amp_pk], axis=1)
-    #     label_list = pd.unique(labels["label"])
-    #
-    #     columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
-    #     stats = []
-    #     for label in label_list:
-    #         subset = data["peak"].loc[data["label"] == label].abs()
-    #         stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
-    #
-    #     amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
-    #     return amp_stats.set_index("Class")
+    def amplitude_statistics(self):
+        columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
+        stats = []
+        for label in self.label_list:
+            subset = self.df["peak"].loc[self.df["label"] == label].abs()
+            stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
+
+        amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
+        return amp_stats.set_index("Class")
 
 
     # def get_peak_frequency(
@@ -305,7 +322,7 @@ def get_amplitude_statistics(path_to_labels, path_to_catalogue):
     amp_pk = pd.read_csv(path_to_catalogue, usecols=["peak"])
 
     data = pd.concat([labels, amp_pk], axis=1)
-    label_list = pd.unique(labels["label"])
+    label_list = np.sort(pd.unique(labels["label"]))
 
     columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
     stats = []
