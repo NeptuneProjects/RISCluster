@@ -92,7 +92,7 @@ def DCM_pretrain(parameters, hyperparameters):
                 )
                 dataloaders = [tra_loader, val_loader]
                 # ==== Pre-train DCM by training the autoencoder: =============
-                model = models.pretrain(
+                _ = models.pretrain(
                     model,
                     dataloaders,
                     criteria,
