@@ -1,3 +1,11 @@
+'''Contains necessary functions, routines, plotting wrappers, and data
+recording for DEC model initialization, training, validation, and inference.
+
+William Jenkins, wjenkins [at] ucsd [dot] edu
+Scripps Institution of Oceanography, UC San Diego
+January 2021
+'''
+
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
 from datetime import datetime
@@ -41,20 +49,40 @@ def pretrain(
         lr,
         parameters
     ):
-    '''
-    Function facilitates pre-training (i.e., training of AEC) of the DCM model.
-    # Arguments:
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        criteria: PyTorch loss function instances
-        optimizer: PyTorch optimizer instance
-        batch_size: Batch size used in calculations
-        lr: Learning rate
-        parameters: Additional variables
-    # Returns:
-        model: Trained model weights are saved to disk.
-        tb: Tensorboard file recording various parameters saved to disk.
-        disp: Input/output spectrograms are saved to disk.
+    '''Pre-trains DEC model (i.e., trains AEC).
+
+    Parameters
+    ----------
+    model : PyTorch model instance
+        Model with untrained parameters
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    criteria : PyTorch loss function instances
+        Error metrics
+
+    optimizer : PyTorch optimizer instance
+
+    batch_size : int
+        Batch size used in calculations
+
+    lr : float
+        Controls initial learning rate for gradient descent.
+
+    parameters : dict
+        Additional experiment parameters/hyperparameters
+
+    Returns
+    -------
+    model : PyTorch model instance
+        Model with trained parameters
+
+    Outputs to Disk
+    ---------------
+    Tensorboard Summary Writer : Records training and validation
+
+    Matplotlib Figures : Prints spectrogram reconstructions to disk.
     '''
     tic = datetime.now()
     print('Commencing pre-training...')
@@ -329,7 +357,7 @@ def pretrain(
         tb.add_figure('K-Means Metrics', fig, global_step=None, close=True)
 
     tb.close()
-    return model, tb
+    return model
 
 
 def train(
@@ -344,19 +372,54 @@ def train(
         tol,
         index_tra,
         parameters
-        ):
-    '''
-    Function facilitates training (i.e., clustering and fine-tuning of AEC) and
-    of the DCM model.
-    # Arguments:
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        criteria: PyTorch loss function instances
-        optimizer: PyTorch optimizer instance
-        n_epochs: Number of epochs over which to fine-tune and cluster
-        params: Administrative variables
-    # Returns:
-        model: Trained PyTorch model instance
+    ):
+    '''Trains DEC model & performs clustering.
+
+    Parameters
+    ----------
+    model : PyTorch model instance
+        Model with untrained parameters
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    criteria : PyTorch loss function instances
+        Error metrics
+
+    optimizer : PyTorch optimizer instance
+
+    n_clusters : int
+        Number of clusters
+
+    batch_size : int
+        Batch size used in calculations
+
+    lr : float
+        Controls initial learning rate for gradient descent.
+
+    gamma : float
+        Hyperparameter that controls contribution of clustering loss to total
+        loss.
+
+    tol : float
+        Threshold at which DEC stops.
+
+    index_tra: array
+        Indeces of data samples to be used for DEC training.
+
+    parameters : dict
+        Additional experiment parameters/hyperparameters
+
+    Returns
+    -------
+    model : PyTorch model instance
+        Model with trained parameters
+
+    Outputs to Disk
+    ---------------
+    Tensorboard Summary Writer : Records training and clustering
+
+    Matplotlib Figures : Prints DEC figures to disk.
     '''
     tic = datetime.now()
     print('Commencing training...')
@@ -609,6 +672,23 @@ def train(
 
 
 def predict(model, dataloader, parameters):
+    '''Run DEC model in inference mode.
+
+    Parameters
+    ----------
+    model : PyTorch model instance
+        Model with trained parameters
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    parameters : dict
+        Additional experiment parameters/hyperparameters
+
+    Outputs to Disk
+    ---------------
+    Catalogue of class labels for each data sample.
+    '''
     device = parameters['device']
     loadpath = parameters['saved_weights']
     savepath = os.path.dirname(loadpath)
@@ -642,18 +722,24 @@ def predict(model, dataloader, parameters):
 
 
 def kmeans(model, dataloader, device):
-    '''
-    Initiate clusters using K-means algorithm.
-    # Arguments:
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        device: PyTorch device object ('cpu' or 'gpu')
-    # Inputs:
-        n_clusters: Number of clusters, set during model construction.
-        n_init: Number of iterations for initialization.
-    # Returns:
-        labels: Sample-wise cluster assignment
-        centroids: Sample-wise cluster centroids
+    '''Initiate clusters using k-means algorithm.
+
+    Parameters
+    ----------
+    model : PyTorch model instance
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    Returns
+    -------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    centroids : array (n_clusters,)
+        Cluster centroids
     '''
     km = KMeans(
         n_clusters=model.n_clusters,
@@ -669,19 +755,24 @@ def kmeans(model, dataloader, device):
 
 
 def kmeds(model, dataloader, device):
-    '''
-    Initiate clusters using K-Medoids algorithm.
-    # Arguments:
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        device: PyTorch device object ('cpu' or 'gpu')
-    # Inputs:
-        n_clusters: Number of clusters, set during model construction.
-        metric: l1 (choose from sk-learn metrics)
-        max_iter: Max number of iterations for algorithm.
-    # Returns:
-        labels: Sample-wise cluster assignment
-        centroids: Sample-wise cluster centroids
+    '''Initiate clusters using K-Medoids algorithm.
+
+    Parameters
+    ----------
+    model : PyTorch model instance
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    Returns
+    -------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    centroids : array (n_clusters,)
+        Cluster centroids
     '''
     kmed = KMedoids(
         n_clusters=model.n_clusters,
@@ -698,17 +789,24 @@ def kmeds(model, dataloader, device):
 
 
 def gmm(model, dataloader, device):
-    '''
-    Initiate clusters using GMM algorithm.
-    # Arguments:
-        model: PyTorch model instance
-        dataloader: PyTorch dataloader instance
-        device: PyTorch device object ('cpu' or 'gpu')
-    # Inputs:
-        n_clusters: Number of clusters, set during model construction.
-    # Returns:
-        labels: Sample-wise cluster assignment
-        centroids: Sample-wise cluster centroids
+    '''Initiate clusters using Gaussian mixtures model algorithm.
+
+    Parameters
+    ----------
+    model : PyTorch model instance
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    Returns
+    -------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    centroids : array (n_clusters,)
+        Cluster centroids
     '''
     M = len(dataloader.dataset)
     labels, centroids = kmeans(model, dataloader, device)
@@ -732,6 +830,29 @@ def gmm(model, dataloader, device):
 
 
 def pca(labels, model, dataloader, device, tb, counter):
+    '''Reduce dimensions of latent space using principal component analysis.
+
+    Parameters
+    ----------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    model : PyTorch model instance
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    tb : Tensorboard SummaryWriter object
+
+    counter : int
+        Iteration/epoch step
+
+    Outputs to Disk
+    ---------------
+    tb: Figure showing 2-D PCA added to Tensorboard
+    '''
     _, _, z_array = infer(dataloader, model, device)
     row_max = z_array.max(axis=1)
     z_array /= row_max[:, np.newaxis]
@@ -743,6 +864,17 @@ def pca(labels, model, dataloader, device, tb, counter):
 
 
 def tsne(data):
+    '''Perform t-SNE on data.
+
+    Parameters
+    ----------
+    data : array (M,N)
+
+    Returns
+    -------
+    results : array (M,2)
+        2-D t-SNE embedding
+    '''
     print('Running t-SNE...', end="", flush=True)
     M = len(data)
     np.seterr(under='warn')
@@ -760,6 +892,26 @@ def tsne(data):
 
 
 def infer(dataloader, model, device, v=False):
+    '''Run DEC model in inference mode.
+
+    Parameters
+    ----------
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    model : PyTorch model instance
+        Model with trained parameters
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    v : Boolean (default=False)
+        Verbose mode
+
+    Returns
+    -------
+    z_array : array (M,D)
+        Latent space data (m_samples, d_features)
+    '''
     if v:
         notqdm = False
     else:
@@ -793,19 +945,22 @@ def infer(dataloader, model, device, v=False):
 
 
 def target_distribution(q):
-    '''
-    From Xie/Girshick/Farhadi (2016). Computes the target distribution p, given
-    soft assignements, q. The target distribtuion is generated by giving more
-    weight to 'high confidence' samples - those with a higher probability of
-    being a signed to a certain cluster.  This is used in the KL-divergence
+    '''From Xie/Girshick/Farhadi (2016). Computes the target distribution p,
+    given soft assignements, q. The target distribtuion is generated by giving
+    more weight to 'high confidence' samples - those with a higher probability
+    of being a signed to a certain cluster.  This is used in the KL-divergence
     loss function.
-    # Arguments
-        q: Soft assignement probabilities - Probabilities of each sample being
-           assigned to each cluster.
-    # Input:
-        2D array of shape [n_samples, n_features].
-    # Output:
-        2D array of shape [n_samples, n_features].
+
+    Parameters
+    ----------
+    q : array (M,D)
+        Soft assignement probabilities - Probabilities of each sample being
+        assigned to each cluster [n_samples, n_features]
+
+    Returns
+    -------
+    p : array (M,D)
+        Auxiliary target distribution of shape [n_samples, n_features].
     '''
     p = q ** 2 / np.sum(q, axis=0)
     p = np.transpose(np.transpose(p) / np.sum(p, axis=1))
@@ -813,7 +968,37 @@ def target_distribution(q):
 
 
 def kmeans_metrics(dataloader, model, device, k_list):
-    # z_array = infer_z(dataloader, model, device)
+    '''Run statistical evaluation on k-means over a range of cluster numbers.
+    Calculates inertia, gap statistic (uniform and Gaussian), and silhouette
+    score.
+
+    Parameters
+    ----------
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    model : PyTorch model instance
+        Model with trained parameters
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    k_list : array or list
+        List of numbers of clusters to evaluate.
+
+    Returns
+    -------
+    inertia : float
+        k-means inertia
+
+    silh : array
+        k-means silhouette score
+
+    gap_g : float
+        k-means gap statistic (against uniform distribution)
+
+    gap_u : float
+        k-means gap statistic (against Gaussian distribution)
+    '''
     _, _, z_array = infer(dataloader, model, device)
 
     feat_min = np.min(z_array, axis=0)
@@ -895,6 +1080,66 @@ def plotter_mp(
         show,
         latex=False
     ):
+    '''Wrapper function for plotting DEC training and performance.
+
+    Parameters
+    ----------
+    fignames : list
+        List of figure names
+
+    figpaths : list
+        List of paths where to save figures
+
+    tb : Tensorboard SummaryWriter object
+
+    model : PyTorch model instance
+
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    fname_dataset : str
+        Path to dataset
+
+    index_tra: array
+        Indeces of data samples to be used for DEC training.
+
+    data_a : array (M,D)
+        Latent data from model initialization [m_samples,d_features]
+
+    data_b : array (M,D)
+        Latent data from current model state [m_samples,d_features]
+
+    labels_a : array (M,)
+        Class labels from cluster initialization
+
+    labels_b : array (M,)
+        Class labels from current state of clustering
+
+    centroids_a : array (n_clusters,)
+        Cluster centroids from model initialization
+
+    centroids_b : array (n_clusters,)
+        Current cluster centroids
+
+    tsne_results : array (M,2)
+        2-D t-SNE results from current model output
+
+    epoch : int
+        Current epoch of training
+
+    show : boolean
+        Show figures or not
+
+    latex : boolean (default=False)
+        Compile figures using latex (extremely slow - not recommended unless
+        rendering figures for publishing)
+
+    Outputs to Disk
+    ---------------
+    Figures analyzing DEC performance.
+    '''
 
     figures = plotting.analyze_clustering(
         model,
