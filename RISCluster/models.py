@@ -511,7 +511,7 @@ def train(
             epoch,
             show
     )
-    plot_process = threading.Thread(target=plotter_mp, args=plotargs)
+    plot_process = threading.Thread(target=plotting.plotter_mp, args=plotargs)
     plot_process.start()
 
     n_iter = 1
@@ -636,7 +636,10 @@ def train(
                     epoch,
                     show
             )
-            plot_process = threading.Thread(target=plotter_mp, args=plotargs)
+            plot_process = threading.Thread(
+                target=plotting.plotter_mp,
+                args=plotargs
+            )
             plot_process.start()
 
         if finished:
@@ -1055,105 +1058,105 @@ def kmeans_metrics(dataloader, model, device, k_list):
     return inertia, silh, gap_g, gap_u
 
 
-def plotter_mp(
-        fignames,
-        figpaths,
-        tb,
-        model,
-        dataloader,
-        device,
-        fname_dataset,
-        index_tra,
-        data_a,
-        data_b,
-        labels_a,
-        labels_b,
-        centroids_a,
-        centroids_b,
-        tsne_results,
-        epoch,
-        show,
-        latex=False
-    ):
-    '''Wrapper function for plotting DEC training and performance.
-
-    Parameters
-    ----------
-    fignames : list
-        List of figure names
-
-    figpaths : list
-        List of paths where to save figures
-
-    tb : Tensorboard SummaryWriter object
-
-    model : PyTorch model instance
-
-    dataloader : PyTorch dataloader instance
-        Loads data from disk into memory.
-
-    device : PyTorch device object ('cpu' or 'gpu')
-
-    fname_dataset : str
-        Path to dataset
-
-    index_tra: array
-        Indeces of data samples to be used for DEC training.
-
-    data_a : array (M,D)
-        Latent data from model initialization [m_samples,d_features]
-
-    data_b : array (M,D)
-        Latent data from current model state [m_samples,d_features]
-
-    labels_a : array (M,)
-        Class labels from cluster initialization
-
-    labels_b : array (M,)
-        Class labels from current state of clustering
-
-    centroids_a : array (n_clusters,)
-        Cluster centroids from model initialization
-
-    centroids_b : array (n_clusters,)
-        Current cluster centroids
-
-    tsne_results : array (M,2)
-        2-D t-SNE results from current model output
-
-    epoch : int
-        Current epoch of training
-
-    show : boolean
-        Show figures or not
-
-    latex : boolean (default=False)
-        Compile figures using latex (extremely slow - not recommended unless
-        rendering figures for publishing)
-
-    Outputs to Disk
-    ---------------
-    Figures analyzing DEC performance.
-    '''
-
-    figures = plotting.analyze_clustering(
-        model,
-        dataloader,
-        device,
-        fname_dataset,
-        index_tra,
-        data_a,
-        data_b,
-        labels_a,
-        labels_b,
-        centroids_a,
-        centroids_b,
-        tsne_results,
-        epoch,
-        show,
-        latex
-    )
-    [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
-        for i, fig in enumerate(figures)]
-    [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
-        for i, fig in enumerate(figures)]
+# def plotter_mp(
+#         fignames,
+#         figpaths,
+#         tb,
+#         model,
+#         dataloader,
+#         device,
+#         fname_dataset,
+#         index_tra,
+#         data_a,
+#         data_b,
+#         labels_a,
+#         labels_b,
+#         centroids_a,
+#         centroids_b,
+#         tsne_results,
+#         epoch,
+#         show,
+#         latex=False
+#     ):
+#     '''Wrapper function for plotting DEC training and performance.
+#
+#     Parameters
+#     ----------
+#     fignames : list
+#         List of figure names
+#
+#     figpaths : list
+#         List of paths where to save figures
+#
+#     tb : Tensorboard SummaryWriter object
+#
+#     model : PyTorch model instance
+#
+#     dataloader : PyTorch dataloader instance
+#         Loads data from disk into memory.
+#
+#     device : PyTorch device object ('cpu' or 'gpu')
+#
+#     fname_dataset : str
+#         Path to dataset
+#
+#     index_tra: array
+#         Indeces of data samples to be used for DEC training.
+#
+#     data_a : array (M,D)
+#         Latent data from model initialization [m_samples,d_features]
+#
+#     data_b : array (M,D)
+#         Latent data from current model state [m_samples,d_features]
+#
+#     labels_a : array (M,)
+#         Class labels from cluster initialization
+#
+#     labels_b : array (M,)
+#         Class labels from current state of clustering
+#
+#     centroids_a : array (n_clusters,)
+#         Cluster centroids from model initialization
+#
+#     centroids_b : array (n_clusters,)
+#         Current cluster centroids
+#
+#     tsne_results : array (M,2)
+#         2-D t-SNE results from current model output
+#
+#     epoch : int
+#         Current epoch of training
+#
+#     show : boolean
+#         Show figures or not
+#
+#     latex : boolean (default=False)
+#         Compile figures using latex (extremely slow - not recommended unless
+#         rendering figures for publishing)
+#
+#     Outputs to Disk
+#     ---------------
+#     Figures analyzing DEC performance.
+#     '''
+#
+#     figures = plotting.analyze_clustering(
+#         model,
+#         dataloader,
+#         device,
+#         fname_dataset,
+#         index_tra,
+#         data_a,
+#         data_b,
+#         labels_a,
+#         labels_b,
+#         centroids_a,
+#         centroids_b,
+#         tsne_results,
+#         epoch,
+#         show,
+#         latex
+#     )
+#     [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
+#         for i, fig in enumerate(figures)]
+#     [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
+#         for i, fig in enumerate(figures)]
