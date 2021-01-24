@@ -1,7 +1,7 @@
 name: RISCluster
-channels:
-  - conda-forge
-  - defaults
+# channels:
+  # - conda-forge
+  # - defaults
 dependencies:
   - python=3.8
   - cmocean
@@ -11,7 +11,6 @@ dependencies:
   - numpy
   - obspy
   - pandas
-  - pip
   - pydotplus
   - python-dotenv
   - pytorch::pytorch
@@ -23,6 +22,8 @@ dependencies:
   - tensorboard
   - tqdm
   - twilio
+  - pip
   - pip:
+    - git+https://github.com/NeptuneProjects/RISCluster.git
     - git+https://github.com/NeptuneProjects/RISProcess.git
     - torchsummary

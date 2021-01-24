@@ -1,4 +1,5 @@
-from concurrent.futures import as_completed, ProcessPoolExecutor
+#!/usr/bin/env python3
+
 import configparser
 import csv
 from datetime import datetime
@@ -10,7 +11,6 @@ from shutil import copyfile
 import smtplib
 import ssl
 import subprocess
-import sys
 
 from dotenv import load_dotenv
 import h5py

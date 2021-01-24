@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 '''Contains necessary functions, routines, plotting wrappers, and data
 recording for DEC model initialization, training, validation, and inference.
 
@@ -6,12 +8,9 @@ Scripps Institution of Oceanography, UC San Diego
 January 2021
 '''
 
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import copy
 from datetime import datetime
 import threading
 import os
-import random
 import shutil
 import sys
 # sys.path.insert(0, '../RISCluster/')

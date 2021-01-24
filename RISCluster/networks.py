@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 William Jenkins
 Scripps Institution of Oceanography, UC San Diego
