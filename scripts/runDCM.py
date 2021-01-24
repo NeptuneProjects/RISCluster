@@ -2,13 +2,13 @@ import argparse
 import configparser
 import os
 import sys
-sys.path.insert(0, '../RISCluster/')
+sys.path.insert(0, '../../RISCluster/')
 
 import matplotlib
 matplotlib.use('Agg')
 
-import production
-import utils
+from RISCluster import production, utils
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -119,7 +119,7 @@ if __name__ == '__main__':
         )
         production.DCM_train(parameters, hyperparameters)
     # =========================================================================
-    # Prediction Routine - Revised
+    # Prediction Routine
     # =========================================================================
     if mode == 'predict':
         saved_weights=config['PARAMETERS']['saved_weights']

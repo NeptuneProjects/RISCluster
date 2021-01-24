@@ -42,22 +42,6 @@ class H5SeismicDataset(Dataset):
         return idx, X
 
 
-# class SeismoDataset(Dataset):
-#     "Converts ndarray already in memory to PyTorch dataset."
-#     def __init__(self, data, transform=None):
-#         self.data = torch.from_numpy(data).float()
-#         self.transform = transform
-#
-#     def __getitem__(self, index):
-#         x = self.data[index]
-#         if self.transform:
-#             x = self.transform(x)
-#         return x
-#
-#     def __len__(self):
-#         return len(self.data)
-
-
 class LabelCatalogue(object):
     def __init__(self, paths, label_list=None):
         self.paths = paths
@@ -443,80 +427,6 @@ def init_output_env(savepath, mode, **kwargs):
             )
 
 
-# def load_dataset(
-#         fname_dataset,
-#         index,
-#         send_message=False,
-#         transform=None,
-#         **kwargs
-#     ):
-#     '''
-#     Arguments:
-#       fname_dataset: Path to h5 dataset
-#       index: List of indices to load
-#       send_message: Boolean
-#       transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
-#     '''
-#     M = len(index)
-#     if 'notqdm' in kwargs:
-#         notqdm = kwargs.get("notqdm")
-#     else:
-#         notqdm = False
-#
-#     with h5py.File(fname_dataset, 'r') as f:
-#         #samples, frequency bins, time bins, amplitude
-#         DataSpec = '/4.0/Spectrogram'
-#         dset = f[DataSpec]
-#         m, n, o = dset.shape
-#         m -= 1
-#         if not notqdm:
-#             print('-' * 80)
-#             print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
-#             print(f'Loading {M} samples...')
-#         tic = datetime.now()
-#
-#         np.seterr(all='ignore')
-#         # X = np.empty([M, n-2, o-173, 1])
-#         # X = np.zeros([M, 1, 65, 175])
-#         X = np.zeros([M, 69, 175])
-#         idx_sample = np.empty([M,], dtype=np.int)
-#         dset_arr = np.zeros([n, o])
-#         count = 0
-#         for i in tqdm(
-#             range(M),
-#             bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
-#             disable=notqdm
-#         ):
-#             dset_arr = dset[index[i], :-1, 12:-14] # <---- This by itself doesn't work.
-#             if transform == "sample_norm":
-#                 dset_arr /= np.abs(dset_arr).max() # <---- This one works
-#             elif transform == "sample_norm_cent":
-#                 dset_arr = (dset_arr - dset_arr.mean()) / np.abs(dset_arr).max() # <---- This one works
-#             elif transform == "sample_std":
-#                 dset_arr = (dset_arr - dset_arr.mean()) / dset_arr.std() # <---- This one throws NaNs for loss in pre-training
-#
-#             X[count,:,:] = dset_arr
-#             # X[count,:,:,:] = np.expand_dims(dset_arr, axis=0)
-#             idx_sample[count,] = int(index[i])
-#             count += 1
-#
-#         if transform == "pixelwise":
-#             X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
-#
-#         X = np.expand_dims(X, axis=1)
-#
-#         toc = datetime.now()
-#         msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
-#                      f'\nTime Elapsed = {(toc-tic)}'
-#         if not notqdm:
-#             print(msgcontent)
-#         if send_message:
-#             msgsubj = 'Data Loaded'
-#             notify(msgsubj, msgcontent)
-#
-#     return SeismoDataset(X)
-
-
 def load_images(fname_dataset, index):
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
@@ -625,71 +535,6 @@ def make_pred_configs_batch(loadpath, savepath, overwrite=False):
 
     print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
     return savepath
-
-
-# def multi_load(path, index, send_message=False, transform=None, **kwargs):
-#     '''
-#     Arguments:
-#       fname_dataset: Path to h5 dataset
-#       index: List of indices to load
-#       send_message: Boolean
-#       transform: Data transformation (default: None, pixelwise, sample_norm, sample_norm_cent, sample_std)
-#     '''
-#     M = len(index)
-#     if 'notqdm' in kwargs:
-#         notqdm = kwargs.get("notqdm")
-#     else:
-#         notqdm = False
-#         m, n, o = query_dbSize(path)
-#         print('--------------------------------------------------------------')
-#         print(f'H5 file has {m} samples, {n} frequency bins, {o} time bins.')
-#         print(f'Loading {M} samples...')
-#     tic = datetime.now()
-#     A = [
-#             {
-#                 'fname_dataset': path,
-#                 'index': index[i],
-#             } for i in range(M)]
-#     X = np.zeros((M, 88, 101))
-#     with ProcessPoolExecutor(max_workers=16) as exec:
-#         futures = [exec.submit(read_h5, **a) for a in A]
-#         kwargs = {
-#             'total': int(len(futures)),
-#             'unit': 'samples',
-#             'unit_scale': True,
-#             'bar_format': '{l_bar}{bar:20}{r_bar}{bar:-20b}',
-#             'leave': True,
-#             'disable': notqdm
-#         }
-#         for i, future in enumerate(tqdm(as_completed(futures), **kwargs)):
-#             X[i, :, :] = future.result()
-#
-#     if not notqdm:
-#         print("Transforming data...", end="", flush=True)
-#     X = X[:, :-1, 1:]
-#     if transform == "sample_norm": # <-------------------------- Works
-#         X /= np.abs(X).max(axis=(1,2))[:,None,None]
-#     elif transform == "sample_norm_cent": # <------------------- Works
-#         X = (X - X.mean(axis=(1,2))[:,None,None]) / \
-#             np.abs(X).max(axis=(1,2))[:,None,None]
-#     elif transform == "sample_std": # <------------------------- Doesn't work
-#         X = (X - X.mean(axis=(1,2))[:,None,None]) / \
-#             X.std(axis=(1,2))[:,None,None]
-#     elif transform == "pixelwise":
-#         X = (X - X.mean(axis=0)) / np.abs(X).max(axis=0)
-#     X = np.expand_dims(X, axis=1)
-#     if not notqdm:
-#         print('complete.')
-#
-#     toc = datetime.now()
-#     msgcontent = f'{M} spectrograms loaded successfully at {toc}.' + \
-#                  f'\nTime Elapsed = {(toc-tic)}'
-#     if not notqdm:
-#         print(msgcontent)
-#     if send_message:
-#         msgsubj = 'Data Loaded'
-#         notify(msgsubj, msgcontent)
-#     return SeismoDataset(X)
 
 
 def measure_class_inertia(data, centroids, n_clusters):

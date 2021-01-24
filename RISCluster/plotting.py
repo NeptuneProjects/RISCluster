@@ -3,7 +3,7 @@ import csv
 from datetime import datetime
 import os
 import sys
-sys.path.insert(0, '../RISCluster/')
+# sys.path.insert(0, '../RISCluster/')
 
 import cmocean.cm as cmo
 import h5py
@@ -20,9 +20,9 @@ import torch
 from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import transforms
 
-from processing import get_metadata, EnvironmentCatalogue
-import utils
-from networks import AEC, DCM
+from RISCluster import utils
+from RISCluster.networks import AEC, DCM
+from RISCluster.processing import get_metadata, EnvironmentCatalogue
 
 
 def analyze_clustering(

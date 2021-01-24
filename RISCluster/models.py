@@ -14,7 +14,7 @@ import os
 import random
 import shutil
 import sys
-sys.path.insert(0, '../RISCluster/')
+# sys.path.insert(0, '../RISCluster/')
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,11 +33,7 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision
 from tqdm import tqdm
 
-import importlib as imp
-import plotting
-imp.reload(plotting)
-import utils
-imp.reload(utils)
+from RISCluster import plotting, utils
 
 
 def pretrain(

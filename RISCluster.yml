@@ -18,9 +18,11 @@ dependencies:
   - pytorch::torchvision
   - scikit-learn
   - scikit-learn-extra
+  - scipy
   - seaborn
   - tensorboard
   - tqdm
   - twilio
   - pip:
+    - git+https://github.com/NeptuneProjects/RISProcess.git
     - torchsummary

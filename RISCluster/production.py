@@ -2,7 +2,7 @@ from datetime import datetime
 from itertools import product
 import os
 import sys
-sys.path.insert(0, '../RISCluster/')
+# sys.path.insert(0, '../RISCluster/')
 import time
 
 import torch
@@ -12,10 +12,8 @@ from torch.utils.data import DataLoader, Subset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 
-import importlib as imp
-import models
-from networks import AEC, DCM, init_weights
-import utils
+from RISCluster import models, utils
+from RISCluster.networks import AEC, DCM, init_weights
 
 
 def DCM_pretrain(parameters, hyperparameters):
