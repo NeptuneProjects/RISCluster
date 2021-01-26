@@ -300,15 +300,17 @@ def runDEC():
     cuda_device : str
         CUDA device number (optional)
     """
-    matplotlib.use('Agg')
     parser = argparse.ArgumentParser(
         description="Script pretrains or trains DEC model."
     )
     parser.add_argument('init_file', help="Enter path to init file.")
     parser.add_argument('--cuda_device', help="Select CUDA device.")
     args = parser.parse_args()
+
     config = configparser.ConfigParser()
     config.read(init_file)
+
+    matplotlib.use('Agg')
 
     if args.cuda_device is not None:
         device = utils.set_device(args.cuda_device)
@@ -364,7 +366,7 @@ def runDEC():
             parameters,
             hyperparameters
         )
-        production.DEC_pretrain(parameters, hyperparameters)
+        DEC_pretrain(parameters, hyperparameters)
     # =========================================================================
     # Training Routine
     # =========================================================================
@@ -405,7 +407,7 @@ def runDEC():
             parameters,
             hyperparameters
         )
-        production.DEC_train(parameters, hyperparameters)
+        DEC_train(parameters, hyperparameters)
     # =========================================================================
     # Prediction Routine
     # =========================================================================
@@ -420,4 +422,4 @@ def runDEC():
             transform=config['PARAMETERS']['transform'],
             workers=int(config['PARAMETERS']['workers'])
         )
-        production.DEC_predict(parameters)
+        DEC_predict(parameters)

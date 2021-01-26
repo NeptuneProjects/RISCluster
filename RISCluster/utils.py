@@ -63,6 +63,17 @@ class LabelCatalogue(object):
         self.station_list = pd.unique(self.df["station"])
 
 
+    def amplitude_statistics(self):
+        columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
+        stats = []
+        for label in self.label_list:
+            subset = self.df["peak"].loc[self.df["label"] == label].abs()
+            stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
+
+        amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
+        return amp_stats.set_index("Class")
+
+
     def build_df(self, paths):
         data1 = pd.read_csv(paths[0]).drop(columns=["Index"])
         data2 = pd.read_csv(self.paths[1]).drop(columns=["idx"])
@@ -177,17 +188,6 @@ class LabelCatalogue(object):
         for col in [1, range(3, 3 + len(self.label_list))]:
             df.iloc[:, col] = df.iloc[:, col].astype("int")
         return df.sort_values(by="station", ignore_index=True)
-
-
-    def amplitude_statistics(self):
-        columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
-        stats = []
-        for label in self.label_list:
-            subset = self.df["peak"].loc[self.df["label"] == label].abs()
-            stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
-
-        amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
-        return amp_stats.set_index("Class")
 
 
     # def get_peak_frequency(
