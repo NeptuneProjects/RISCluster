@@ -177,7 +177,29 @@ def query_H5size():
 
 
 def ExtractH5Dataset():
+    """Command line function that extracts a subset of an HDF database and
+    saves it to a new HDF database.
 
+    Parameters
+    ----------
+    source : str
+        Path to HDF file from which new dataset will be extracted.
+
+    dest : str
+        Path to new HDF file
+
+    include : str (optional)
+        List of stations to extract
+
+    exclude : str (optional)
+        List of stations to exclude during extraction
+
+    after : str (optional)
+        Datetime after which to include (in format YYYYMMDDTHHMMSS)
+
+    before : str (optional)
+        Datetime before which to include (in format YYYYMMDDTHHMMSS)
+    """
     def _copy_attributes(in_object, out_object):
         """Copy attributes between 2 HDF5 objects.
 
