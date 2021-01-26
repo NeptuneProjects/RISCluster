@@ -12,10 +12,9 @@ def setup_package():
         # scripts=["scripts/testscript.py", "scripts/testscript2.py"],
         entry_points = {
             'console_scripts': [
-                'cleancat=RISProcess.commands:cleancat',
-                'dlfdsn=RISProcess.commands:dlfdsn',
-                'process=RISProcess.commands:process',
-
+                'runDEC=RISCluster.commands:runDEC',
+                'query_H5size=RISCluster.commands:query_H5size',
+                'ExtractH5Dataset=RISCluster.commands:ExtractH5Dataset'
             ]
         },
         install_requires=[

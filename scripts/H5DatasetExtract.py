@@ -21,6 +21,22 @@ if debug:
     before = None
     dest = '../../../Data/RS09.h5'
 
+
+def _copy_attributes(in_object, out_object):
+    '''Copy attributes between 2 HDF5 objects.'''
+    for key, value in in_object.attrs.items():
+        out_object.attrs[key] = value
+
+
+def _find_indeces(index, source, stations):
+    with h5py.File(source, 'r') as f:
+        metadata = json.loads(f['/4.0/Catalogue'][index])
+    if metadata["Station"] in stations:
+        return index
+    else:
+        return np.nan
+
+
 if __name__ == "__main__":
     if not debug:
         parser = argparse.ArgumentParser(
@@ -93,7 +109,7 @@ if __name__ == "__main__":
     index_keep = np.zeros(len(index))
     with ProcessPoolExecutor(max_workers=14) as exec:
         print("Finding detections that meet filter criteria...")
-        futures = [exec.submit(processing._find_indeces, **a) for a in A]
+        futures = [exec.submit(_find_indeces, **a) for a in A]
         kwargs1 = {
             "total": int(len(index)),
             "bar_format": '{l_bar}{bar:20}{r_bar}{bar:-20b}',
@@ -114,7 +130,7 @@ if __name__ == "__main__":
             dset_shape = (M,) + dset_shape
             group_id = fd.require_group(group_path)
             dset_id = group_id.create_dataset(dset_name, dset_shape, dtype=dset.dtype, chunks=None)
-            processing._copy_attributes(dset, dset_id)
+            _copy_attributes(dset, dset_id)
             kwargs2 = {
                 "desc": dset_name,
                 "bar_format": '{l_bar}{bar:20}{r_bar}{bar:-20b}'
