@@ -1,8 +1,8 @@
 import argparse
-import sys
-sys.path.insert(0, '../RISCluster/')
+# import sys
+# sys.path.insert(0, '../RISCluster/')
 
-from processing import file2dt, KPDR_sac2mseed, remove_trace
+from RISCluster.environment import KPDR_sac2mseed
 
 debug = False
 

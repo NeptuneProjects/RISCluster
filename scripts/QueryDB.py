@@ -1,10 +1,10 @@
 import argparse
-import sys
-sys.path.insert(0, '../RISCluster/')
+# import sys
+# sys.path.insert(0, '../RISCluster/')
 
 import h5py
 
-from utils import query_dbSize
+from RISCluster.utils import query_dbSize
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Enter path to .h5 file.')

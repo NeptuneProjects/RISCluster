@@ -9,7 +9,6 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-import processing
 import utils
 
 debug = False
@@ -84,20 +83,20 @@ if __name__ == "__main__":
         before = None
 
     if include is not None and exclude is not None:
-        removals = [processing.get_station(i) for i in exclude]
-        stations = [processing.get_station(i) for i in include]
+        removals = [utils.get_station(i) for i in exclude]
+        stations = [utils.get_station(i) for i in include]
         stations = [i for i in stations if i not in removals]
         print(f"Searching {stations}")
     elif include is not None:
-        stations = [processing.get_station(i) for i in include]
+        stations = [utils.get_station(i) for i in include]
         print(f"Searching {stations}")
     elif exclude is not None:
-        removals = [processing.get_station(i) for i in exclude]
-        stations = [processing.get_station(i) for i in range(34)]
+        removals = [utils.get_station(i) for i in exclude]
+        stations = [utils.get_station(i) for i in range(34)]
         stations = [i for i in stations if i not in removals]
         print(f"Searching {stations}")
     else:
-        stations = [processing.get_station(i) for i in range(34)]
+        stations = [utils.get_station(i) for i in range(34)]
         print(f"Searching {stations}")
 
     A = [{

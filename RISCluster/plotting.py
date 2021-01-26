@@ -22,7 +22,7 @@ from torchvision import transforms
 
 from RISCluster import utils
 from RISCluster.networks import AEC, DCM
-from RISCluster.processing import get_metadata, EnvironmentCatalogue
+from RISCluster.environment import EnvironmentCatalogue
 
 
 def analyze_dec(
@@ -1013,7 +1013,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
         tvec = dset[1, 87, 1:]
 
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
-    metadata = get_metadata(sample_index, image_index, fname_dataset)
+    metadata = utils.get_metadata(sample_index, image_index, fname_dataset)
     fontsize = 16
     fig = plt.figure(figsize=figsize, dpi=150)
     cmap = 'cmo.ice_r'
@@ -1392,7 +1392,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
     '''Plots selected spectrograms from input data.'''
     if not len(insp_idx) == nrows * ncols:
         raise ValueError('Subplot/sample number mismatch: check dimensions.')
-    metadata = get_metadata(insp_idx, sample_index, fname_dataset)
+    metadata = utils.get_metadata(insp_idx, sample_index, fname_dataset)
     fig = plt.figure(figsize=figsize, dpi=150)
     gs = gridspec.GridSpec(nrows=nrows, ncols=ncols)
     counter = 0
@@ -1431,7 +1431,7 @@ def view_specgram_training(
         show=True
     ):
     sample_idx = np.arange(0, len(disp_idx))
-    metadata = get_metadata(sample_idx, disp_idx, fname_dataset)
+    metadata = utils.get_metadata(sample_idx, disp_idx, fname_dataset)
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
@@ -1496,7 +1496,7 @@ def view_specgram_training2(
     }
     mpl.rcParams.update(rc_fonts)
     sample_idx = np.arange(0, len(disp_idx))
-    metadata = get_metadata(sample_idx, disp_idx, fname_dataset)
+    metadata = utils.get_metadata(sample_idx, disp_idx, fname_dataset)
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()

@@ -11,6 +11,7 @@ import pandas as pd
 from scipy.io import loadmat
 from tqdm import tqdm
 
+from RISCluster.utils import get_station
 
 class EnvironmentCatalogue(object):
     def __init__(self, station, aws, path):

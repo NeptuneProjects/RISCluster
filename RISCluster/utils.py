@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 
+"""Utility and helper functions for RISCluster.
+
+William Jenkins, wjenkins [at] ucsd [dot] edu
+Scripps Institution of Oceanography, UC San Diego
+January 2021
+"""
+import argparse
+from concurrent.futures import as_completed, ProcessPoolExecutor
 import configparser
 import csv
 from datetime import datetime
 from email.message import EmailMessage
+import json
 import os
 import pickle
 import re
@@ -295,27 +304,253 @@ def distance_matrix(x, y, f):
     return dist
 
 
+def ExtractH5Dataset():
+    """Command line function that extracts a subset of an HDF database and
+    saves it to a new HDF database.
+
+    Parameters
+    ----------
+    source : str
+        Path to HDF file from which new dataset will be extracted.
+
+    dest : str
+        Path to new HDF file
+
+    include : str (optional)
+        List of stations to extract
+
+    exclude : str (optional)
+        List of stations to exclude during extraction
+
+    after : str (optional)
+        Datetime after which to include (in format YYYYMMDDTHHMMSS)
+
+    before : str (optional)
+        Datetime before which to include (in format YYYYMMDDTHHMMSS)
+    """
+    def _copy_attributes(in_object, out_object):
+        """Copy attributes between 2 HDF5 objects.
+
+        Parameters
+        ----------
+        in_object : object
+            Object to be copied
+
+        out_ojbect : object
+            Object to which in_object attributes are copied.
+        """
+        for key, value in in_object.attrs.items():
+            out_object.attrs[key] = value
+
+
+    def _find_indeces(index, source, stations):
+        """Returns index of sample if it matches station input.
+
+        Parameters
+        ----------
+        index : int
+            Sample index to be queried.
+
+        source : str
+            Path to H5 database.
+
+        stations : list
+            List of stations to match.
+
+        Returns
+        -------
+        index : int
+            Sample index if match; nan otherwise.
+        """
+        with h5py.File(source, 'r') as f:
+            metadata = json.loads(f['/4.0/Catalogue'][index])
+        if metadata["Station"] in stations:
+            return index
+        else:
+            return np.nan
+
+    parser = argparse.ArgumentParser(
+        description="Creates new dataset from existing dataset."
+    )
+    parser.add_argument("source", help="Enter path to source dataset.")
+    parser.add_argument("dest", help="Enter path to destination dataset.")
+    parser.add_argument("--include", help="Enter stations to include.")
+    parser.add_argument("--exclude", help="Enter stations to exclude.")
+    parser.add_argument("--after", help="Include after YYYYMMDDTHHMMSS.")
+    parser.add_argument("--before", help="Include before YYYYMMDDTHHMMSS.")
+    args = parser.parse_args()
+
+    if args.include is None and args.exclude is None:
+        raise Exception("Must specify stations to include or exclude.")
+    source = args.source
+    dest = args.dest
+    include = args.include
+    exclude = args.exclude
+    after = args.after
+    before = args.before
+
+    if not os.path.exists(source):
+        raise ValueError(f"Source file not found: {source}")
+
+    with h5py.File(source, 'r') as rf:
+        M = len(rf['/4.0/Trace'])
+    index = np.arange(1, M)
+
+    if include is not None:
+        include = json.loads(include)
+    else:
+        include = None
+    if exclude is not None:
+        exclude = json.loads(exclude)
+    else:
+        exclude = None
+    if after is not None:
+        after = after
+    else:
+        after = None
+    if before is not None:
+        before = before
+    else:
+        before = None
+
+    if include is not None and exclude is not None:
+        removals = [get_station(i) for i in exclude]
+        stations = [get_station(i) for i in include]
+        stations = [i for i in stations if i not in removals]
+        print(f"Searching {stations}")
+    elif include is not None:
+        stations = [get_station(i) for i in include]
+        print(f"Searching {stations}")
+    elif exclude is not None:
+        removals = [get_station(i) for i in exclude]
+        stations = [get_station(i) for i in range(34)]
+        stations = [i for i in stations if i not in removals]
+        print(f"Searching {stations}")
+    else:
+        stations = [get_station(i) for i in range(34)]
+        print(f"Searching {stations}")
+
+    A = [{
+            "index": index[i],
+            "source": source,
+            "stations": stations
+        } for i in range(len(index))]
+
+    index_keep = np.zeros(len(index))
+    with ProcessPoolExecutor(max_workers=14) as exec:
+        print("Finding detections that meet filter criteria...")
+        futures = [exec.submit(_find_indeces, **a) for a in A]
+        kwargs1 = {
+            "total": int(len(index)),
+            "bar_format": '{l_bar}{bar:20}{r_bar}{bar:-20b}',
+            "leave": True
+        }
+        for i, future in enumerate(tqdm(as_completed(futures), **kwargs1)):
+            index_keep[i] = future.result()
+    index_keep = np.sort(index_keep[~np.isnan(index_keep)]).astype(int)
+
+    with h5py.File(source, 'r') as fs, h5py.File(dest, 'w') as fd:
+        M = len(index_keep)
+        dset_names = ['Catalogue', 'Trace', 'Spectrogram', 'Scalogram']
+        # dset_names = ['Catalogue']
+        for dset_name in dset_names:
+            group_path = '/4.0'
+            dset = fs[f"{group_path}/{dset_name}"]
+            dset_shape = dset.shape[1:]
+            dset_shape = (M,) + dset_shape
+            group_id = fd.require_group(group_path)
+            dset_id = group_id.create_dataset(dset_name, dset_shape, dtype=dset.dtype, chunks=None)
+            _copy_attributes(dset, dset_id)
+            kwargs2 = {
+                "desc": dset_name,
+                "bar_format": '{l_bar}{bar:20}{r_bar}{bar:-20b}'
+            }
+            for i in tqdm(range(len(index_keep)), **kwargs2):
+                dset_id[i] = dset[index_keep[i]]
+
+
 def fractional_distance(x, y, f):
     diff = np.fabs(x - y) ** f
     dist = np.sum(diff, axis=1) ** (1 / f)
     return dist
 
 
-def get_amplitude_statistics(path_to_labels, path_to_catalogue):
-    labels = pd.read_csv(path_to_labels, index_col=0)
-    amp_pk = pd.read_csv(path_to_catalogue, usecols=["peak"])
+def GenerateSampleIndex():
+    """Command line function that generates a uniformly random sample index.
 
-    data = pd.concat([labels, amp_pk], axis=1)
-    label_list = np.sort(pd.unique(labels["label"]))
+    Parameters
+    ----------
+    M : int
+        Number of samples
 
-    columns = ["Class", "Mean", "Median", "Standard Deviation", "Maximum"]
-    stats = []
-    for label in label_list:
-        subset = data["peak"].loc[data["label"] == label].abs()
-        stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
+    path : str
+        Path to h5 dataset
 
-    amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
-    return amp_stats.set_index("Class")
+    savepath : str
+        Path to save sample index.
+    """
+    parser = argparse.ArgumentParser(description='Enter sample number.')
+    parser.add_argument(
+        'M',
+        metavar='M',
+        type=int,
+        help='Enter number of spectrograms to be used for training/validation.'
+    )
+    parser.add_argument(
+        'path',
+        metavar='path',
+        help='Enter path to h5 dataset.'
+    )
+    parser.add_argument(
+        'savepath',
+        metavar='savepath',
+        help='Enter savepath'
+    )
+    args = parser.parse_args()
+    M = args.M
+    fname_dataset = args.path
+    savepath = args.savepath
+    save_TraVal_index(M, fname_dataset, savepath)
+
+
+def get_channel(channel_index):
+    '''Input: Integer channel index (0-2).
+       Output: Channel name (str)'''
+    channel_list = ['HHE', 'HHN', 'HHZ']
+    channel_name = channel_list[channel_index]
+    return channel_name
+
+
+def get_datetime(datetime_index):
+    '''Input: Integer datetime index for any day between ti and tf.
+       Output: Datetime string'''
+    ti = "20141202T000000"
+    tf = "20161129T000000"
+    datetimes = pd.date_range(ti, tf, freq='d')
+    datetime = datetimes[datetime_index]
+    return datetime
+
+
+def get_metadata(query_index, sample_index, fname_dataset):
+    '''Returns station metadata given sample index.'''
+    with h5py.File(fname_dataset, 'r') as f:
+        DataSpec = '/4.0/Catalogue'
+        dset = f[DataSpec]
+        metadata = dict()
+        counter = 0
+        for i in query_index:
+            query = sample_index[i]
+            metadata[counter] = json.loads(dset[query])
+            counter += 1
+    return metadata
+
+
+def get_network(network_index):
+    '''Input: Integer network index (0).
+       Output: Network name string'''
+    network_list = ['XH']
+    network_name = network_list[network_index]
+    return network_name
 
 
 def get_peak_frequency(
@@ -361,6 +596,31 @@ def get_peak_frequency(
 
     peak_freqs = pd.DataFrame({"Class": label_list, "Avg_Peak_Freq": class_avg_maxfreq}).sort_values(by=["Class"], ignore_index=True)
     return peak_freqs.set_index("Class")
+
+
+def get_station(station):
+    '''Returns station index or station name, depending on whether input is a
+    name (string) or index (integer).
+
+    Parameters
+    ----------
+    station : str, int
+        Station name (str), Station index (int)
+
+    Returns
+    -------
+    station: int, str
+        Station index (int), Station name (str)
+    '''
+    station_list = ['DR01', 'DR02', 'DR03', 'DR04', 'DR05', 'DR06', 'DR07',
+                   'DR08', 'DR09', 'DR10', 'DR11', 'DR12', 'DR13', 'DR14',
+                   'DR15', 'DR16', 'RS01', 'RS02', 'RS03', 'RS04', 'RS05',
+                   'RS06', 'RS07', 'RS08', 'RS09', 'RS10', 'RS11', 'RS12',
+                   'RS13', 'RS14', 'RS15', 'RS16', 'RS17', 'RS18']
+    if isinstance(station, int):
+        return station_list[station]
+    elif isinstance(station, str):
+        return station_list.index(station)
 
 
 def init_exp_env(mode, savepath, **kwargs):
@@ -611,6 +871,27 @@ def query_dbSize(path):
         dset = f[DataSpec]
         m, n, o = dset.shape
         return m, n, o
+
+
+def query_H5size():
+    """Command line function that prints the dimensions of the specified HDF
+    database.
+
+    Parameters
+    ----------
+    path : str
+        Path to the H5 database.
+    """
+    parser = argparse.ArgumentParser(description='Enter path to .h5 file.')
+    parser.add_argument(
+        'path',
+        help='Enter path to database; must be .h5/.hd5 file.'
+    )
+    args = parser.parse_args()
+    path = args.path
+    m, n, o = query_dbSize(path)
+    print(f" >> h5 dataset contains {m} samples with dimensions [{n},{o}]. <<")
+    pass
 
 
 def read_h5(fname_dataset, index):
