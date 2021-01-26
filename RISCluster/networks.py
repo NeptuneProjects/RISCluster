@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-"""
-William Jenkins
-Scripps Institution of Oceanography, UC San Diego
+"""This script contains neural network architectures used in the RIS package.
 
-This script contains neural network architectures used in the RIS package.
+William Jenkins, wjenkins [at] ucsd [dot] edu
+Scripps Institution of Oceanography, UC San Diego
+January 2021
 """
 
 import torch
