@@ -5,7 +5,7 @@ from setuptools import setup
 def setup_package():
     setup(
         name='RISCluster',
-        url="'https://github.com/NeptuneProjects/RISCluster',
+        url='https://github.com/NeptuneProjects/RISCluster',
         author='William F. Jenkins II',
         author_email='wjenkins@ucsd.edu',
         packages=['RISCluster'],
