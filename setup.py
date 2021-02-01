@@ -20,8 +20,6 @@ def setup_package():
         },
         install_requires=[
             'cmocean',
-            'cudatoolkit>=11.0',
-            'cuml',
             'h5py',
             'jupyterlab',
             'matplotlib',
