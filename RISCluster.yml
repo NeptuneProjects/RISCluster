@@ -1,11 +1,14 @@
 name: RISCluster
-# channels:
-  # - conda-forge
-  # - defaults
+channels:
+  - rapidsai
+  - nvidia
+  - pytorch
+  - conda-forge
+  - defaults
 dependencies:
   - python=3.8
   - cmocean
-  - cudatoolkit=11.0
+  - nvidia::cudatoolkit=11.0
   - h5py
   - jupyterlab
   - matplotlib
@@ -16,7 +19,7 @@ dependencies:
   - python-dotenv
   - pytorch::pytorch
   - pytorch::torchvision
-  - rapidsai::cuml
+  - rapidsai::cuml=0.17
   - scikit-learn
   - scikit-learn-extra
   - scipy
