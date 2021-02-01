@@ -16,7 +16,7 @@ dependencies:
   - python-dotenv
   - pytorch::pytorch
   - pytorch::torchvision
-  - rapidsai:cuml
+  - rapidsai::cuml
   - scikit-learn
   - scikit-learn-extra
   - scipy
