@@ -5,6 +5,7 @@ name: RISCluster
 dependencies:
   - python=3.8
   - cmocean
+  - cudatoolkit=11.0
   - h5py
   - jupyterlab
   - matplotlib
@@ -15,6 +16,7 @@ dependencies:
   - python-dotenv
   - pytorch::pytorch
   - pytorch::torchvision
+  - rapidsai:cuml
   - scikit-learn
   - scikit-learn-extra
   - scipy

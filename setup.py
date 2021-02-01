@@ -5,7 +5,7 @@ from setuptools import setup
 def setup_package():
     setup(
         name='RISCluster',
-        url="'ttps://github.com/NeptuneProjects/RISCluster',
+        url="'https://github.com/NeptuneProjects/RISCluster',
         author='William F. Jenkins II',
         author_email='wjenkins@ucsd.edu',
         packages=['RISCluster'],
@@ -20,6 +20,8 @@ def setup_package():
         },
         install_requires=[
             'cmocean',
+            'cudatoolkit>=11.0',
+            'cuml',
             'h5py',
             'jupyterlab',
             'matplotlib',
