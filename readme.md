@@ -27,7 +27,7 @@ The following steps will set up a Conda environment and install RISProcess.
  **RISCluster.yml** environment file.
 2. Save **RISCluster.yml** to your computer by running the following:
   <br>a. **Mac**:
-  <br>`curl -LJO https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster.yml`
+  <br>`curl -LJO https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISClusterMacOS.yml`
   <br>b. **Linux**:
   <br>`wget --no-check-certificate --content-disposition https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster.yml`
 3. In terminal, run: `conda env create -f RISCluster.yml`
