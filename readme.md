@@ -34,7 +34,7 @@ machine is not CUDA-capable.
 <br>`wget --no-check-certificate --content-disposition https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster_CUDA.yml`
 3. In terminal, run: `conda env create -f RISCluster_CUDA.yml`
 4. Once the environment is set up and the package is installed, activate your
-environment by running `conda activate RISCluster` in terminal.
+environment by running `conda activate RISCluster_CUDA` in terminal.
 
 #### CPU-based RISCluster
 1. Open a terminal and navigate to the directory you would like to download the
@@ -46,7 +46,7 @@ environment by running `conda activate RISCluster` in terminal.
   <br>`wget --no-check-certificate --content-disposition https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster_CPU.yml`
 3. In terminal, run: `conda env create -f RISCluster_CPU.yml`
 4. Once the environment is set up and the package is installed, activate your
-environment by running `conda activate RISCluster` in terminal.
+environment by running `conda activate RISCluster_CPU` in terminal.
 
 ### References
 *Submitted*: William F. Jenkins II, Peter Gerstoft, Michael J. Bianco, Peter D. Bromirski; *Unsupervised Deep Clustering of Seismic Data: Monitoring the Ross Ice Shelf, Antarctica.* Submitted to Journal of Geophysical Research on 20 Jan 2021; doi: https://doi.org/10.1002/essoar.10505894.1

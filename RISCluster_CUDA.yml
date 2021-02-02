@@ -1,4 +1,4 @@
-name: RISClusterCUDA
+name: RISCluster_CUDA
 channels:
   - rapidsai
   - nvidia

@@ -1,4 +1,4 @@
-name: RISClusterGPU
+name: RISCluster_CPU
 channels:
   - pytorch
   - conda-forge
