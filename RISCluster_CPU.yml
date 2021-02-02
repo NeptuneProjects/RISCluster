@@ -1,4 +1,4 @@
-name: RISClusterMacOS
+name: RISClusterGPU
 channels:
   - pytorch
   - conda-forge

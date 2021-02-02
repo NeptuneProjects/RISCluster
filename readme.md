@@ -20,17 +20,31 @@ Pre-requisites:
 [Anaconda](https://anaconda.org) or
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 
-Tested on MacOS 11.1 and Red Hat Enterprise Linux 7.9.
+The following steps will set up a Conda environment and install RISProcess, and
+have been tested on MacOS 11.1 and Red Hat Enterprise Linux 7.9.  If you have
+a CUDA-enabled machine (i.e., not MacOS), you can install the CUDA version of
+RISCluster.  Unfortunately, Pytorch & CUML are not implemented for MacOS, so
+you will need to install the GPU version if you use a Mac, or if your Linux
+machine is not CUDA-capable.
 
-The following steps will set up a Conda environment and install RISProcess.
+#### CUDA-enabled RISCluster (Linux-only)
 1. Open a terminal and navigate to the directory you would like to download the
- **RISCluster.yml** environment file.
-2. Save **RISCluster.yml** to your computer by running the following:
+ **RISCluster_CUDA.yml** environment file.
+2. Save **RISCluster_CUDA.yml** to your computer by running the following:
+<br>`wget --no-check-certificate --content-disposition https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster_CUDA.yml`
+3. In terminal, run: `conda env create -f RISCluster_CUDA.yml`
+4. Once the environment is set up and the package is installed, activate your
+environment by running `conda activate RISCluster` in terminal.
+
+#### CPU-based RISCluster
+1. Open a terminal and navigate to the directory you would like to download the
+ **RISCluster_CPU.yml** environment file.
+2. Save **RISCluster_CPU.yml** to your computer by running the following:
   <br>a. **Mac**:
-  <br>`curl -LJO https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISClusterMacOS.yml`
+  <br>`curl -LJO https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster_CPU.yml`
   <br>b. **Linux**:
-  <br>`wget --no-check-certificate --content-disposition https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster.yml`
-3. In terminal, run: `conda env create -f RISCluster.yml`
+  <br>`wget --no-check-certificate --content-disposition https://raw.githubusercontent.com/NeptuneProjects/RISCluster/master/RISCluster_CPU.yml`
+3. In terminal, run: `conda env create -f RISCluster_CPU.yml`
 4. Once the environment is set up and the package is installed, activate your
 environment by running `conda activate RISCluster` in terminal.
 
