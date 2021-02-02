@@ -1,0 +1,30 @@
+name: RISClusterMacOS
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - cmocean
+  - h5py
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - obspy
+  - pandas
+  - pydotplus
+  - python-dotenv
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - scikit-learn
+  - scikit-learn-extra
+  - scipy
+  - seaborn
+  - tensorboard
+  - tqdm
+  - twilio
+  - pip
+  - pip:
+    - git+https://github.com/NeptuneProjects/RISCluster.git
+    - git+https://github.com/NeptuneProjects/RISProcess.git
+    - torchsummary
