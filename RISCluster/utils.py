@@ -687,9 +687,8 @@ def init_output_env(savepath, mode, **kwargs):
             )
 
 
-def init_project_env(project_path, folders):
-    for folder in folders:
-        path = f"{project_path}/{folder}"
+def init_project_env(paths):
+    for path in paths:
         if not os.path.exists(path):
             os.makedirs(path)
             print(f"{path} created.")
