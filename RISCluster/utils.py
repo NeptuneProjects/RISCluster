@@ -687,6 +687,14 @@ def init_output_env(savepath, mode, **kwargs):
             )
 
 
+def init_project_env(project_path, folders):
+    for folder in folders:
+        path = os.path.join(project_path, folder)
+        if not os.path.exists(path):
+            os.makedirs(path)
+    print("Project folders initialized.")
+
+
 def load_images(fname_dataset, index):
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
