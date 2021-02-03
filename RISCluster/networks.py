@@ -152,18 +152,26 @@ class ClusteringLayer(nn.Module):
         return x
 
 
-class DCM(nn.Module):
-    """
-    Description: Deep Clustering Model; combines autoencoder with clustering
-    layer to generate end-to-end deep embedded clustering neural network model.
-    Arguments:
-        - n_clusters: User-defined
-    Inputs:
-        - Input data (spectrograms)
-    Outputs:
-        - Soft cluster assignments
-        - Reconstructed data
-        - Latent space data
+class DEC(nn.Module):
+    """Description: Deep Embedded Clustering Model; combines autoencoder with
+    clustering layer to generate end-to-end deep embedded clustering neural
+    network model.
+
+    Parameters
+    ----------
+    n_clusters : int
+        Number of clusters
+
+    Returns
+    -------
+    q : array
+        Soft cluster assignments
+
+    x : array
+        Reconstructed data
+
+    z : array
+        Latent space data
     """
     def __init__(self, n_clusters):
         super(DCM, self).__init__()
