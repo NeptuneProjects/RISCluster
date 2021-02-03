@@ -3,8 +3,6 @@ import configparser
 from datetime import datetime
 from itertools import product
 import os
-# import sys
-# sys.path.insert(0, '../RISCluster/')
 import time
 
 import matplotlib

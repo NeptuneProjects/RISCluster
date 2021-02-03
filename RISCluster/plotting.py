@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-# import sys
-# sys.path.insert(0, '../RISCluster/')
 
 import cmocean.cm as cmo
 import h5py
@@ -462,56 +460,46 @@ def cluster_gallery(
 def compare_images(
         model,
         epoch,
-        disp_idx,
+        image_index,
         fname_dataset,
         device,
         savepath=None,
         show=True,
-        mode='multi'
     ):
-    images, tvec, fvec = utils.load_images(fname_dataset, disp_idx)
-    disp_loader = DataLoader(
-        utils.SeismoDataset(images),
-        batch_size=len(disp_idx)
+    tvec, fvec = utils.get_timefreqvec(fname_dataset)
+    dataset = utils.H5SeismicDataset(
+        fname_dataset,
+        transform = transforms.Compose(
+            [utils.SpecgramShaper(), utils.SpecgramToTensor()]
+        )
+
     )
-    data = next(iter(disp_loader))
-    disp = data.to(device)
-
+    subset = Subset(dataset, image_index)
+    dataloader = DataLoader(subset, batch_size=len(image_index))
     model.eval()
-    x_r, z = model(disp)
-    figtitle = f'Pre-training: Epoch {epoch}'
-    n, o = list(disp.size()[2:])
 
+    for batch in dataloader:
+        idx, X = batch
+        Xr, z = model(X)
+
+    figtitle = f'Pre-training: Epoch {epoch}'
     if savepath is not None:
         savepath_snap = savepath + '/snapshots/'
         if not os.path.exists(savepath_snap):
             os.makedirs(savepath_snap)
-    if mode == 'multi':
-        fig = view_specgram_training(
-            disp,
-            x_r, z, n, o,
-            figtitle,
-            disp_idx,
-            tvec,
-            fvec,
-            fname_dataset,
-            show=show
-        )
-        figname = savepath_snap + f'AEC_Training_Epoch_Multi_{epoch:03d}.png'
-        fig.savefig(figname, dpi=300)
-    elif mode == 'single':
-        fig = view_specgram_training2(
-            disp,
-            x_r, z, n, o,
-            figtitle,
-            disp_idx,
-            tvec,
-            fvec,
-            fname_dataset,
-            show=show
-        )
-        figname = savepath_snap + f'AEC_Training_Epoch_Single_{epoch:03d}.png'
-        fig.savefig(figname, dpi=300)
+
+    fig = view_specgram_training(
+        X,
+        Xr, z,
+        figtitle,
+        image_index,
+        tvec,
+        fvec,
+        fname_dataset,
+        show=show
+    )
+    figname = savepath_snap + f'AEC_Training_Epoch_Single_{epoch:03d}.png'
+    fig.savefig(figname, dpi=300)
     return fig
 
 
@@ -1005,12 +993,7 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
     factor = 1e-9
     tr_max = np.max(np.abs(tr)) / factor
 
-    with h5py.File(fname_dataset, 'r') as f:
-        M = len(image_index)
-        DataSpec = '/4.0/Spectrogram'
-        dset = f[DataSpec]
-        fvec = dset[1, 0:87, 0]
-        tvec = dset[1, 87, 1:]
+    tvec, fvec = utils.get_timefreqvec(fname_dataset)
 
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
     metadata = utils.get_metadata(sample_index, image_index, fname_dataset)
@@ -1421,65 +1404,7 @@ def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
 
 
 def view_specgram_training(
-        x, x_r, z, n, o,
-        figtitle,
-        disp_idx,
-        tvec,
-        fvec,
-        fname_dataset,
-        figsize=(6,5),
-        show=True
-    ):
-    sample_idx = np.arange(0, len(disp_idx))
-    metadata = utils.get_metadata(sample_idx, disp_idx, fname_dataset)
-    X = x.detach().cpu().numpy()
-    X_r = x_r.detach().cpu().numpy()
-    z = z.detach().cpu().numpy()
-    fig = plt.figure(figsize=figsize, dpi=150)
-    cmap = 'cmo.ice_r'
-    heights = [4, 0.4, 4]
-    extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
-    gs = gridspec.GridSpec(nrows=3, ncols=4, height_ratios=heights, wspace=0.3)
-    counter = 0
-    for i in range(x.size()[0]):
-        station = metadata[i]['station']
-        time_on = metadata[counter]['spec_start']
-
-        ax = fig.add_subplot(gs[0,counter])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
-        plt.xlabel('Time (s)')
-        if i == 0:
-            plt.ylabel('Frequency (Hz)')
-        plt.title(f'Station {station}; Index: {disp_idx[i]}\nTrigger: {time_on}', fontsize=8)
-
-        ax = fig.add_subplot(gs[1,counter])
-        plt.imshow(np.expand_dims(z[i], 0), cmap=cmo.deep_r, aspect='auto', interpolation="none")
-        plt.xticks([])
-        plt.yticks([])
-
-        ax = fig.add_subplot(gs[2,counter])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
-        plt.xlabel('Time (s)')
-        if i == 0:
-            plt.ylabel('Frequency (Hz)')
-        if counter == 0:
-            plt.figtext(0.03, 0.87, 'a)', size=16, fontweight='bold')
-            plt.figtext(0.03, 0.5, 'b)', size=16, fontweight='bold')
-            plt.figtext(0.03, 0.42, 'c)', size=16, fontweight='bold')
-        counter += 1
-
-    fig.suptitle(figtitle, size=16, weight='bold')
-    # fig.tight_layout()
-    fig.subplots_adjust(top=0.88, left=0.08)
-    if show:
-        plt.show()
-    else:
-        plt.close()
-    return fig
-
-
-def view_specgram_training2(
-        x, x_r, z, n, o,
+        x, x_r, z,
         figtitle,
         disp_idx,
         tvec,
@@ -1500,6 +1425,7 @@ def view_specgram_training2(
     X = x.detach().cpu().numpy()
     X_r = x_r.detach().cpu().numpy()
     z = z.detach().cpu().numpy()
+    n, o = list(X.shape[2:])
     fig = plt.figure(figsize=(figsize[0],len(disp_idx)*figsize[1]), dpi=150)
     cmap = 'cmo.ice_r'
     heights = [4 for i in range(x.size()[0])]

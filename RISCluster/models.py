@@ -13,7 +13,6 @@ import threading
 import os
 import shutil
 import sys
-# sys.path.insert(0, '../RISCluster/')
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -117,35 +116,18 @@ def pretrain(
             global_step=None
         )
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
-    fig1 = plotting.compare_images(
-        model,
-        0,
-        disp_index[0:1],
-        fname_dataset,
-        device,
-        savepath_run,
-        show,
-        mode='single'
-    )
-    fig2 = plotting.compare_images(
+    fig = plotting.compare_images(
         model,
         0,
         disp_index,
         fname_dataset,
         device,
-        savepath_run,
-        show,
-        mode='multi'
+        savepath=savepath_run,
+        show=show,
     )
     tb.add_figure(
-        'TrainingProgress1',
-        fig1,
-        global_step=0,
-        close=True
-    )
-    tb.add_figure(
-        'TrainingProgress2',
-        fig2,
+        'TrainingProgress',
+        fig,
         global_step=0,
         close=True
     )
@@ -201,35 +183,18 @@ def pretrain(
             tb.add_histogram(f'{name}.grad', weight.grad, epoch)
 
         if (epoch % 5) == 0 and not (epoch == 0):
-            fig1 = plotting.compare_images(
-                model,
-                epoch,
-                disp_index[0:1],
-                fname_dataset,
-                device,
-                savepath_run,
-                show,
-                mode='single'
-            )
-            fig2 = plotting.compare_images(
+            fig = plotting.compare_images(
                 model,
                 epoch,
                 disp_index,
                 fname_dataset,
                 device,
-                savepath_run,
-                show,
-                mode='multi'
+                savepath=savepath_run,
+                show=show,
             )
             tb.add_figure(
-                'TrainingProgress1',
-                fig1,
-                global_step=epoch,
-                close=True
-            )
-            tb.add_figure(
-                'TrainingProgress2',
-                fig2,
+                'TrainingProgress',
+                fig,
                 global_step=epoch,
                 close=True
             )
@@ -291,35 +256,18 @@ def pretrain(
             'hp/Validation MSE': epoch_val_mse
         }
     )
-    fig1 = plotting.compare_images(
-        model,
-        epoch,
-        disp_index[0:1],
-        fname_dataset,
-        device,
-        savepath_run,
-        show,
-        mode='single'
-    )
-    fig2 = plotting.compare_images(
+    fig = plotting.compare_images(
         model,
         epoch,
         disp_index,
         fname_dataset,
         device,
-        savepath_run,
-        show,
-        mode='multi'
+        savepath=savepath_run,
+        show=show
     )
     tb.add_figure(
-        'TrainingProgress1',
-        fig1,
-        global_step=epoch,
-        close=True
-    )
-    tb.add_figure(
-        'TrainingProgress2',
-        fig2,
+        'TrainingProgress',
+        fig,
         global_step=epoch,
         close=True
     )

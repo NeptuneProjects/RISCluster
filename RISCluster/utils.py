@@ -562,7 +562,7 @@ def get_peak_frequency(
     ):
     labels = pd.read_csv(path_to_labels, index_col=0)
     label_list = pd.unique(labels["label"])
-    _, _, fvec = load_images(fname_dataset, [[0]])
+    _, fvec = get_timefreqvec(fname_dataset)
 
     class_avg_maxfreq = np.zeros(len(label_list))
     for j, label in enumerate(label_list):
@@ -695,6 +695,15 @@ def init_project_env(paths):
         else:
             print(f"{path} exists.")
     print("Project folders initialized.")
+
+
+def get_timefreqvec(fname_dataset):
+    with h5py.File(fname_dataset) as f:
+        DataSpec = '/4.0/Spectrogram'
+        dset = f[DataSpec]
+        tvec = dset[0, 87, 1:]
+        fvec = dset[0, 0:87, 0]
+    return tvec, fvec
 
 
 def load_images(fname_dataset, index):
