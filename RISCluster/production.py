@@ -306,7 +306,7 @@ def runDEC():
     parser.add_argument('init_file', help="Enter path to init file.")
     parser.add_argument('--cuda_device', help="Select CUDA device.")
     args = parser.parse_args()
-
+    init_file = args.init_file
     config = configparser.ConfigParser()
     config.read(init_file)
 
