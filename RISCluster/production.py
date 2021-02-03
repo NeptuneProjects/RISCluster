@@ -16,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 
 from RISCluster import models, utils
-from RISCluster.networks import AEC, DCM, init_weights
+from RISCluster.networks import AEC, DEC, init_weights
 
 
 def DEC_pretrain(parameters, hyperparameters):
@@ -92,7 +92,7 @@ def DEC_pretrain(parameters, hyperparameters):
                     num_workers=workers
                 )
                 dataloaders = [tra_loader, val_loader]
-                # ==== Pre-train DCM by training the autoencoder: =============
+                # ==== Pre-train DEC by training the autoencoder: =============
                 _ = models.pretrain(
                     model,
                     dataloaders,
@@ -125,7 +125,7 @@ def DEC_pretrain(parameters, hyperparameters):
 
         if send_message:
             toc = datetime.now()
-            msgsubj = 'DCM Pre-training & Tuning Status Update'
+            msgsubj = 'DEC Pre-training & Tuning Status Update'
             msgcontent = f'Tuning run {tuning_count}/{tuning_runs} complete.'+\
                          f'\nTime Elapsed = {toc-tic}'
             if queued_flag:
@@ -138,11 +138,11 @@ def DEC_pretrain(parameters, hyperparameters):
 
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'DCM pre-training & tuning completed at {toc}.' + \
+    msgcontent = f'DEC pre-training & tuning completed at {toc}.' + \
                  f'\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
-        msgsubj = 'DCM Pre-training & Tuning Complete'
+        msgsubj = 'DEC Pre-training & Tuning Complete'
         utils.notify(msgsubj, msgcontent)
 
     print('To view results in Tensorboard, run the following command:')
@@ -197,7 +197,7 @@ def DEC_train(parameters, hyperparameters):
         print('To view results in Tensorboard, run the following command:')
         print(f'cd {savepath_exp} && tensorboard --logdir=.')
         # ==== Instantiate Model, Optimizer, & Loss Functions =================
-        model = DCM(n_clusters).to(device)
+        model = DEC(n_clusters).to(device)
 
         criterion_mse = nn.MSELoss(reduction='mean')
         criterion_kld = nn.KLDivLoss(reduction='sum')
@@ -210,7 +210,7 @@ def DEC_train(parameters, hyperparameters):
             batch_size=batch_size,
             num_workers=workers
         )
-        # ==== Train DCM parameters: =========================================
+        # ==== Train DEC parameters: =========================================
         models.train(
             model,
             dataloader,
@@ -226,7 +226,7 @@ def DEC_train(parameters, hyperparameters):
         )
         if send_message:
             toc = datetime.now()
-            msgsubj = 'DCM Training & Tuning Status Update'
+            msgsubj = 'DEC Training & Tuning Status Update'
             msgcontent = f'Tuning run {tuning_count}/{tuning_runs} complete.'+\
                          f'\nTime Elapsed = {toc-tic}'
             utils.notify(msgsubj, msgcontent)
@@ -234,11 +234,11 @@ def DEC_train(parameters, hyperparameters):
 
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'DCM training & tuning completed at {toc}.' + \
+    msgcontent = f'DEC training & tuning completed at {toc}.' + \
                  f'\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
-        msgsubj = 'DCM Training & Tuning Complete'
+        msgsubj = 'DEC Training & Tuning Complete'
         utils.notify(msgsubj, msgcontent)
     print('To view results in Tensorboard, run the following command:')
     print(f'cd {savepath_exp} && tensorboard --logdir=.')
@@ -276,14 +276,14 @@ def DEC_predict(parameters):
         shuffle=False,
         num_workers=workers
     )
-    model = DCM(n_clusters).to(device)
+    model = DEC(n_clusters).to(device)
     models.predict(model, dataloader, parameters)
     print('--------------------------------------------------------------')
     toc = datetime.now()
-    msgcontent = f'DCM outputs saved.\nTime Elapsed = {toc-tic}.'
+    msgcontent = f'DEC outputs saved.\nTime Elapsed = {toc-tic}.'
     print(msgcontent)
     if send_message:
-        msgsubj = 'DCM Outputs Saved'
+        msgsubj = 'DEC Outputs Saved'
         utils.notify(msgsubj, msgcontent)
     print('==============================================================')
 

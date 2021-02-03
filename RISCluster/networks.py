@@ -174,7 +174,7 @@ class DEC(nn.Module):
         Latent space data
     """
     def __init__(self, n_clusters):
-        super(DCM, self).__init__()
+        super(DEC, self).__init__()
         self.n_clusters = n_clusters
         self.encoder = Encoder()
         self.decoder = Decoder()

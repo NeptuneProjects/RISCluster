@@ -635,7 +635,7 @@ def init_exp_env(mode, savepath, **kwargs):
         if mode == 'pretrain':
             savepath_exp = f'{savepath}/Models/AEC/Exp{serial_exp}/'
         elif mode == 'train':
-            savepath_exp = f'{savepath}/Models/DCM/Exp{serial_exp}/'
+            savepath_exp = f'{savepath}/Models/DEC/Exp{serial_exp}/'
         elif mode == 'predict':
             savepath_exp = f'{savepath}/Trials/Exp{serial_exp}/'
         else:
@@ -749,7 +749,7 @@ def make_exp(exppath, **kwargs):
     serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
     savepath_exp = f"{exppath}/{serial_exp}"
     savepath_AEC = f"{savepath_exp}/AEC"
-    savepath_DCM = f"{savepath_exp}/DCM"
+    savepath_DEC = f"{savepath_exp}/DEC"
     if not os.path.exists(savepath_exp):
         os.makedirs(savepath_exp)
     return savepath_exp, serial_exp
@@ -941,7 +941,7 @@ def save_history(training_history, validation_history, savepath, run_serial):
         d2.update(d1)
         del d1
     else:
-        fname = f'{savepath}/DCM_History{run_serial}.csv'
+        fname = f'{savepath}/DEC_History{run_serial}.csv'
         d2 = training_history
 
     with open(fname, 'w') as csvfile:
