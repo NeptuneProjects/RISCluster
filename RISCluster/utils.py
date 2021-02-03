@@ -284,7 +284,7 @@ def config_training(universal, parameters, hyperparameters=None):
     config['PARAMETERS'] = parameters
     if hyperparameters is not None:
         config['HYPERPARAMETERS'] = hyperparameters
-    fname = f"{universal['savepath']}/init_{parameters['mode']}.ini"
+    fname = f"{universal['configpath']}/init_{parameters['mode']}.ini"
     with open(fname, 'w') as configfile:
         config.write(configfile)
     return fname
