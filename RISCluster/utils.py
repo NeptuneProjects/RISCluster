@@ -692,6 +692,9 @@ def init_project_env(project_path, folders):
         path = os.path.join(project_path, folder)
         if not os.path.exists(path):
             os.makedirs(path)
+            print(f"{path} created.")
+        else:
+            print(f"{path} exists.")
     print("Project folders initialized.")
 
 
