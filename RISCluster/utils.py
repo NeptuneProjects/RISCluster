@@ -270,6 +270,26 @@ class SpecgramToTensor(object):
         return torch.from_numpy(X)
 
 
+def add_to_history(ll, lv):
+    """Appends values from a list of values to a list from a list of lists.
+
+    Parameters
+    ----------
+    ll : list
+        List of lists to which values will be appended.
+
+    lv : list
+        List of values to append to lists.
+
+    Returns
+    -------
+    list
+        List of lists to which values have been appended.
+    """
+    [ll[i].append(v) for i, v in enumerate(lv)]
+    return [l for l in ll]
+
+
 def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
     for key in hyperparameters:
@@ -932,31 +952,27 @@ def save_exp_config(savepath, serial, init_file, parameters, hyperparameters):
         pickle.dump(configs, f)
 
 
-def save_history(training_history, validation_history, savepath, run_serial):
-    if validation_history is not None:
-        fname = f'{savepath}/AEC_History{run_serial}.csv'
-        d1 = training_history.copy()
-        d2 = validation_history.copy()
-        modes = ['training', 'validation']
-        for mode in range(len(modes)):
-            if modes[mode] == 'training':
-                d = d1
-            elif modes[mode] == 'validation':
-                d = d2
-            for j in range(2):
-                newkey = '{}_{}'.format(modes[mode], list(d.keys())[0])
-                oldkey = list(d.keys())[0]
-                d[newkey] = d.pop(oldkey)
-        d2.update(d1)
-        del d1
-    else:
-        fname = f'{savepath}/DEC_History{run_serial}.csv'
-        d2 = training_history
+def save_history(history, path):
+    """Uses Pandas dataframe to write counter and scalars (epoch, iteration) to
+    CSV file.
 
-    with open(fname, 'w') as csvfile:
-        w = csv.writer(csvfile)
-        w.writerow(d2.keys())
-        w.writerows(zip(*d2.values()))
+    Parameters
+    ----------
+    history : dict
+        Dictionary of keys and values (array) to be saved. First dictionary
+        item is used as the dataframe index.
+
+    path : str
+        Path to disk where CSV will be saved.
+
+    Returns
+    -------
+    df : DataFrame
+        DataFrame containing history values.
+    """
+    df = pd.DataFrame.from_dict(history).set_index(list(history.keys())[0])
+    df.to_csv(path)
+    return df
 
 
 def save_labels(label_list, savepath, serial=None):

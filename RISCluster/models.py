@@ -135,6 +135,9 @@ def pretrain(
     if early_stopping:
         best_val_loss = 10000
 
+    epochs = list()
+    tra_losses = list()
+    val_losses = list()
     finished = False
     for epoch in range(n_epochs):
         print('-' * 100)
@@ -232,6 +235,11 @@ def pretrain(
         epoch_val_mse = running_val_mse / len(val_loader.dataset)
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
 
+        epochs, tra_losses, val_losses = utils.add_history(
+            [epochs, tra_losses, val_losses,
+            [epoch, epoch_tra_mse, epoch_val_mse]
+        )
+
         if early_stopping:
             if epoch_val_mse < best_val_loss:
                 strikes = 0
@@ -249,6 +257,14 @@ def pretrain(
             fname = f'{savepath_chkpnt}/AEC_Params_{epoch:03d}.pt'
             torch.save(model.state_dict(), fname)
 
+    _ = utils.save_history(
+        {
+            'Epoch': epochs,
+            'Training History': tra_history,
+            'Validiation History': val_history
+        },
+        f"{savepath_run}/AEC_history.csv"
+    )
     tb.add_hparams(
         {'Batch Size': batch_size, 'LR': lr},
         {
@@ -462,6 +478,14 @@ def train(
     plot_process = threading.Thread(target=plotting.plotter_mp, args=plotargs)
     plot_process.start()
 
+    iters = list()
+    rec_losses = list()
+    clust_losses = list()
+    total_losses = list()
+
+    deltas_iter = list()
+    deltas = list()
+
     n_iter = 1
     finished = False
     for epoch in range(n_epochs):
@@ -505,6 +529,11 @@ def train(
                 # check stop criterion
                 delta_label = np.sum(labels != labels_prev).astype(np.float32)\
                     / labels.shape[0]
+                deltas_iter, deltas = utils.add_to_history(
+                    [deltas_iter, deltas],
+                    [n_iter, delta_label]
+                )
+                deltas.append(delta_label)
                 tb.add_scalar('delta', delta_label, n_iter)
                 labels_prev = np.copy(labels)
                 if delta_label < tol:
@@ -543,7 +572,11 @@ def train(
                 KLD = f"{accum_loss_clust:.4e}",
                 Loss = f"{accum_loss:.4e}"
             )
-
+            iters, rec_losses, clust_losses, total_losses = \
+                utils.add_history(
+                    [iters, rec_losses, clust_losses, total_losses],
+                    [n_iter, accum_loss_rec, accum_loss_clust, accum_loss]
+                )
             tb.add_scalars(
                 'Losses',
                 {
@@ -593,6 +626,22 @@ def train(
         if finished:
             break
 
+    _ = utils.save_history(
+        {
+            'Iteration': iters,
+            'Reconstruction Loss': rec_losses,
+            'Clustering Loss': clust_losses,
+            'Total Loss': total_losses
+        },
+        f"{savepath_run}/DEC_history.csv"
+    )
+    _ = utils.save_history(
+        {
+            'Iteration': deltas_iters,
+            'Delta': deltas
+        },
+        f"{savepath_run}/Delta_history.csv"
+    )
     tb.add_hparams(
         {
             'Clusters': n_clusters,
