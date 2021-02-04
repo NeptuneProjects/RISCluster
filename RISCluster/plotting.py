@@ -498,8 +498,9 @@ def compare_images(
         fname_dataset,
         show=show
     )
-    figname = savepath_snap + f'AEC_Training_Epoch_Single_{epoch:03d}.png'
-    fig.savefig(figname, dpi=300)
+    if savepath is not None:
+        figname = savepath_snap + f'AEC_Training_Epoch_Single_{epoch:03d}.png'
+        fig.savefig(figname, dpi=300)
     return fig
 
 
@@ -1415,7 +1416,7 @@ def view_specgram_training(
     ):
     rc_fonts = {
         "text.usetex": True,
-        'text.latex.preview': False, # Gives correct legend alignment.
+        'text.latex.preview': True, # Gives correct legend alignment.
         'mathtext.default': 'regular',
         'text.latex.preamble': [r"""\usepackage{bm}"""],
     }
