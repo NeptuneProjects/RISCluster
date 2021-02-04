@@ -1438,9 +1438,9 @@ def view_specgram_training(
         "text.usetex": True,
         'text.latex.preview': True, # Gives correct legend alignment.
         'mathtext.default': 'regular',
-        'text.latex.preamble': [r"""\usepackage{bm}"""],
+        'text.latex.preamble': [r'\usepackage{bm}'],
     }
-    mpl.rcParams.update(rc_fonts)
+    plt.rcParams.update(rc_fonts)
     sample_idx = np.arange(0, len(disp_idx))
     metadata = utils.get_metadata(sample_idx, disp_idx, fname_dataset)
     X = x.detach().cpu().numpy()
