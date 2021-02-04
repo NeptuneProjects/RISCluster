@@ -235,8 +235,8 @@ def pretrain(
         epoch_val_mse = running_val_mse / len(val_loader.dataset)
         tb.add_scalar('Validation MSE', epoch_val_mse, epoch)
 
-        epochs, tra_losses, val_losses = utils.add_history(
-            [epochs, tra_losses, val_losses,
+        epochs, tra_losses, val_losses = utils.add_to_history(
+            [epochs, tra_losses, val_losses],
             [epoch, epoch_tra_mse, epoch_val_mse]
         )
 
@@ -573,7 +573,7 @@ def train(
                 Loss = f"{accum_loss:.4e}"
             )
             iters, rec_losses, clust_losses, total_losses = \
-                utils.add_history(
+                utils.add_to_history(
                     [iters, rec_losses, clust_losses, total_losses],
                     [n_iter, accum_loss_rec, accum_loss_clust, accum_loss]
                 )
