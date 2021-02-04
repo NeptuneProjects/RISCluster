@@ -1415,7 +1415,7 @@ def view_specgram_training(
     ):
     rc_fonts = {
         "text.usetex": True,
-        'text.latex.preview': True, # Gives correct legend alignment.
+        'text.latex.preview': False, # Gives correct legend alignment.
         'mathtext.default': 'regular',
         'text.latex.preamble': [r"""\usepackage{bm}"""],
     }
