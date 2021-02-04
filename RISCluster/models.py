@@ -264,7 +264,7 @@ def pretrain(
         {
             'Epoch': epochs,
             'Training Loss': tra_losses,
-            'Validiation Loss': val_losses
+            'Validation Loss': val_losses
         },
         f"{savepath_run}/AEC_history.csv"
     )
