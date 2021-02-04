@@ -1041,14 +1041,49 @@ def view_history_AEC(path, show=False):
     df = pd.read_csv(path, index_col=0)
 
     fig = plt.figure(figsize=(6, 4), dpi=150)
-    plt.plot(df.index, df["Training Loss"])
-    plt.plot(df.index, df["Validation Loss"])
+    plt.plot(df.index, df["Training Loss"], color='k', linestyle='solid')
+    plt.plot(df.index, df["Validation Loss"], color='k', linestyle='dashdot')
     plt.xlim(0, max(df.index))
     plt.yscale('log')
     plt.grid()
     plt.xlabel('Epoch')
     plt.ylabel('Loss (MSE)')
     plt.legend(['Training Loss','Validation Loss'])
+    plt.title('Autoencoder Training')
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+
+def view_history_DEC(paths, show=False):
+    df1 = pd.read_csv(paths[0], index_col=0)
+    df2 = pd.read_csv(paths[1], index_col=0)
+
+    fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
+    ax1.plot(df1.index, df1["Total Loss"], color='k', linestyle='solid')
+    ax1.plot(df1.index, df1["Clustering Loss"], color='r', linestyle='dashdot')
+    ax1.plot(df1.index, df1["Reconstruction Loss"], color='b', linestyle='dashed')
+    ax1.set_xlim(0, max(df1.index))
+    ax1.set_yscale('log')
+    ax1.grid()
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["bottom"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
+    ax1.tick_params(axis='x', length=0)
+    ax1.set_ylabel('Loss')
+    ax1.set_title('DEC Model Training')
+    ax1.legend(['Total','$L_{KLD}$','$L_{MSE}$'])
+
+    ax2.plot(df2.index, df2["Delta"], color='k')
+    ax2.set_yscale('log')
+    ax2.grid()
+    ax2.spines["top"].set_visible(False)
+    ax2.spines["right"].set_visible(False)
+    ax2.set_xlabel('Iteration')
+    ax2.set_ylabel(r'$\Delta$ Assignments (\%)')
 
     if show:
         plt.show()
