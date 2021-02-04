@@ -268,6 +268,8 @@ def pretrain(
         },
         f"{savepath_run}/AEC_history.csv"
     )
+    fig2 = plotting.view_history_AEC(f"{savepath_run}/AEC_history.csv")
+    fig2.savefig(f"{savepath_run}/AEC_history.png", dpi=300, facecolor='w')
     tb.add_hparams(
         {'Batch Size': batch_size, 'LR': lr},
         {
