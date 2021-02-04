@@ -1037,6 +1037,26 @@ def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
     return fig
 
 
+def view_history_AEC(path, show):
+    df = pd.read_csv(path, index_col=0)
+
+    fig = plt.figure(figsize=(6, 4), dpi=150)
+    plt.plot(df.index, df["Training Loss"])
+    plt.plot(df.index, df["Validation Loss"])
+    plt.xlim(0, max(df.index))
+    plt.yscale('log')
+    plt.grid()
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss (MSE)')
+    plt.legend(['Training Loss','Validation Loss'])
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+
 def view_latent_space(
         data_a,
         data_b,
