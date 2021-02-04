@@ -247,7 +247,10 @@ def pretrain(
                 fname = f'{savepath_chkpnt}/AEC_Best_Weights.pt'
                 torch.save(model.state_dict(), fname)
             else:
-                strikes += 1
+                if epoch == 0:
+                    strikes = 1
+                else:
+                    strikes += 1
 
             if epoch > patience and strikes > patience:
                 print('Stopping Early.')
