@@ -287,6 +287,7 @@ def DEC_predict(parameters):
 
 
 def runDEC():
+    print(__name__)
     """This command line function is the primary script that performs
     pre-training and training of the deep embedded clustering workflows.
 
@@ -427,4 +428,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
