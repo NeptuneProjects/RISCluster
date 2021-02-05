@@ -421,3 +421,10 @@ def runDEC():
             workers=int(config['PARAMETERS']['workers'])
         )
         DEC_predict(parameters)
+
+def main():
+    print("I am Main.")
+
+if __name__ == '__main__':
+    main()
+    

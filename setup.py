@@ -15,7 +15,8 @@ def setup_package():
                 'runDEC=RISCluster.production:runDEC',
                 'query_H5size=RISCluster.utils:query_H5size',
                 'ExtractH5Dataset=RISCluster.utils:ExtractH5Dataset',
-                'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex'
+                'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex',
+                'testmain=RISCluster.production'
             ]
         },
         install_requires=[
