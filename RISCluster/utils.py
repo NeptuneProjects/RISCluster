@@ -993,7 +993,7 @@ def save_labels(label_list, savepath, serial=None):
 
 
 def set_device(cuda_device=None):
-    if torch.cuda.is_available and (cuda_device is not None):
+    if torch.cuda.is_available() and (cuda_device is not None):
         device = torch.device(f'cuda:{cuda_device}')
     elif torch.cuda.is_available():
         device = torch.device('cuda')
