@@ -12,11 +12,10 @@ def setup_package():
         # scripts=["scripts/testscript.py", "scripts/testscript2.py"],
         entry_points = {
             'console_scripts': [
-                'runDEC=RISCluster.production:runDEC',
+                'runDEC=RISCluster.main',
                 'query_H5size=RISCluster.utils:query_H5size',
                 'ExtractH5Dataset=RISCluster.utils:ExtractH5Dataset',
-                'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex',
-                'testmain=RISCluster.testmain'
+                'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex'
             ]
         },
         install_requires=[
