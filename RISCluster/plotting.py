@@ -480,7 +480,7 @@ def compare_images(
 
     for batch in dataloader:
         idx, X = batch
-        Xr, z = model(X)
+        Xr, z = model(X.to(device))
 
     figtitle = f'Pre-training: Epoch {epoch}'
     if savepath is not None:
