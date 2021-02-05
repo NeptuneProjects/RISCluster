@@ -459,10 +459,8 @@ def train(
     # Initialize Target Distribution:
     print('inferring')
     q, _, z_array0 = infer(dataloader, model, device)
-    print('tgt_distro calc')
     p = target_distribution(q)
     epoch = 0
-    print('starting TSNE)')
     tsne_results = tsne(z_array0)
     plotargs = (
             fignames,
@@ -483,10 +481,8 @@ def train(
             epoch,
             show
     )
-    print('TSNE complete...starting plotting thread.')
     plot_process = threading.Thread(target=plotting.plotter_mp, args=plotargs)
     plot_process.start()
-    print('Thread started.')
 
     iters = list()
     rec_losses = list()
@@ -926,16 +922,21 @@ def infer(dataloader, model, device, v=False):
         cflag = False
     else:
         cflag = True
-
+    print('model.eval')
     model.eval()
     bsz = dataloader.batch_size
     z_array = np.zeros((len(dataloader.dataset), model.clustering.n_features), dtype=np.float32)
 
     if cflag:
+        print('q_array init')
         q_array = np.zeros((len(dataloader.dataset), model.n_clusters),dtype=np.float32)
+        print('Beginning for loop...')
         for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+            print('batch=batch')
             _, batch = batch
+            print('batch.to(device)')
             x = batch.to(device)
+            print('q,_,z=model(x)')
             q, _, z = model(x)
             q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
             z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
