@@ -784,56 +784,56 @@ def make_exp(exppath, **kwargs):
     return savepath_exp, serial_exp
 
 
-def make_pred_configs_batch(loadpath, savepath, overwrite=False):
-    exper = loadpath.split("/")[-1]
-    savepath = f"{savepath}/BatchEval_{exper}"
-    if not os.path.exists(savepath):
-        os.makedirs(savepath)
-
-    config_ = configparser.ConfigParser()
-    tmp = [f for f in os.listdir(loadpath) if f.endswith('.ini')][0]
-    config_.read(f"{loadpath}/{tmp}")
-    transform = config_['PARAMETERS']['transform']
-
-    count_wr = 0
-    count_ow = 0
-    count_sk = 0
-    runlist = [f for f in os.listdir(f'{loadpath}') if "Run" in f]
-    for run in runlist:
-        fname = f'{savepath}/init_pred_{run[4:]}.ini'
-        if os.path.isfile(fname):
-            if not overwrite:
-                count_sk += 1
-                continue
-            elif overwrite:
-                count_ow += 1
-        else:
-            count_wr += 1
-
-        config = configparser.ConfigParser()
-        config['UNIVERSAL'] = {
-            'mode': 'predict',
-            'fname_dataset': '../../../Data/DetectionData_4s.h5',
-            'savepath': '../../../Outputs/',
-            'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
-        }
-        saved_weights = [f for f in os.listdir(f'{loadpath}/{run}') if f.endswith('.pt')][0]
-        config['PARAMETERS'] = {
-            'M': 'all',
-            'exclude': 'False',
-            'batch_size': '1024',
-            'show': 'False',
-            'send_message': 'False',
-            'max_workers': '14',
-            'n_clusters': parse_nclusters(run),
-            'saved_weights': f'{loadpath}/{run}/{saved_weights}',
-            'transform': transform
-        }
-        with open(fname, 'w') as configfile:
-            config.write(configfile)
-
-    print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
-    return savepath
+# def make_pred_configs_batch(loadpath, savepath, overwrite=False):
+#     exper = loadpath.split("/")[-1]
+#     savepath = f"{savepath}/BatchEval_{exper}"
+#     if not os.path.exists(savepath):
+#         os.makedirs(savepath)
+#
+#     config_ = configparser.ConfigParser()
+#     tmp = [f for f in os.listdir(loadpath) if f.endswith('.ini')][0]
+#     config_.read(f"{loadpath}/{tmp}")
+#     transform = config_['PARAMETERS']['transform']
+#
+#     count_wr = 0
+#     count_ow = 0
+#     count_sk = 0
+#     runlist = [f for f in os.listdir(f'{loadpath}') if "Run" in f]
+#     for run in runlist:
+#         fname = f'{savepath}/init_pred_{run[4:]}.ini'
+#         if os.path.isfile(fname):
+#             if not overwrite:
+#                 count_sk += 1
+#                 continue
+#             elif overwrite:
+#                 count_ow += 1
+#         else:
+#             count_wr += 1
+#
+#         config = configparser.ConfigParser()
+#         config['UNIVERSAL'] = {
+#             'mode': 'predict',
+#             'fname_dataset': '../../../Data/DetectionData_4s.h5',
+#             'savepath': '../../../Outputs/',
+#             'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
+#         }
+#         saved_weights = [f for f in os.listdir(f'{loadpath}/{run}') if f.endswith('.pt')][0]
+#         config['PARAMETERS'] = {
+#             'M': 'all',
+#             'exclude': 'False',
+#             'batch_size': '1024',
+#             'show': 'False',
+#             'send_message': 'False',
+#             'max_workers': '14',
+#             'n_clusters': parse_nclusters(run),
+#             'saved_weights': f'{loadpath}/{run}/{saved_weights}',
+#             'transform': transform
+#         }
+#         with open(fname, 'w') as configfile:
+#             config.write(configfile)
+#
+#     print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
+#     return savepath
 
 
 def measure_class_inertia(data, centroids, n_clusters):

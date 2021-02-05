@@ -457,9 +457,12 @@ def train(
     torch.save(model.state_dict(), fname)
     print('complete.')
     # Initialize Target Distribution:
+    print('inferring')
     q, _, z_array0 = infer(dataloader, model, device)
+    print('tgt_distro calc')
     p = target_distribution(q)
     epoch = 0
+    print('starting TSNE)')
     tsne_results = tsne(z_array0)
     plotargs = (
             fignames,
@@ -480,8 +483,10 @@ def train(
             epoch,
             show
     )
+    print('TSNE complete...starting plotting thread.')
     plot_process = threading.Thread(target=plotting.plotter_mp, args=plotargs)
     plot_process.start()
+    print('Thread started.')
 
     iters = list()
     rec_losses = list()
