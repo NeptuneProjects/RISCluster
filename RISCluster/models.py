@@ -21,6 +21,8 @@ if sys.platform == 'darwin':
     from sklearn.cluster import KMeans
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
+    import torch.multiprocessing as mp
+    mp.set_start_method('spawn')
     from cuml import KMeans, TSNE
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
@@ -458,7 +460,7 @@ def train(
     print('complete.')
     # Initialize Target Distribution:
     print('inferring')
-    q, _, z_array0 = infer(dataloader, model, device)
+    q, _, z_array0 = infer(dataloader, model, device) # <-- The CUDA problem occurs in here
     p = target_distribution(q)
     epoch = 0
     tsne_results = tsne(z_array0)
@@ -936,7 +938,7 @@ def infer(dataloader, model, device, v=False):
             _, batch = batch
             print('batch.to(device)')
             x = batch.to(device)
-            print('q,_,z=model(x)')
+            print('q,_,z=model')
             q, _, z = model(x)
             q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
             z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
