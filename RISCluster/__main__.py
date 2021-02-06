@@ -5,10 +5,10 @@ import configparser
 
 import matplotlib
 
-from RISCluster import utils
+from RISCluster import production, utils
 
 def main():
-    print(__name__)
+    print(f"{__name__} called within the function.")
     """This command line function is the primary script that performs
     pre-training and training of the deep embedded clustering workflows.
 
@@ -86,7 +86,7 @@ def main():
             parameters,
             hyperparameters
         )
-        DEC_pretrain(parameters, hyperparameters)
+        production.DEC_pretrain(parameters, hyperparameters)
     # =========================================================================
     # Training Routine
     # =========================================================================
@@ -127,7 +127,7 @@ def main():
             parameters,
             hyperparameters
         )
-        DEC_train(parameters, hyperparameters)
+        production.DEC_train(parameters, hyperparameters)
     # =========================================================================
     # Prediction Routine
     # =========================================================================
@@ -142,9 +142,9 @@ def main():
             transform=config['PARAMETERS']['transform'],
             workers=int(config['PARAMETERS']['workers'])
         )
-        DEC_predict(parameters)
+        production.DEC_predict(parameters)
 
 
 if __name__ == '__main__':
-    print(__name__)
+    print(f"{__name__} called outside the function.")
     main()
