@@ -8,7 +8,6 @@ import matplotlib
 from RISCluster import production, utils
 
 def main():
-    print(f"{__name__} called within the function.")
     """This command line function is the primary script that performs
     pre-training and training of the deep embedded clustering workflows.
 
@@ -146,5 +145,4 @@ def main():
 
 
 if __name__ == '__main__':
-    print(f"{__name__} called outside the function.")
     main()
