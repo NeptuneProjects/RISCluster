@@ -52,7 +52,7 @@ class H5SeismicDataset(Dataset):
 
 
     def read_h5(self, fname, idx):
-        with h5py.File(fname_dataset, 'r') as f:
+        with h5py.File(fname, 'r') as f:
             DataSpec = '/4.0/Spectrogram'
             return f[DataSpec][idx]
 
