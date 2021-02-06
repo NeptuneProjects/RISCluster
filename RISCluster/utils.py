@@ -154,7 +154,15 @@ class LabelCatalogue(object):
                 count_winter16[j] = 100 * len(subset.loc[mask_winter16].index) / total_count
                 total[j] = total_count
 
-            return pd.DataFrame({"total": total, "JFMTotal": count_summer15 + count_summer16, "JFM15": count_summer15, "JFM16": count_summer16, "JJATotal": count_winter15 + count_winter16, "JJA15": count_winter15, "JJA16": count_winter16})
+            return pd.DataFrame({
+                "total": total,
+                "JFMTotal": count_summer15 + count_summer16,
+                "JFM15": count_summer15,
+                "JFM16": count_summer16,
+                "JJATotal": count_winter15 + count_winter16,
+                "JJA15": count_winter15,
+                "JJA16": count_winter16
+            })
         else:
             count_summer = np.empty((len(self.label_list),))
             count_winter = np.empty((len(self.label_list),))
@@ -649,6 +657,15 @@ def get_station(station):
         return station_list.index(station)
 
 
+def get_timefreqvec(fname_dataset):
+    with h5py.File(fname_dataset) as f:
+        DataSpec = '/4.0/Spectrogram'
+        dset = f[DataSpec]
+        tvec = dset[0, 87, 1:]
+        fvec = dset[0, 0:87, 0]
+    return tvec, fvec
+
+
 def init_exp_env(mode, savepath, **kwargs):
     if mode == 'batch_predict':
         init_file = kwargs.get("init_file")
@@ -723,15 +740,6 @@ def init_project_env(paths):
     print("Project folders initialized.")
 
 
-def get_timefreqvec(fname_dataset):
-    with h5py.File(fname_dataset) as f:
-        DataSpec = '/4.0/Spectrogram'
-        dset = f[DataSpec]
-        tvec = dset[0, 87, 1:]
-        fvec = dset[0, 0:87, 0]
-    return tvec, fvec
-
-
 def load_images(fname_dataset, index):
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
@@ -766,6 +774,14 @@ def load_labels(exppath):
     return label, index, label_list
 
 
+def load_TraVal_index(fname_dataset, loadpath):
+    with open(loadpath, 'rb') as f:
+        data = pickle.load(f)
+        index_tra = data['index_tra']
+        index_val = data['index_val']
+    return index_tra, index_val
+
+
 def load_weights(model, fname, device):
     model.load_state_dict(torch.load(fname, map_location=device), strict=False)
     model.eval()
@@ -788,58 +804,6 @@ def make_exp(exppath, **kwargs):
     if not os.path.exists(savepath_exp):
         os.makedirs(savepath_exp)
     return savepath_exp, serial_exp
-
-
-# def make_pred_configs_batch(loadpath, savepath, overwrite=False):
-#     exper = loadpath.split("/")[-1]
-#     savepath = f"{savepath}/BatchEval_{exper}"
-#     if not os.path.exists(savepath):
-#         os.makedirs(savepath)
-#
-#     config_ = configparser.ConfigParser()
-#     tmp = [f for f in os.listdir(loadpath) if f.endswith('.ini')][0]
-#     config_.read(f"{loadpath}/{tmp}")
-#     transform = config_['PARAMETERS']['transform']
-#
-#     count_wr = 0
-#     count_ow = 0
-#     count_sk = 0
-#     runlist = [f for f in os.listdir(f'{loadpath}') if "Run" in f]
-#     for run in runlist:
-#         fname = f'{savepath}/init_pred_{run[4:]}.ini'
-#         if os.path.isfile(fname):
-#             if not overwrite:
-#                 count_sk += 1
-#                 continue
-#             elif overwrite:
-#                 count_ow += 1
-#         else:
-#             count_wr += 1
-#
-#         config = configparser.ConfigParser()
-#         config['UNIVERSAL'] = {
-#             'mode': 'predict',
-#             'fname_dataset': '../../../Data/DetectionData_4s.h5',
-#             'savepath': '../../../Outputs/',
-#             'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
-#         }
-#         saved_weights = [f for f in os.listdir(f'{loadpath}/{run}') if f.endswith('.pt')][0]
-#         config['PARAMETERS'] = {
-#             'M': 'all',
-#             'exclude': 'False',
-#             'batch_size': '1024',
-#             'show': 'False',
-#             'send_message': 'False',
-#             'max_workers': '14',
-#             'n_clusters': parse_nclusters(run),
-#             'saved_weights': f'{loadpath}/{run}/{saved_weights}',
-#             'transform': transform
-#         }
-#         with open(fname, 'w') as configfile:
-#             config.write(configfile)
-#
-#     print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
-#     return savepath
 
 
 def measure_class_inertia(data, centroids, n_clusters):
@@ -992,6 +956,44 @@ def save_labels(label_list, savepath, serial=None):
             w.writerows(label_list)
 
 
+def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
+
+
+    def _set_TraVal_index(M, fname_dataset, reserve=0.0):
+        with h5py.File(fname_dataset, 'r') as f:
+            DataSpec = '/4.0/Spectrogram'
+            m, _, _ = f[DataSpec].shape
+            if M > m:
+                print(f'{M} spectrograms requested, but only {m} '
+                      f'available in database; setting M to {m}.')
+                M = m
+        index = np.random.choice(
+            np.arange(1,m),
+            size=int(M * (1+reserve)),
+            replace=False
+        )
+        split_fraction = 0.8
+        split = int(split_fraction * len(index))
+        index_tra = index[0:split]
+        index_val = index[split:]
+        return index_tra, index_val, M
+
+
+    index_tra, index_val, M = _set_TraVal_index(M, fname_dataset)
+    index = dict(
+        index_tra=index_tra,
+        index_val=index_val
+    )
+    serial = datetime.now().strftime('%Y%m%dT%H%M%S')
+    # savepath = f'{savepath}TraValIndex_M={M}_Res={reserve}_{serial}.pkl'
+    savepath = f'{savepath}/TraValIndex_M={M}.pkl'
+    with open(savepath, 'wb') as f:
+        pickle.dump(index, f)
+    print(f'{M} training & validation indices saved to:')
+    print(savepath)
+    return index_tra, index_val, savepath
+
+
 def set_device(cuda_device=None):
     if torch.cuda.is_available() and (cuda_device is not None):
         device = torch.device(f'cuda:{cuda_device}')
@@ -1012,85 +1014,90 @@ def start_tensorboard(logdir, tbport):
     return tbpid
 
 
-# =============================================================================
-#  Functions to set/save/get indices of training/validation/prediction samples.
-# =============================================================================
-def set_TraVal_index(M, fname_dataset, reserve=0.0):
-    with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4.0/Spectrogram'
-        m, _, _ = f[DataSpec].shape
-        if M > m:
-            print(f'{M} spectrograms requested, but only {m} '
-                  f'available in database; setting M to {m}.')
-            M = m
-    index = np.random.choice(
-        np.arange(1,m),
-        size=int(M * (1+reserve)),
-        replace=False
-    )
-    split_fraction = 0.8
-    split = int(split_fraction * len(index))
-    index_tra = index[0:split]
-    index_val = index[split:]
-    return index_tra, index_val, M
+# def make_pred_configs_batch(loadpath, savepath, overwrite=False):
+#     exper = loadpath.split("/")[-1]
+#     savepath = f"{savepath}/BatchEval_{exper}"
+#     if not os.path.exists(savepath):
+#         os.makedirs(savepath)
+#
+#     config_ = configparser.ConfigParser()
+#     tmp = [f for f in os.listdir(loadpath) if f.endswith('.ini')][0]
+#     config_.read(f"{loadpath}/{tmp}")
+#     transform = config_['PARAMETERS']['transform']
+#
+#     count_wr = 0
+#     count_ow = 0
+#     count_sk = 0
+#     runlist = [f for f in os.listdir(f'{loadpath}') if "Run" in f]
+#     for run in runlist:
+#         fname = f'{savepath}/init_pred_{run[4:]}.ini'
+#         if os.path.isfile(fname):
+#             if not overwrite:
+#                 count_sk += 1
+#                 continue
+#             elif overwrite:
+#                 count_ow += 1
+#         else:
+#             count_wr += 1
+#
+#         config = configparser.ConfigParser()
+#         config['UNIVERSAL'] = {
+#             'mode': 'predict',
+#             'fname_dataset': '../../../Data/DetectionData_4s.h5',
+#             'savepath': '../../../Outputs/',
+#             'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
+#         }
+#         saved_weights = [f for f in os.listdir(f'{loadpath}/{run}') if f.endswith('.pt')][0]
+#         config['PARAMETERS'] = {
+#             'M': 'all',
+#             'exclude': 'False',
+#             'batch_size': '1024',
+#             'show': 'False',
+#             'send_message': 'False',
+#             'max_workers': '14',
+#             'n_clusters': parse_nclusters(run),
+#             'saved_weights': f'{loadpath}/{run}/{saved_weights}',
+#             'transform': transform
+#         }
+#         with open(fname, 'w') as configfile:
+#             config.write(configfile)
+#
+#     print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
+#     return savepath
 
 
-def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
-    index_tra, index_val, M = set_TraVal_index(M, fname_dataset)
-    index = dict(
-        index_tra=index_tra,
-        index_val=index_val
-    )
-    serial = datetime.now().strftime('%Y%m%dT%H%M%S')
-    # savepath = f'{savepath}TraValIndex_M={M}_Res={reserve}_{serial}.pkl'
-    savepath = f'{savepath}/TraValIndex_M={M}.pkl'
-    with open(savepath, 'wb') as f:
-        pickle.dump(index, f)
-    print(f'{M} training & validation indices saved to:')
-    print(savepath)
-    return index_tra, index_val, savepath
+# def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
+#     with h5py.File(fname_dataset, 'r') as f:
+#         DataSpec = '/4.0/Spectrogram'
+#         m, _, _ = f[DataSpec].shape
+#     index = np.arange(0, m)
+#     if exclude:
+#         idx_ex = load_TraVal_index(fname_dataset, indexpath)
+#         idx_ex = sorted(set(np.concatenate(idx_ex).flatten()))
+#         index_avail = np.setdiff1d(index, idx_ex)
+#     else:
+#         index_avail = index
+#     index_tst = np.random.choice(
+#         index_avail,
+#         size=int(M * (1+reserve)),
+#         replace=False
+#     )
+#     return index_tst
 
 
-def load_TraVal_index(fname_dataset, loadpath):
-    with open(loadpath, 'rb') as f:
-        data = pickle.load(f)
-        index_tra = data['index_tra']
-        index_val = data['index_val']
-    return index_tra, index_val
-
-
-def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
-    with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4.0/Spectrogram'
-        m, _, _ = f[DataSpec].shape
-    index = np.arange(0, m)
-    if exclude:
-        idx_ex = load_TraVal_index(fname_dataset, indexpath)
-        idx_ex = sorted(set(np.concatenate(idx_ex).flatten()))
-        index_avail = np.setdiff1d(index, idx_ex)
-    else:
-        index_avail = index
-    index_tst = np.random.choice(
-        index_avail,
-        size=int(M * (1+reserve)),
-        replace=False
-    )
-    return index_tst
-
-
-def set_M(fname_dataset, indexpath, exclude=True):
-    with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4.0/Spectrogram'
-        m, _, _ = f[DataSpec].shape
-    print('Determining number of prediction samples...')
-    print(f'{m} samples in dataset...')
-    if exclude:
-        idx_tra, idx_val = load_TraVal_index(fname_dataset, indexpath)
-        M_TraVal = len(idx_tra) + len(idx_val)
-        print(f'{M_TraVal} training/validation samples...')
-        M = m - M_TraVal
-        print(f'{m} - {M_TraVal} = {M} prediction samples to be used.')
-    else:
-        M = m
-        print(f'{M} prediction samples to be used.')
-    return M
+# def set_M(fname_dataset, indexpath, exclude=True):
+#     with h5py.File(fname_dataset, 'r') as f:
+#         DataSpec = '/4.0/Spectrogram'
+#         m, _, _ = f[DataSpec].shape
+#     print('Determining number of prediction samples...')
+#     print(f'{m} samples in dataset...')
+#     if exclude:
+#         idx_tra, idx_val = load_TraVal_index(fname_dataset, indexpath)
+#         M_TraVal = len(idx_tra) + len(idx_val)
+#         print(f'{M_TraVal} training/validation samples...')
+#         M = m - M_TraVal
+#         print(f'{m} - {M_TraVal} = {M} prediction samples to be used.')
+#     else:
+#         M = m
+#         print(f'{M} prediction samples to be used.')
+#     return M
