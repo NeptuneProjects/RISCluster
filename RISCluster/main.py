@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-def runDEC():
+def main():
     """This command line function is the primary script that performs
     pre-training and training of the deep embedded clustering workflows.
 
@@ -139,4 +139,4 @@ def runDEC():
 
 if __name__ == '__main__':
     print(__name__)
-    runDEC()
+    main()
