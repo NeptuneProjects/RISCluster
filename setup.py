@@ -12,7 +12,7 @@ def setup_package():
         # scripts=["scripts/testscript.py", "scripts/testscript2.py"],
         entry_points = {
             'console_scripts': [
-                'runDEC=RISCluster.runDEC:runDEC',
+                'runDEC=RISCluster.main:main',
                 'query_H5size=RISCluster.utils:query_H5size',
                 'ExtractH5Dataset=RISCluster.utils:ExtractH5Dataset',
                 'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex',
