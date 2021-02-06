@@ -457,10 +457,6 @@ def train(
     torch.save(model.state_dict(), fname)
     print('complete.')
     # Initialize Target Distribution:
-    print('inferring')
-    print(dataloader)
-    print(model)
-    print(device)
     q, _, z_array0 = infer(dataloader, model, device) # <-- The CUDA problem occurs in here
     p = target_distribution(q)
     epoch = 0
@@ -925,21 +921,15 @@ def infer(dataloader, model, device, v=False):
         cflag = False
     else:
         cflag = True
-    print('model.eval')
     model.eval()
     bsz = dataloader.batch_size
     z_array = np.zeros((len(dataloader.dataset), model.clustering.n_features), dtype=np.float32)
 
     if cflag:
-        print('q_array init')
         q_array = np.zeros((len(dataloader.dataset), model.n_clusters),dtype=np.float32)
-        print('Beginning for loop...')
         for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
-            print('batch=batch')
             _, batch = batch
-            print('batch.to(device)')
             x = batch.to(device)
-            print('q,_,z=model')
             q, _, z = model(x)
             q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
             z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
