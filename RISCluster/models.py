@@ -25,6 +25,7 @@ elif sys.platform == 'linux':
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 from sklearn_extra.cluster import KMedoids
+import time
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -455,6 +456,7 @@ def train(
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
     fname = f'{savepath_run}/DEC_Params_Initial.pt'
     torch.save(model.state_dict(), fname)
+    time.sleep(2)
     print('complete.')
     # Initialize Target Distribution:
     q, _, z_array0 = infer(dataloader, model, device) # <-- The CUDA problem occurs in here
