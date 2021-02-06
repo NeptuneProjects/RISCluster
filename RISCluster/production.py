@@ -7,12 +7,12 @@ from itertools import product
 import os
 import time
 
-import matplotlib
+# import matplotlib
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 
 from RISCluster import models, utils
@@ -70,9 +70,6 @@ def DEC_pretrain(parameters, hyperparameters):
             try:
                 # ==== Instantiate Model, Optimizer, & Loss Functions =========
                 model = AEC()
-                # if (device.type == 'cuda') and (torch.cuda.device_count() > 1):
-                    # print(f'{torch.cuda.device_count()} GPUs in use.')
-                    # model = nn.DataParallel(model)
                 model.to(device)
                 model.apply(init_weights)
 
