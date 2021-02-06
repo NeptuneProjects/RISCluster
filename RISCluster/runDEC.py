@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-if __name__ == '__main__':
+def runDEC():
     """This command line function is the primary script that performs
     pre-training and training of the deep embedded clustering workflows.
 
@@ -135,3 +135,8 @@ if __name__ == '__main__':
             workers=int(config['PARAMETERS']['workers'])
         )
         DEC_predict(parameters)
+
+
+if __name__ == '__main__':
+    print(__name__)
+    runDEC()
