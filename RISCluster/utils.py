@@ -51,6 +51,12 @@ class H5SeismicDataset(Dataset):
         return idx, X
 
 
+    def read_h5(self, fname, idx):
+        with h5py.File(fname_dataset, 'r') as f:
+            DataSpec = '/4.0/Spectrogram'
+            return f[DataSpec][idx]
+
+
 class LabelCatalogue(object):
     def __init__(self, paths, label_list=None):
         self.paths = paths
@@ -931,12 +937,6 @@ def query_H5size():
     m, n, o = query_dbSize(path)
     print(f" >> h5 dataset contains {m} samples with dimensions [{n},{o}]. <<")
     pass
-
-
-def read_h5(fname_dataset, index):
-    with h5py.File(fname_dataset, 'r') as f:
-        DataSpec = '/4.0/Spectrogram'
-        return f[DataSpec][index]
 
 
 def save_exp_config(savepath, serial, init_file, parameters, hyperparameters):
