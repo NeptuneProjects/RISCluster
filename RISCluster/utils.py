@@ -44,17 +44,17 @@ class H5SeismicDataset(Dataset):
         return m
 
 
+    def __getitem__(self, idx):
+        X = torch.from_numpy(self.read_h5(self.fname, idx))
+        if self.transform:
+            X = self.transform(X)
+        return idx, X
+
+
     def read_h5(self, fname, idx):
         with h5py.File(fname_dataset, 'r') as f:
             DataSpec = '/4.0/Spectrogram'
             return f[DataSpec][idx]
-
-
-    def __getitem__(self, idx):
-        X = torch.from_numpy(read_h5(self.fname, idx))
-        if self.transform:
-            X = self.transform(X)
-        return idx, X
 
 
 class LabelCatalogue(object):
