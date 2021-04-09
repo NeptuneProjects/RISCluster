@@ -822,46 +822,11 @@ def gmm(model, dataloader, device):
         weights_init=gmm_weights,
         means_init=centroids
     )
-    print("You made it this far...")
     _, _, z_array = infer(dataloader, model, device)
     np.seterr(under='ignore')
     labels = GMM.fit_predict(z_array)
     centroids = GMM.means_
     return labels, centroids
-
-
-def pca(labels, model, dataloader, device, tb, counter):
-    '''Reduce dimensions of latent space using principal component analysis.
-
-    Parameters
-    ----------
-    labels : array (M,)
-        Sample-wise cluster assignment
-
-    model : PyTorch model instance
-
-    dataloader : PyTorch dataloader instance
-        Loads data from disk into memory.
-
-    device : PyTorch device object ('cpu' or 'gpu')
-
-    tb : Tensorboard SummaryWriter object
-
-    counter : int
-        Iteration/epoch step
-
-    Outputs to Disk
-    ---------------
-    tb: Figure showing 2-D PCA added to Tensorboard
-    '''
-    _, _, z_array = infer(dataloader, model, device)
-    row_max = z_array.max(axis=1)
-    z_array /= row_max[:, np.newaxis]
-
-    pca2 = PCA(n_components=model.n_clusters).fit(z_array)
-    pca2d = pca2.transform(z_array)
-    fig = plotting.view_clusters(pca2d, labels)
-    tb.add_figure('PCA_Z', fig, global_step=counter, close=True)
 
 
 def tsne(data):
@@ -928,7 +893,8 @@ def infer(dataloader, model, device, v=False):
 
     if cflag:
         q_array = np.zeros((len(dataloader.dataset), model.n_clusters),dtype=np.float32)
-        for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+        # for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+        for b, batch in enumerate(dataloader):
             _, batch = batch
             x = batch.to(device)
             q, _, z = model(x)
@@ -937,7 +903,8 @@ def infer(dataloader, model, device, v=False):
         labels = np.argmax(q_array.data, axis=1)
         return np.round(q_array, 5), labels, z_array
     else:
-        for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+        # for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+        for b, batch in enumerate(dataloader):
             x = batch.to(device)
             _, z = model(x)
             z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
