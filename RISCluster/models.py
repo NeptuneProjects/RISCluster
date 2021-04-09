@@ -696,13 +696,15 @@ def predict(model, dataloader, parameters):
     model.load_state_dict(torch.load(loadpath, map_location=device))
     model.eval()
 
-    pbar = tqdm(
-        dataloader,
-        leave=True,
-        desc="Saving cluster labels",
-        unit="batch",
-        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-    )
+    _, labels, _ = infer(dataloader, model, device)
+
+    # pbar = tqdm(
+    #     dataloader,
+    #     leave=True,
+    #     desc="Saving cluster labels",
+    #     unit="batch",
+    #     bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    # )
 
     for batch in pbar:
         idx, batch = batch
@@ -883,10 +885,10 @@ def infer(dataloader, model, device, v=False):
     else:
         notqdm = True
 
-    if not hasattr(model, 'n_clusters'):
-        cflag = False
-    else:
+    if hasattr(model, 'n_clusters'):
         cflag = True
+    else:
+        cflag = False
     model.eval()
     bsz = dataloader.batch_size
     z_array = np.zeros((len(dataloader.dataset), model.clustering.n_features), dtype=np.float32)

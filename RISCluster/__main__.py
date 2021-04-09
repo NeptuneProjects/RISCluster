@@ -8,6 +8,7 @@ import matplotlib
 from RISCluster import production, utils
 
 def main():
+    print("This is the MAIN function.")
     """This command line function is the primary script that performs
     pre-training and training of the deep embedded clustering workflows.
 

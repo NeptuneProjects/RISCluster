@@ -1,14 +1,13 @@
 name: RISCluster_CUDA
 channels:
   - rapidsai
-  - nvidia
   - pytorch
   - conda-forge
   - defaults
 dependencies:
   - python=3.8
   - cmocean
-  - nvidia::cudatoolkit=11.0
+  - cudatoolkit=11.1
   - h5py
   - jupyterlab
   - matplotlib
