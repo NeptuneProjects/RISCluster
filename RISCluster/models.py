@@ -822,6 +822,7 @@ def gmm(model, dataloader, device):
         weights_init=gmm_weights,
         means_init=centroids
     )
+    print("You made it this far...")
     _, _, z_array = infer(dataloader, model, device)
     np.seterr(under='ignore')
     labels = GMM.fit_predict(z_array)
