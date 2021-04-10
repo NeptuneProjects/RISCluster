@@ -8,7 +8,7 @@ dependencies:
   - python=3.9
   - cmocean
   - conda-forge::cudatoolkit=11.1
-  - h5py=3.2.1
+  - h5py=3.1.0
   - jupyterlab=3.0.13
   - matplotlib=3.4.1
   - numpy=1.20.0
