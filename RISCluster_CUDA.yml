@@ -5,25 +5,25 @@ channels:
   - rapidsai-nightly
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.8
   - cmocean
-  - conda-forge::cudatoolkit=11.1
-  - h5py=3.1.0
-  - jupyterlab=3.0.13
-  - matplotlib=3.4.1
-  - numpy=1.20.0
-  - obspy=1.2.0
-  - pandas=1.2.3
-  - pydotplus=2.0.2
-  - python-dotenv=0.17.0
+  - conda-forge::cudatoolkit=11.0
+  - h5py
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - obspy
+  - pandas
+  - pydotplus
+  - python-dotenv
   - pytorch::pytorch=1.8.1
   - pytorch::torchvision
-  - rapidsai-nightly::cuml=0.19
-  - scikit-learn=0.24
-  - scipy=1.6.2
-  - seaborn=0.11.1
-  - tensorboard=2.4.1
-  - tqdm=4.38.0
+  - rapidsai::cuml
+  - scikit-learn
+  - scipy
+  - seaborn
+  - tensorboard
+  - tqdm
   - twilio
   - pip
   - pip:
