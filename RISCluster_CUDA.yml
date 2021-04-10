@@ -1,8 +1,8 @@
 name: RISCluster_CUDA
 channels:
+  - conda-forge
   - rapidsai-nightly
   - pytorch
-  - conda-forge
   - defaults
 dependencies:
   - python=3.9

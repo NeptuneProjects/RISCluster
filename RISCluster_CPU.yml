@@ -1,7 +1,7 @@
 name: RISCluster_CPU
 channels:
-  - pytorch
   - conda-forge
+  - pytorch
   - defaults
 dependencies:
   - python=3.9
@@ -14,7 +14,7 @@ dependencies:
   - pandas
   - pydotplus
   - python-dotenv
-  - pytorch::pytorch
+  - pytorch::pytorch=1.8.1
   - pytorch::torchvision
   - scikit-learn
   - scikit-learn-extra
