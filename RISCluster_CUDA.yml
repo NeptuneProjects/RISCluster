@@ -23,6 +23,7 @@ dependencies:
   - tensorboard=2.4.1
   - tqdm=4.38.0
   - twilio
+  - pip
   - pip:
     - git+https://github.com/NeptuneProjects/RISCluster.git
     - git+https://github.com/NeptuneProjects/RISProcess.git
