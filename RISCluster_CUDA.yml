@@ -5,26 +5,24 @@ channels:
 dependencies:
   - python=3.9
   - cmocean
-  - conda-forge::cudatoolkit=11.1
-  - h5py
-  - jupyterlab
-  - matplotlib
-  - numpy
-  - obspy
-  - pandas
-  - pydotplus
-  - python-dotenv
+  - conda-forge::cudatoolkit=11.0
+  - h5py=3.2.1
+  - jupyterlab=3.0.13
+  - matplotlib=3.4.1
+  - numpy=1.20.0
+  - obspy=1.2.0
+  - pandas=1.2.3
+  - pydotplus=2.0.2
+  - python-dotenv=0.17.0
   - pytorch::pytorch=1.8.1
   - pytorch::torchvision
   - rapidsai-nightly::cuml=0.19
-  - scikit-learn
-  - scikit-learn-extra
-  - scipy
-  - seaborn
-  - tensorboard
-  - tqdm
+  - scikit-learn=0.24
+  - scipy=1.6.2
+  - seaborn=0.11.1
+  - tensorboard=2.4.1
+  - tqdm=4.38.0
   - twilio
-  - pip
   - pip:
     - git+https://github.com/NeptuneProjects/RISCluster.git
     - git+https://github.com/NeptuneProjects/RISProcess.git
