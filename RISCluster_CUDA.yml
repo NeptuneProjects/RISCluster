@@ -5,7 +5,7 @@ channels:
 dependencies:
   - python=3.9
   - cmocean
-  - conda-forge::cudatoolkit=11.0
+  - conda-forge::cudatoolkit=11.1
   - h5py=3.2.1
   - jupyterlab=3.0.13
   - matplotlib=3.4.1
