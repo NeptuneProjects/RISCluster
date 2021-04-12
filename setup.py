@@ -10,7 +10,7 @@ def setup_package():
         author_email='wjenkins@ucsd.edu',
         packages=['RISCluster'],
         # scripts=["scripts/testscript.py", "scripts/testscript2.py"],
-        scripts=['RISCluster/runDEC'],
+        scripts=['RISCluster/runDEC.py'],
         entry_points = {
             'console_scripts': [
                 # 'runDEC=RISCluster.runDEC:main',
