@@ -446,9 +446,11 @@ def train(
     elif init == "gmm": # GMM Initialization:
         print('Initiating clusters with GMM...', end="", flush=True)
         labels_prev, centroids = gmm(model, dataloader, device)
-    elif init == "kmeds": # K-Medoids Initialization:
-        print('Initiating clusters with k-medoids...', end="", flush=True)
-        labels_prev, centroids = kmeds(model, dataloader, device)
+        labels_prev =
+        centroids = np.random.randn()
+    # elif init == "kmeds": # K-Medoids Initialization:
+    #     print('Initiating clusters with k-medoids...', end="", flush=True)
+    #     labels_prev, centroids = kmeds(model, dataloader, device)
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -744,8 +746,8 @@ def kmeans(model, dataloader, device):
     '''
     km = KMeans(
         n_clusters=model.n_clusters,
-        max_iter=2000,
-        n_init=500,
+        max_iter=1000,
+        n_init=100,
         random_state=2009
     )
     _, _, z_array = infer(dataloader, model, device)
@@ -784,7 +786,7 @@ def gmm(model, dataloader, device):
 
     GMM = GaussianMixture(
         n_components=model.n_clusters,
-        max_iter=2000,
+        max_iter=1000,
         n_init=1,
         weights_init=gmm_weights,
         means_init=centroids
