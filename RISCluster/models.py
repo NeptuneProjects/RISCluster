@@ -446,8 +446,8 @@ def train(
     elif init == "gmm": # GMM Initialization:
         print('Initiating clusters with GMM...', end="", flush=True)
         labels_prev, centroids = gmm(model, dataloader, device)
-        labels_prev =
-        centroids = np.random.randn()
+        # labels_prev =
+        # centroids = np.random.randn()
     # elif init == "kmeds": # K-Medoids Initialization:
     #     print('Initiating clusters with k-medoids...', end="", flush=True)
     #     labels_prev, centroids = kmeds(model, dataloader, device)
