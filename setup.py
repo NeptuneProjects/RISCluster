@@ -10,8 +10,8 @@ def setup_package():
         author_email='wjenkins@ucsd.edu',
         packages=['RISCluster'],
         # scripts=["scripts/testscript.py", "scripts/testscript2.py"],
+        scripts=['RISCluster/runDEC'],
         entry_points = {
-            'scripts': ['runDEC=RISCluster/__main__.py'],
             'console_scripts': [
                 # 'runDEC=RISCluster.runDEC:main',
                 'query_H5size=RISCluster.utils:query_H5size',
