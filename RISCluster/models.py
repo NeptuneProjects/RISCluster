@@ -862,8 +862,8 @@ def infer(dataloader, model, device, v=False):
 
     if cflag:
         q_array = np.zeros((len(dataloader.dataset), model.n_clusters),dtype=np.float32)
-        # for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
-        for b, batch in enumerate(dataloader):
+        for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+        # for b, batch in enumerate(dataloader):
             _, batch = batch
             x = batch.to(device)
             q, _, z = model(x)
@@ -872,8 +872,8 @@ def infer(dataloader, model, device, v=False):
         labels = np.argmax(q_array.data, axis=1)
         return np.round(q_array, 5), labels, z_array
     else:
-        # for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
-        for b, batch in enumerate(dataloader):
+        for b, batch in enumerate(tqdm(dataloader, disable=notqdm)):
+        # for b, batch in enumerate(dataloader):
             x = batch.to(device)
             _, z = model(x)
             z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
