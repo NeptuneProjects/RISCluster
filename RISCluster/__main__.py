@@ -148,5 +148,6 @@ def main():
 
 
 if __name__ == '__main__':
+    print(f"My name is {__name__}!!!")
     mp.set_start_method('spawn')
     main()
