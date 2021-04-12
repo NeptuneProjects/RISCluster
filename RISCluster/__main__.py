@@ -2,6 +2,7 @@
 
 import argparse
 import configparser
+import multiprocessing as mp
 
 import matplotlib
 
@@ -147,4 +148,5 @@ def main():
 
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn')
     main()
