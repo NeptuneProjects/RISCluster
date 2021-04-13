@@ -22,6 +22,7 @@ if sys.platform == 'darwin':
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
     from cuml import KMeans, TSNE
+    import cupy
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 import torch
@@ -783,6 +784,9 @@ def gmm(model, dataloader, device):
     gmm_weights = np.empty(len(labels))
     for i in range(len(labels)):
         gmm_weights[i] = counts[i] / M
+
+    if device.type == 'cuda':
+        cupy.cuda.Device(device.index).use()
 
     GMM = GaussianMixture(
         n_components=model.n_clusters,
