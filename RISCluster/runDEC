@@ -2,7 +2,7 @@
 
 import argparse
 import configparser
-import multiprocessing as mp
+import torch.multiprocessing as mp
 
 import matplotlib
 
