@@ -22,7 +22,7 @@ if sys.platform == 'darwin':
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
     from cuml import KMeans, TSNE
-    import cupy
+    # import cupy
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 import torch
@@ -458,7 +458,7 @@ def train(
     q, _, z_array0 = infer(dataloader, model, device) # <-- The CUDA problem occurs in here
     p = target_distribution(q)
     epoch = 0
-    tsne_results = tsne(z_array0, device)
+    tsne_results = tsne(z_array0)
     plotargs = (
             fignames,
             figpaths,
@@ -600,7 +600,7 @@ def train(
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
             _, _, z_array1 = infer(dataloader, model, device)
-            tsne_results = tsne(z_array1, device)
+            tsne_results = tsne(z_array1)
             plotargs = (
                     fignames,
                     figpaths,
@@ -749,11 +749,7 @@ def kmeans(model, dataloader, device):
         random_state=2009
     )
     _, _, z_array = infer(dataloader, model, device)
-    if device.type == 'cuda':
-        with cupy.cuda.Device(device.index):
-            km.fit_predict(z_array)
-    else:
-        km.fit_predict(z_array)
+    km.fit_predict(z_array)
     labels = km.labels_
     centroids = km.cluster_centers_
     return labels, centroids
@@ -800,7 +796,7 @@ def gmm(model, dataloader, device):
     return labels, centroids
 
 
-def tsne(data, device):
+def tsne(data):
     '''Perform t-SNE on data.
 
     Parameters
@@ -815,28 +811,15 @@ def tsne(data, device):
     print('Running t-SNE...', end="", flush=True)
     M = len(data)
     np.seterr(under='warn')
-
-    if device.type == 'cuda':
-        with cupy.cuda.Device(device.index):
-            results = TSNE(
-                n_components=2,
-                perplexity=int(M/100),
-                early_exaggeration=20,
-                learning_rate=int(M/12),
-                n_iter=2000,
-                verbose=0,
-                random_state=2009
-            ).fit_transform(data.astype('float64'))
-    else:
-        results = TSNE(
-            n_components=2,
-            perplexity=int(M/100),
-            early_exaggeration=20,
-            learning_rate=int(M/12),
-            n_iter=2000,
-            verbose=0,
-            random_state=2009
-        ).fit_transform(data.astype('float64'))
+    results = TSNE(
+        n_components=2,
+        perplexity=int(M/100),
+        early_exaggeration=20,
+        learning_rate=int(M/12),
+        n_iter=2000,
+        verbose=0,
+        random_state=2009
+    ).fit_transform(data.astype('float64'))
     print('complete.')
     return results
 
