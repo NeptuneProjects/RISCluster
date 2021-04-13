@@ -441,8 +441,6 @@ def train(
         )
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     # Initialize Clusters:
-    if device.type == 'cuda':
-        cupy.cuda.Device(device.index).use()
     if init == "kmeans": # K-Means Initialization:
         print('Initiating clusters with k-means...', end="", flush=True)
         labels_prev, centroids = kmeans(model, dataloader, device)
@@ -751,7 +749,11 @@ def kmeans(model, dataloader, device):
         random_state=2009
     )
     _, _, z_array = infer(dataloader, model, device)
-    km.fit_predict(z_array)
+    if device.type == 'cuda':
+        with Device(device.index):
+            km.fit_predict(z_array)
+    else:
+        km.fit_predict(z_array)
     labels = km.labels_
     centroids = km.cluster_centers_
     return labels, centroids
@@ -813,15 +815,28 @@ def tsne(data):
     print('Running t-SNE...', end="", flush=True)
     M = len(data)
     np.seterr(under='warn')
-    results = TSNE(
-        n_components=2,
-        perplexity=int(M/100),
-        early_exaggeration=20,
-        learning_rate=int(M/12),
-        n_iter=2000,
-        verbose=0,
-        random_state=2009
-    ).fit_transform(data.astype('float64'))
+
+    if device.type == 'cuda':
+        with Device(device.index):
+            results = TSNE(
+                n_components=2,
+                perplexity=int(M/100),
+                early_exaggeration=20,
+                learning_rate=int(M/12),
+                n_iter=2000,
+                verbose=0,
+                random_state=2009
+            ).fit_transform(data.astype('float64'))
+    else:
+        results = TSNE(
+            n_components=2,
+            perplexity=int(M/100),
+            early_exaggeration=20,
+            learning_rate=int(M/12),
+            n_iter=2000,
+            verbose=0,
+            random_state=2009
+        ).fit_transform(data.astype('float64'))
     print('complete.')
     return results
 
