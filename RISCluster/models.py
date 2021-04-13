@@ -458,7 +458,7 @@ def train(
     q, _, z_array0 = infer(dataloader, model, device) # <-- The CUDA problem occurs in here
     p = target_distribution(q)
     epoch = 0
-    tsne_results = tsne(z_array0)
+    tsne_results = tsne(z_array0, device)
     plotargs = (
             fignames,
             figpaths,
@@ -600,7 +600,7 @@ def train(
 
         if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
             _, _, z_array1 = infer(dataloader, model, device)
-            tsne_results = tsne(z_array1)
+            tsne_results = tsne(z_array1, device)
             plotargs = (
                     fignames,
                     figpaths,
@@ -800,7 +800,7 @@ def gmm(model, dataloader, device):
     return labels, centroids
 
 
-def tsne(data):
+def tsne(data, device):
     '''Perform t-SNE on data.
 
     Parameters
