@@ -750,7 +750,7 @@ def kmeans(model, dataloader, device):
     )
     _, _, z_array = infer(dataloader, model, device)
     if device.type == 'cuda':
-        with Device(device.index):
+        with cupy.cuda.Device(device.index):
             km.fit_predict(z_array)
     else:
         km.fit_predict(z_array)
@@ -817,7 +817,7 @@ def tsne(data):
     np.seterr(under='warn')
 
     if device.type == 'cuda':
-        with Device(device.index):
+        with cupy.cuda.Device(device.index):
             results = TSNE(
                 n_components=2,
                 perplexity=int(M/100),
