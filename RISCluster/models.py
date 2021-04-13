@@ -694,20 +694,18 @@ def predict(model, dataloader, parameters):
     model.load_state_dict(torch.load(loadpath, map_location=device))
     model.eval()
 
-    _, labels, _ = infer(dataloader, model, device)
-
-    # pbar = tqdm(
-    #     dataloader,
-    #     leave=True,
-    #     desc="Saving cluster labels",
-    #     unit="batch",
-    #     bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-    # )
+    pbar = tqdm(
+        dataloader,
+        leave=True,
+        desc="Saving cluster labels",
+        unit="batch",
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    )
 
     for batch in pbar:
         idx, batch = batch
         x = batch.to(device)
-        _, labels, _ = infer(x)
+        _, labels, _ = model(x)
 
         A = [{
             'idx': idx[i].cpu().detach().numpy(),
