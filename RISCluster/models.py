@@ -745,6 +745,9 @@ def kmeans(model, dataloader, device):
     centroids : array (n_clusters,)
         Cluster centroids
     '''
+    if device.type == 'cuda':
+        cupy.cuda.Device(device.index).use()
+
     km = KMeans(
         n_clusters=model.n_clusters,
         max_iter=1000,
