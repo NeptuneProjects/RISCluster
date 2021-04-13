@@ -776,8 +776,21 @@ def gmm(model, dataloader, device):
         Cluster centroids
     '''
     M = len(dataloader.dataset)
-    labels, centroids = kmeans(model, dataloader, device)
+    _, _, z_array = infer(dataloader, model, device)
+    # Initialize w/ K-Means
+    km = KMeans(
+        n_clusters=model.n_clusters,
+        max_iter=1000,
+        n_init=100,
+        random_state=2009
+    )
+    km.fit_predict(z_array)
+    labels = km.labels_
+    centroids = km.cluster_centers_
+
     labels, counts = np.unique(labels, return_counts=True)
+
+    # Perform EM
     gmm_weights = np.empty(len(labels))
     for i in range(len(labels)):
         gmm_weights[i] = counts[i] / M
@@ -789,7 +802,6 @@ def gmm(model, dataloader, device):
         weights_init=gmm_weights,
         means_init=centroids
     )
-    _, _, z_array = infer(dataloader, model, device)
     np.seterr(under='ignore')
     labels = GMM.fit_predict(z_array)
     centroids = GMM.means_
