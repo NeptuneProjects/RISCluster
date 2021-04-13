@@ -745,8 +745,8 @@ def kmeans(model, dataloader, device):
     centroids : array (n_clusters,)
         Cluster centroids
     '''
-    if device.type == 'cuda':
-        cupy.cuda.Device(device.index).use()
+    # if device.type == 'cuda':
+    #     cupy.cuda.Device(device.index).use()
 
     km = KMeans(
         n_clusters=model.n_clusters,
@@ -788,8 +788,8 @@ def gmm(model, dataloader, device):
     for i in range(len(labels)):
         gmm_weights[i] = counts[i] / M
 
-    if device.type == 'cuda':
-        cupy.cuda.Device(device.index).use()
+    # if device.type == 'cuda':
+    #     cupy.cuda.Device(device.index).use()
 
     GMM = GaussianMixture(
         n_components=model.n_clusters,
