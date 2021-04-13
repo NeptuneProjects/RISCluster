@@ -22,7 +22,7 @@ if sys.platform == 'darwin':
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
     from cuml import KMeans, TSNE
-    import cupy
+    # import cupy
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 import torch
@@ -441,8 +441,8 @@ def train(
         )
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     # Initialize Clusters:
-    if device.type == 'cuda':
-        cupy.cuda.Device(device.index).use()
+    # if device.type == 'cuda':
+    #     cupy.cuda.Device(device.index).use()
     if init == "kmeans": # K-Means Initialization:
         print('Initiating clusters with k-means...', end="", flush=True)
         labels_prev, centroids = kmeans(model, dataloader, device)
