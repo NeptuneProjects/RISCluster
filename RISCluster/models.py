@@ -441,17 +441,15 @@ def train(
         )
     tb.add_text("Path to Saved Outputs", savepath_run, global_step=None)
     # Initialize Clusters:
+    if device.type == 'cuda':
+        cupy.cuda.Device(device.index).use()
     if init == "kmeans": # K-Means Initialization:
         print('Initiating clusters with k-means...', end="", flush=True)
         labels_prev, centroids = kmeans(model, dataloader, device)
     elif init == "gmm": # GMM Initialization:
         print('Initiating clusters with GMM...', end="", flush=True)
         labels_prev, centroids = gmm(model, dataloader, device)
-        # labels_prev =
-        # centroids = np.random.randn()
-    # elif init == "kmeds": # K-Medoids Initialization:
-    #     print('Initiating clusters with k-medoids...', end="", flush=True)
-    #     labels_prev, centroids = kmeds(model, dataloader, device)
+
     cluster_centers = torch.from_numpy(centroids).to(device)
     with torch.no_grad():
         model.state_dict()["clustering.weights"].copy_(cluster_centers)
@@ -745,8 +743,6 @@ def kmeans(model, dataloader, device):
     centroids : array (n_clusters,)
         Cluster centroids
     '''
-    # if device.type == 'cuda':
-    #     cupy.cuda.Device(device.index).use()
 
     km = KMeans(
         n_clusters=model.n_clusters,
@@ -787,9 +783,6 @@ def gmm(model, dataloader, device):
     gmm_weights = np.empty(len(labels))
     for i in range(len(labels)):
         gmm_weights[i] = counts[i] / M
-
-    # if device.type == 'cuda':
-    #     cupy.cuda.Device(device.index).use()
 
     GMM = GaussianMixture(
         n_components=model.n_clusters,
