@@ -29,7 +29,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
 from tqdm import tqdm
-from twilio.rest import Client
 
 
 class H5SeismicDataset(Dataset):
@@ -842,20 +841,20 @@ def notify(msgsubj, msgcontent):
     except:
         print('Unable to send email notification upon job completion.')
         pass
-    try:
-        client = Client()
-        orig_whatsapp_number = 'whatsapp:' + os.getenv('ORIG_PHONE_NUMBER')
-        rx_whatsapp_number = 'whatsapp:' + os.getenv('RX_PHONE_NUMBER')
-        msgcontent = f'*{msgsubj}*\n{msgcontent}'
-        client.messages.create(
-            body=msgcontent,
-            from_=orig_whatsapp_number,
-            to=rx_whatsapp_number
-        )
-        print('Job completion notification sent by WhatsApp.')
-    except:
-        print('Unable to send WhatsApp notification upon job completion.')
-        pass
+    # try:
+    #     client = Client()
+    #     orig_whatsapp_number = 'whatsapp:' + os.getenv('ORIG_PHONE_NUMBER')
+    #     rx_whatsapp_number = 'whatsapp:' + os.getenv('RX_PHONE_NUMBER')
+    #     msgcontent = f'*{msgsubj}*\n{msgcontent}'
+    #     client.messages.create(
+    #         body=msgcontent,
+    #         from_=orig_whatsapp_number,
+    #         to=rx_whatsapp_number
+    #     )
+    #     print('Job completion notification sent by WhatsApp.')
+    # except:
+    #     print('Unable to send WhatsApp notification upon job completion.')
+    #     pass
 
 
 def parse_nclusters(line):
@@ -1012,58 +1011,6 @@ def start_tensorboard(logdir, tbport):
     tbpid = p.pid
     print(f"Tensorboard server available at http://localhost:{tbport}; PID={tbpid}")
     return tbpid
-
-
-# def make_pred_configs_batch(loadpath, savepath, overwrite=False):
-#     exper = loadpath.split("/")[-1]
-#     savepath = f"{savepath}/BatchEval_{exper}"
-#     if not os.path.exists(savepath):
-#         os.makedirs(savepath)
-#
-#     config_ = configparser.ConfigParser()
-#     tmp = [f for f in os.listdir(loadpath) if f.endswith('.ini')][0]
-#     config_.read(f"{loadpath}/{tmp}")
-#     transform = config_['PARAMETERS']['transform']
-#
-#     count_wr = 0
-#     count_ow = 0
-#     count_sk = 0
-#     runlist = [f for f in os.listdir(f'{loadpath}') if "Run" in f]
-#     for run in runlist:
-#         fname = f'{savepath}/init_pred_{run[4:]}.ini'
-#         if os.path.isfile(fname):
-#             if not overwrite:
-#                 count_sk += 1
-#                 continue
-#             elif overwrite:
-#                 count_ow += 1
-#         else:
-#             count_wr += 1
-#
-#         config = configparser.ConfigParser()
-#         config['UNIVERSAL'] = {
-#             'mode': 'predict',
-#             'fname_dataset': '../../../Data/DetectionData_4s.h5',
-#             'savepath': '../../../Outputs/',
-#             'indexpath': '../../../Data/TraValIndex_M=125000_Res=0.0_20200828T005531.pkl'
-#         }
-#         saved_weights = [f for f in os.listdir(f'{loadpath}/{run}') if f.endswith('.pt')][0]
-#         config['PARAMETERS'] = {
-#             'M': 'all',
-#             'exclude': 'False',
-#             'batch_size': '1024',
-#             'show': 'False',
-#             'send_message': 'False',
-#             'max_workers': '14',
-#             'n_clusters': parse_nclusters(run),
-#             'saved_weights': f'{loadpath}/{run}/{saved_weights}',
-#             'transform': transform
-#         }
-#         with open(fname, 'w') as configfile:
-#             config.write(configfile)
-#
-#     print(f'Config Files: {count_wr} written, {count_ow} overwritten, {count_sk} skipped.')
-#     return savepath
 
 
 # def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):

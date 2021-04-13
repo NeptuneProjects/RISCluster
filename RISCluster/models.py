@@ -1098,37 +1098,3 @@ def kmeans_metrics(dataloader, model, device, k_list):
 #         for i, fig in enumerate(figures)]
 #     [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
 #         for i, fig in enumerate(figures)]
-
-
-# def kmeds(model, dataloader, device):
-#     '''Initiate clusters using K-Medoids algorithm.
-#
-#     Parameters
-#     ----------
-#     model : PyTorch model instance
-#
-#     dataloader : PyTorch dataloader instance
-#         Loads data from disk into memory.
-#
-#     device : PyTorch device object ('cpu' or 'gpu')
-#
-#     Returns
-#     -------
-#     labels : array (M,)
-#         Sample-wise cluster assignment
-#
-#     centroids : array (n_clusters,)
-#         Cluster centroids
-#     '''
-#     kmed = KMedoids(
-#         n_clusters=model.n_clusters,
-#         metric='l1',
-#         init='heuristic',
-#         max_iter=10000,
-#         random_state=2009
-#     )
-#     _, _, z_array = infer(dataloader, model, device)
-#     kmed.fit_predict(z_array)
-#     labels = kmed.labels_
-#     centroids = kmed.cluster_centers_
-#     return labels, centroids

@@ -9,11 +9,9 @@ def setup_package():
         author='William F. Jenkins II',
         author_email='wjenkins@ucsd.edu',
         packages=['RISCluster'],
-        # scripts=["scripts/testscript.py", "scripts/testscript2.py"],
         scripts=['RISCluster/runDEC'],
         entry_points = {
             'console_scripts': [
-                # 'runDEC=RISCluster.runDEC:main',
                 'query_H5size=RISCluster.utils:query_H5size',
                 'ExtractH5Dataset=RISCluster.utils:ExtractH5Dataset',
                 'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex'
@@ -32,12 +30,10 @@ def setup_package():
             'torch',
             'torchvision',
             'scikit-learn',
-            'scikit-learn-extra',
             'scipy',
             'seaborn',
             'tensorboard',
-            'tqdm',
-            'twilio'
+            'tqdm'
         ],
         version='0.0b0',
         license='MIT',

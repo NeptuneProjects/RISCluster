@@ -25,7 +25,6 @@ dependencies:
   - seaborn
   - tensorboard
   - tqdm
-  - twilio
   - pip
   - pip:
     - git+https://github.com/NeptuneProjects/RISCluster.git
