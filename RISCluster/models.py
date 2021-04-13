@@ -640,7 +640,7 @@ def train(
     )
     _ = utils.save_history(
         {
-            'Iteration': deltas_iters,
+            'Iteration': deltas_iter,
             'Delta': deltas
         },
         f"{savepath_run}/Delta_history.csv"
