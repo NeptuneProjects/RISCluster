@@ -536,7 +536,7 @@ def train(
                     [deltas_iter, deltas],
                     [n_iter, delta_label]
                 )
-                deltas.append(delta_label)
+                # deltas.append(delta_label)
                 tb.add_scalar('delta', delta_label, n_iter)
                 labels_prev = np.copy(labels)
                 if delta_label < tol:
