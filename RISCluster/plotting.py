@@ -411,9 +411,12 @@ def cluster_gallery(
             plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
             # plt.text(0, 60, f"{load_index[i]}", fontdict=font)
             # plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
-            plt.xticks([])
-            plt.yticks([])
+            # plt.xticks([])
+            # plt.yticks([])
             if l == 0:
+                if i ~= N - 1:
+                    plt.xticks([])
+                    plt.yticks([])
                 if latex:
                     plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
