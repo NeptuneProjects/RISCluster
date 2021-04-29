@@ -1505,16 +1505,16 @@ def view_specgram_training(
 
         ax2 = fig.add_subplot(gs[counter,1])
         plt.imshow(np.expand_dims(z[i], 1), cmap=cmo.deep_r, aspect='auto', interpolation="none")
-        for j in range(z.shape[1]):
-            plt.text(
-                0,
-                j,
-                f"{z[i,j]:.1f}",
-                backgroundcolor='w',
-                ha='center',
-                va='center',
-                bbox=dict(boxstyle='square,pad=0', facecolor='w', edgecolor='w')
-            )
+        # for j in range(z.shape[1]):
+        #     plt.text(
+        #         0,
+        #         j,
+        #         f"{z[i,j]:.1f}",
+        #         backgroundcolor='w',
+        #         ha='center',
+        #         va='center',
+        #         bbox=dict(boxstyle='square,pad=0', facecolor='w', edgecolor='w')
+        #     )
         plt.xticks([])
         plt.yticks(ticks=np.arange(0, z.shape[1]), labels=np.arange(1, z.shape[1]+1))
         plt.title('Latent Space\n' + r'$\bm{z}$')
