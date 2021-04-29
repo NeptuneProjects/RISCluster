@@ -411,7 +411,9 @@ def cluster_gallery(
             plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
             # plt.text(0, 60, f"{load_index[i]}", fontdict=font)
             # plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
-            if (l != 0) and (i != N - 1):
+            if (l == 0) and (i == N - 1):
+                pass
+            else:
                 plt.xticks([])
                 plt.yticks([])
 
