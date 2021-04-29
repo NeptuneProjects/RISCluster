@@ -414,7 +414,7 @@ def cluster_gallery(
             # plt.xticks([])
             # plt.yticks([])
             if l == 0:
-                if i ~= N - 1:
+                if i != N - 1:
                     plt.xticks([])
                     plt.yticks([])
                 if latex:
