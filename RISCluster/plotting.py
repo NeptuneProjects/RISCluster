@@ -725,7 +725,7 @@ def view_class_cdf(
         if max_dist_ > max_dist:
             max_dist = max_dist_
 
-        plt.plot(distance_a, cdf_a, color=colors[0], label="K-means")
+        plt.plot(distance_a, cdf_a, color=colors[0], label="GMM")
         plt.plot(distance_b, cdf_b, color=colors[1], label="DEC")
         ax.set_yticks([0., 0.5, 1.])
 
@@ -816,7 +816,7 @@ def view_class_pdf(
             plt.xticks([])
             plt.ylim(0, 1)
             plt.yticks([0., 0.5, 1.])
-            plt.text(1, 0.9, 'K-means', ha='right', va='top', transform=axa.transAxes, fontsize=fontsize)
+            plt.text(1, 0.9, 'GMM', ha='right', va='top', transform=axa.transAxes, fontsize=fontsize)
             if latex:
                 plt.title(fr"Class PDFs relative to $\pmb{{\mu}}_{l+1}$", loc="left", size=fontsize)
             else:
@@ -1150,7 +1150,7 @@ def view_latent_space(
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
-            plt.ylabel('K-means', size=fontsize)
+            plt.ylabel('GMM', size=fontsize)
             if latex:
                 plt.title(r'$\pmb{\mu}_j$')
             else:
