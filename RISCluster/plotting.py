@@ -398,7 +398,7 @@ def cluster_gallery(
             else:
                 plt.ylabel("$g(mu)", rotation=0, va="center", ha="right")
 
-        if l == len(label_list) - 1: # <--------------------- Fix ticks
+        if l == len(label_list) - 1:
             plt.xticks([0, 100], ['0', '4'])
             plt.yticks([0, 87], ['3', '20'])
             ax.yaxis.tick_right()
