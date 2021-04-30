@@ -331,7 +331,7 @@ def cluster_gallery(
     fig = plt.figure(figsize=(len(label_list),2*N), dpi=150)
     heights = [1 for i in range(N+1)] + [0.2]
     gs_sup = gridspec.GridSpec(nrows=N+2, ncols=len(label_list), hspace=0.1, wspace=0.1, height_ratios=heights)
-    heights = [1, 4, 0.5]
+    heights = [0.5, 4, 1]
     font = {
         'family': 'serif',
         'color':  'k',
@@ -375,21 +375,9 @@ def cluster_gallery(
         Z = model.encoder(X)
 
         gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[0,l], hspace=0, wspace=0, height_ratios=heights)
-        ax = fig.add_subplot(gs_sub[0])
-        plt.axis('off')
-        ax = fig.add_subplot(gs_sub[1])
-        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
-        plt.xticks([])
-        plt.yticks([])
-        ax.xaxis.set_label_position('top')
-        ax.set_xlabel(f"$j={label+1}$", va="bottom", size=fontsize)
-        if l == 0:
-            if latex:
-                plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right", size=fontsize)
-            else:
-                plt.ylabel("$g(mu)", rotation=0, va="center", ha="right")
 
-        ax = fig.add_subplot(gs_sub[2])
+        # Centroid
+        ax = fig.add_subplot(gs_sub[0])
         plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="none")
         plt.xticks([])
         plt.yticks([])
@@ -398,32 +386,37 @@ def cluster_gallery(
                 plt.ylabel(r'$\pmb{\mu}_j$', rotation=0, va="center", ha="right", size=fontsize)
             else:
                 plt.ylabel("mu", rotation=0, va="center", ha="right")
+        ax.xaxis.set_label_position('top')
+        ax.set_xlabel(f"$j={label+1}$", va="bottom", size=fontsize)
 
-        for i in range(N):
-            gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[i+1,l], hspace=0, wspace=0, height_ratios=heights)
-            ax = fig.add_subplot(gs_sub[0])
-            plt.plot(tr[i], 'k', linewidth=0.5)
-            plt.xlim((0, k))
+        # Centroid Reconstruction
+        ax = fig.add_subplot(gs_sub[1])
+        plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
+        if l == 0:
+            if latex:
+                plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right", size=fontsize)
+            else:
+                plt.ylabel("$g(mu)", rotation=0, va="center", ha="right")
+
+        if l == len(label_list) - 1: # <--------------------- Fix ticks
+            plt.xticks([0, 100], ['0', '4'])
+            plt.yticks([0, 87], ['3', '20'])
+            ax.yaxis.tick_right()
+            plt.text(50, -20, 'Time (s)', ha="center")
+            plt.text(120, 44, 'Freq (Hz)', ha="center", va="center", rotation="vertical")
+        else:
             plt.xticks([])
             plt.yticks([])
 
-            ax = fig.add_subplot(gs_sub[1])
-            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
-            # plt.text(0, 60, f"{load_index[i]}", fontdict=font)
-            # plt.text(110, 60, f"d={distance[i]:.1f}", fontdict=font)
-            if (l == 0) and (i == N - 1):
-                pass
-            else:
-                plt.xticks([])
-                plt.yticks([])
+        # Empty Space
+        ax = fig.add_subplot(gs_sub[2])
+        plt.axis('off')
 
-            if l == 0:
-                if latex:
-                    plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
-                else:
-                    plt.ylabel(f"x_{i+1}", rotation=0, va="center", ha="right")
+        for i in range(N):
+            gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=3, ncols=1, subplot_spec=gs_sup[i+1,l], hspace=0, wspace=0, height_ratios=heights)
 
-            ax = fig.add_subplot(gs_sub[2])
+            # Latent Features
+            ax = fig.add_subplot(gs_sub[0])
             plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="none")
             plt.xticks([])
             plt.yticks([])
@@ -432,6 +425,25 @@ def cluster_gallery(
                     plt.ylabel(fr"$\pmb{{z}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
                     plt.ylabel(f"z_{i+1}", rotation=0, va="center", ha="right")
+
+            # Spectrogram
+            ax = fig.add_subplot(gs_sub[1])
+            plt.imshow(np.squeeze(X[i,:,:].detach().cpu().numpy()), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
+            plt.xticks([])
+            plt.yticks([])
+
+            if l == 0:
+                if latex:
+                    plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
+                else:
+                    plt.ylabel(f"x_{i+1}", rotation=0, va="center", ha="right")
+
+            # Seismogram
+            ax = fig.add_subplot(gs_sub[2])
+            plt.plot(tr[i], 'k', linewidth=0.5)
+            plt.xlim((0, k))
+            plt.xticks([])
+            plt.yticks([])
 
     gs_sub = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=gs_sup[-1,:])
     # Colorbar: Specgram
