@@ -1613,7 +1613,7 @@ def view_TSNE(results, labels, title, show=False):
         return x * N / 100
 
     ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
-    ax3.set_ylabel('\% of $N_{train}$')
+    ax3.set_ylabel('% of $N_{train}$')
     for i in range(len(np.unique(labels))):
         plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
 
