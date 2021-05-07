@@ -1162,7 +1162,7 @@ def view_latent_space(
 
         # Centroid A
         ax0 = fig.add_subplot(gs_sub[0,0])
-        plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax, interpolation="none")
+        plt.imshow(centroids_a[l][None].T, cmap=cmap, vmax=vmax, interpolation="nearest")
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
@@ -1176,7 +1176,7 @@ def view_latent_space(
 
         # Latent Space A
         ax1 = fig.add_subplot(gs_sub[0,1])
-        plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax, interpolation="none")
+        plt.imshow(data_a[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax, interpolation="nearest")
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
             if latex:
@@ -1208,7 +1208,7 @@ def view_latent_space(
 
         # Centroid B
         ax2 = fig.add_subplot(gs_sub[1,0])
-        plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax, interpolation="none")
+        plt.imshow(centroids_b[l][None].T, cmap=cmap, vmax=vmax, interpolation="nearest")
         plt.xticks([])
         if l == 0:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
@@ -1218,7 +1218,7 @@ def view_latent_space(
 
         # Latent Space B
         ax3 = fig.add_subplot(gs_sub[1,1])
-        plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax, interpolation="none")
+        plt.imshow(data_b[sort_index_d].T, cmap=cmap, aspect='auto', vmax=vmax, interpolation="nearest")
         plt.vlines(centroids_ind, -0.5, d-0.5, colors='w', ls='dashed', lw=0.75, alpha=0.5)
         for ll in range(n_clusters-1):
             if latex:
