@@ -378,7 +378,7 @@ def cluster_gallery(
 
         # Centroid
         ax = fig.add_subplot(gs_sub[0])
-        plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="none")
+        plt.imshow(np.expand_dims(centroids[l], 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="nearest")
         plt.xticks([])
         plt.yticks([])
         if l == 0:
@@ -417,7 +417,7 @@ def cluster_gallery(
 
             # Latent Features
             ax = fig.add_subplot(gs_sub[0])
-            plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="none")
+            plt.imshow(np.expand_dims(Z[i].detach().cpu().numpy(), 0), cmap=cmap_feat, aspect='auto', vmax = vmax, interpolation="nearest")
             plt.xticks([])
             plt.yticks([])
             if l == 0:
