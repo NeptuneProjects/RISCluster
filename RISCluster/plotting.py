@@ -1586,6 +1586,8 @@ def view_TSNE(results, labels, title, show=False):
     df["Class"] = df["Class"].astype('int').astype('category')
 
     fig = plt.figure(figsize=(6,8))
+    params = {'mathtext.default': 'regular' }
+    plt.rcParams.update(params)
     gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
 
     ax1 = fig.add_subplot(gs[0])
@@ -1601,7 +1603,7 @@ def view_TSNE(results, labels, title, show=False):
     plt.ylim([0, 1.25 * max(counts)])
     ax2.set_xlabel('Class')
     ax2.set_ylabel('Detections')
-    plt.title(f'Class Assignments, N = {len(labels)}')
+    plt.title('Class Assignments, $N_{train}$ = ' + f'{len(labels)}')
 
     N = counts.sum()
     def CtP(x):
@@ -1611,7 +1613,7 @@ def view_TSNE(results, labels, title, show=False):
         return x * N / 100
 
     ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
-    ax3.set_ylabel('\% of N')
+    ax3.set_ylabel('\% of $N_{train}$')
     for i in range(len(np.unique(labels))):
         plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
 
