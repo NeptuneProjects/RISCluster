@@ -1520,7 +1520,7 @@ def view_specgram_training(
         xy1 = (0.67, arrow_yloc)
 
         ax2 = fig.add_subplot(gs[counter,1])
-        plt.imshow(np.expand_dims(z[i], 1), cmap=cmo.deep_r, aspect='auto', interpolation="none")
+        plt.imshow(np.expand_dims(z[i], 1), cmap=cmo.deep_r, aspect='auto', interpolation="nearest")
         # for j in range(z.shape[1]):
         #     plt.text(
         #         0,
