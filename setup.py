@@ -31,7 +31,6 @@ def setup_package():
             'torchvision',
             'scikit-learn',
             'scipy',
-            'seaborn',
             'tensorboard',
             'tqdm'
         ],

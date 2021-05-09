@@ -19,7 +19,6 @@ dependencies:
   - scikit-learn
   - scikit-learn-extra
   - scipy
-  - seaborn
   - tensorboard
   - tqdm
   - twilio

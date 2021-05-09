@@ -22,7 +22,6 @@ dependencies:
   - rapidsai::cuml=0.18
   - scikit-learn
   - scipy
-  - seaborn
   - tensorboard
   - tqdm
   - pip

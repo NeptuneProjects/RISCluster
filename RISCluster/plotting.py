@@ -12,7 +12,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import torch
 from torch.utils.data import DataLoader, Dataset, Subset
 from torch.utils.tensorboard import SummaryWriter
@@ -1280,15 +1279,6 @@ def view_learningcurve(training_history, validation_history, show=True):
         plt.close()
     return fig
 
-def view_PCA(pca2d, labels):
-    fig = plt.figure(figsize=(6,6), dpi=150)
-    sns.scatterplot(pca2d[:,0], pca2d[:,1], hue=labels, palette='Set1', alpha=0.2)
-    plt.legend()
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-    fig.tight_layout()
-    return fig
-
 
 def view_series(
         station,
@@ -1580,6 +1570,7 @@ def view_specgram_training(
 def view_TSNE(results, labels, title, show=False):
     label_list, counts = np.unique(labels, return_counts=True)
 
+    textsize = 14
     colors = cmap_lifeaquatic(len(counts))
     data = np.stack([(labels+1), results[:,0], results[:,1]], axis=1)
     df = pd.DataFrame(data=data, columns=["Class", "x", "y"])
@@ -1591,19 +1582,23 @@ def view_TSNE(results, labels, title, show=False):
     gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
 
     ax1 = fig.add_subplot(gs[0])
-    sns.scatterplot(data=df, x="x", y="y", hue="Class", palette=colors, alpha=0.2)
+    for j in range(len(df["Class"].cat.categories)):
+        plt.plot(df[df.Class == df["Class"].cat.categories[j]].x, df[df.Class == df["Class"].cat.categories[j]].y, 'o', alpha=0.2, c=colors[j], ms=6, mec="w", mew=0.5, rasterized=True, label=j+1)
     plt.axis('off')
-    plt.legend(loc='center left', bbox_to_anchor=(0.9, 0.75), ncol=1)
-    plt.title(title)
+    leg = plt.legend(loc='center left', bbox_to_anchor=(0.9, 0.75), ncol=1, title="Class", title_fontsize=textsize)
+    for lh in leg.legendHandles:
+        lh._legmarker.set_alpha(1)
+    plt.title(title, fontsize=textsize)
 
     ax2 = fig.add_subplot(gs[1])
     arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8, color='k')
     plt.grid(axis='y', linestyle='--')
     plt.xticks(label_list+1, label_list+1)
-    plt.ylim([0, 1.25 * max(counts)])
-    ax2.set_xlabel('Class')
-    ax2.set_ylabel('Detections')
-    plt.title('Class Assignments, $N_{train}$ = ' + f'{len(labels)}')
+#     plt.ylim([0, 1.25 * max(counts)])
+    plt.ylim([0, 30000])
+    ax2.set_xlabel('Class', fontsize=textsize)
+    ax2.set_ylabel('Detections', fontsize=textsize)
+    plt.title('Class Assignments, $N_{train}$ = ' + f'{len(labels)}', fontsize=textsize)
 
     N = counts.sum()
     def CtP(x):
@@ -1613,9 +1608,11 @@ def view_TSNE(results, labels, title, show=False):
         return x * N / 100
 
     ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
-    ax3.set_ylabel('% of $N_{train}$')
+    ax3.set_ylabel('$\%N_{train}$', fontsize=textsize)
     for i in range(len(np.unique(labels))):
         plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
+
+    fig.subplots_adjust(left=0.15, right=0.9)
 
     if show:
         plt.show()
