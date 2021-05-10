@@ -147,7 +147,7 @@ def file2dt(fname):
 
 
 def read_KPDR(path):
-    data = loadmat("/Users/williamjenkins/Research/Workflows/RIS_Clustering/Data/KPDR_0.001_0.04.mat")
+    data = loadmat(path)
     datenums = data["t"].squeeze()
     timestamps = pd.to_datetime(datenums-719529, unit='D').round("S")
     ampl = data["a"].squeeze()
