@@ -15,7 +15,6 @@ This repository is a PyTorch implementation of DEC. The workflow is as follows:
 5. Intialize clusters (K-Means, GMM available)
 6. Train the DEC model: clustering and model training are simultaneous.
 7. Once trained, infer class labels for remainder of the data set.
-
 ***
 ### Installation
 Pre-requisites:
@@ -49,17 +48,17 @@ environment by running `conda activate RISCluster_CUDA` in terminal.
 3. In terminal, run: `conda env create -f RISCluster_CPU.yml`
 4. Once the environment is set up and the package is installed, activate your
 environment by running `conda activate RISCluster_CPU` in terminal.
-
+***
 ### Usage
 Please refer to
-
+***
 ### References
 *Submitted*: William F. Jenkins II, Peter Gerstoft, Michael J. Bianco, Peter D. Bromirski; *Unsupervised Deep Clustering of Seismic Data: Monitoring the Ross Ice Shelf, Antarctica.* Submitted to Journal of Geophysical Research on 20 Jan 2021; doi: https://doi.org/10.1002/essoar.10505894.2
 
 Dylan Snover, Christopher W. Johnson, Michael J. Bianco, Peter Gerstoft; *Deep Clustering to Identify Sources of Urban Seismic Noise in Long Beach, California.* Seismological Research Letters 2020; doi: https://doi.org/10.1785/0220200164
 
 Junyuan Xie, Ross Girshick, Ali Farhadi; *Unsupervised Deep Embedding for Clustering Analysis.* Proceedings of the 33rd International Conference on Machine Learning, New York, NY, 2016; https://arxiv.org/abs/1511.06335v2
-
+***
 ### Author
 Project assembled by William Jenkins
 <br>wjenkins [@] ucsd [dot] edu
