@@ -279,51 +279,6 @@ class LabelCatalogue(object):
         ).sort_values(by=["Class"], ignore_index=True)
         return peak_freqs.set_index("Class")
 
-    # Not yet implemented: ====================================================
-    # def get_peak_frequency(
-    #         path_to_labels,
-    #         path_to_catalogue,
-    #         fname_dataset,
-    #         batch_size=2048,
-    #         workers=12
-    #     ):
-    #     labels = pd.read_csv(path_to_labels, index_col=0)
-    #     label_list = pd.unique(labels["label"])
-    #     _, _, fvec = load_images(fname_dataset, [[0]])
-    #
-    #     class_avg_maxfreq = np.zeros(len(label_list))
-    #     for j, label in enumerate(label_list):
-    #         mask = labels.label == label
-    #         labels_subset = labels.loc[mask]
-    #         dataset = H5SeismicDataset(
-    #             fname_dataset,
-    #             transform = transforms.Compose(
-    #                 [SpecgramShaper(), SpecgramToTensor()]
-    #             )
-    #         )
-    #         subset = Subset(dataset, labels_subset.index)
-    #         dataloader = DataLoader(subset, batch_size=batch_size, num_workers=workers)
-    #         batch_avg_maxfreq = np.zeros(len(dataloader))
-    #         pbar = tqdm(
-    #             dataloader,
-    #             bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
-    #             desc=f"Label {j+1}/{len(label_list)} (Class {label})",
-    #             leave=True,
-    #             position=0
-    #         )
-    #         for i, batch in enumerate(pbar):
-    #             _, X = batch
-    #             maxfreqind = torch.max(torch.sum(X, 3) / X.size(3), 2).indices
-    #             maxfreqind = maxfreqind.detach().cpu().numpy()
-    #             maxfreq = fvec[maxfreqind]
-    #             batch_avg_maxfreq[i] = maxfreq.mean()
-    #
-    #         class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
-    #         print(f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz", flush=True)
-    #
-    #     peak_freqs = pd.DataFrame({"Class": label_list, "Avg_Peak_Freq": class_avg_maxfreq}).sort_values(by=["Class"], ignore_index=True)
-    #     return peak_freqs.set_index("Class")
-
 
 class SpecgramShaper(object):
     """Crop & reshape data."""
