@@ -50,7 +50,7 @@ environment by running `conda activate RISCluster_CUDA` in terminal.
 environment by running `conda activate RISCluster_CPU` in terminal.
 ***
 ### Usage
-Please refer to
+Please refer to the [RISWorkflow repository](https://github.com/NeptuneProjects/RISWorkflow) for detailed instructions on how to implement the workflow.
 ***
 ### References
 *Submitted*: William F. Jenkins II, Peter Gerstoft, Michael J. Bianco, Peter D. Bromirski; *Unsupervised Deep Clustering of Seismic Data: Monitoring the Ross Ice Shelf, Antarctica.* Submitted to Journal of Geophysical Research on 20 Jan 2021; doi: https://doi.org/10.1002/essoar.10505894.2
