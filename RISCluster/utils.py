@@ -6,6 +6,7 @@ William Jenkins, wjenkins [at] ucsd [dot] edu
 Scripps Institution of Oceanography, UC San Diego
 January 2021
 """
+
 import argparse
 from concurrent.futures import as_completed, ProcessPoolExecutor
 import configparser
@@ -73,14 +74,25 @@ class LabelCatalogue(object):
         stats = []
         for label in self.label_list:
             subset = self.df["peak"].loc[self.df["label"] == label].abs()
-            stats.append((label+1, subset.mean(), subset.median(), subset.std(), subset.max()))
+            stats.append(
+                (
+                    label+1,
+                    subset.mean(),
+                    subset.median(),
+                    subset.std(),
+                    subset.max()
+                )
+            )
 
-        amp_stats = pd.DataFrame(stats, columns=columns).sort_values(by=["Class"], ignore_index=True)
+        amp_stats = pd.DataFrame(
+            stats,
+            columns=columns
+        ).sort_values(by=["Class"], ignore_index=True)
         return amp_stats.set_index("Class")
 
 
     def build_df(self, paths):
-        data1 = pd.read_csv(paths[0]).drop(columns=["Index"])
+        data1 = pd.read_csv(paths[0])
         data2 = pd.read_csv(self.paths[1]).drop(columns=["idx"])
         df = pd.concat(
             [data1, data2],
@@ -115,14 +127,20 @@ class LabelCatalogue(object):
         elif freq == "hour":
             freqcode = "1H"
         self.freq = freq
-        if (label_list is not None) and (max(label_list) > max(self.label_list)):
+        if (label_list is not None) and \
+            (max(label_list) > max(self.label_list)):
             raise ValueError("label_list includes impossibly high label.")
         else:
             label_list = self.label_list
         for i, label in enumerate(label_list):
-            mask = (self.df["station"] == station) & (self.df['label'] == label)
-            subset = self.df.loc[mask].drop(columns=["network","station","peak","unit"])
-            counts = subset.resample(freqcode).count().rename(columns={"label": f"{label+1}"})
+            mask = (self.df["station"] == station) & \
+                (self.df['label'] == label)
+            subset = self.df.loc[mask].drop(
+                columns=["network","station","peak","unit"]
+            )
+            counts = subset.resample(freqcode).count().rename(
+                columns={"label": f"{label+1}"}
+            )
             if i == 0:
                 df = counts
             else:
@@ -142,10 +160,14 @@ class LabelCatalogue(object):
                 mask_label = self.df["label"] == label
                 subset = self.df.loc[mask_label]
                 total_count = len(subset.index)
-                mask_summer15 = (subset.index >= datetime(2015,1,1)) & (subset.index < datetime(2015,4,1))
-                mask_winter15 = (subset.index >= datetime(2015,6,1)) & (subset.index < datetime(2015,9,1))
-                mask_summer16 = (subset.index >= datetime(2016,1,1)) & (subset.index < datetime(2016,4,1))
-                mask_winter16 = (subset.index >= datetime(2016,6,1)) & (subset.index < datetime(2016,9,1))
+                mask_summer15 = (subset.index >= datetime(2015,1,1)) & \
+                    (subset.index < datetime(2015,4,1))
+                mask_winter15 = (subset.index >= datetime(2015,6,1)) & \
+                    (subset.index < datetime(2015,9,1))
+                mask_summer16 = (subset.index >= datetime(2016,1,1)) & \
+                    (subset.index < datetime(2016,4,1))
+                mask_winter16 = (subset.index >= datetime(2016,6,1)) & \
+                    (subset.index < datetime(2016,9,1))
 
                 count_summer15[j] = 100 * len(subset.loc[mask_summer15].index) / total_count
                 count_winter15[j] = 100 * len(subset.loc[mask_winter15].index) / total_count
@@ -203,6 +225,46 @@ class LabelCatalogue(object):
         return df.sort_values(by="station", ignore_index=True)
 
 
+    def get_peak_frequency(self, fname_dataset, batch_size=2048, workers=12):
+
+        _, _, fvec = load_images(fname_dataset, [[0]])
+
+        dataset = H5SeismicDataset(
+            fname_dataset,
+            transform = transforms.Compose(
+                [SpecgramShaper(), SpecgramToTensor()]
+            )
+        )
+
+        class_avg_maxfreq = np.zeros(len(self.label_list))
+        for j, label in enumerate(self.label_list):
+            mask = self.df.label == label
+            labels_subset = self.df.loc[mask]
+
+            subset = Subset(dataset, labels_subset.Index)
+            dataloader = DataLoader(subset, batch_size=batch_size, num_workers=workers)
+            batch_avg_maxfreq = np.zeros(len(dataloader))
+            pbar = tqdm(
+                dataloader,
+                bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+                desc=f"Label {j+1}/{len(label_list)} (Class {label})",
+                leave=True,
+                position=0
+            )
+            for i, batch in enumerate(pbar):
+                _, X = batch
+                maxfreqind = torch.max(torch.sum(X, 3) / X.size(3), 2).indices
+                maxfreqind = maxfreqind.detach().cpu().numpy()
+                maxfreq = fvec[maxfreqind]
+                batch_avg_maxfreq[i] = maxfreq.mean()
+
+            class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
+            print(f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz", flush=True)
+
+        peak_freqs = pd.DataFrame({"Class": label_list, "Avg_Peak_Freq": class_avg_maxfreq}).sort_values(by=["Class"], ignore_index=True)
+        return peak_freqs.set_index("Class")
+
+    # Not yet implemented: ====================================================
     # def get_peak_frequency(
     #         path_to_labels,
     #         path_to_catalogue,
@@ -492,7 +554,12 @@ def ExtractH5Dataset():
             dset_shape = dset.shape[1:]
             dset_shape = (M,) + dset_shape
             group_id = fd.require_group(group_path)
-            dset_id = group_id.create_dataset(dset_name, dset_shape, dtype=dset.dtype, chunks=None)
+            dset_id = group_id.create_dataset(
+                dset_name,
+                dset_shape,
+                dtype=dset.dtype,
+                chunks=None
+            )
             _copy_attributes(dset, dset_id)
             kwargs2 = {
                 "desc": dset_name,
@@ -608,7 +675,11 @@ def get_peak_frequency(
             )
         )
         subset = Subset(dataset, labels_subset.index)
-        dataloader = DataLoader(subset, batch_size=batch_size, num_workers=workers)
+        dataloader = DataLoader(
+            subset,
+            batch_size=batch_size,
+            num_workers=workers
+        )
         batch_avg_maxfreq = np.zeros(len(dataloader))
         pbar = tqdm(
             dataloader,
@@ -627,7 +698,12 @@ def get_peak_frequency(
         class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
         print(f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz", flush=True)
 
-    peak_freqs = pd.DataFrame({"Class": label_list, "Avg_Peak_Freq": class_avg_maxfreq}).sort_values(by=["Class"], ignore_index=True)
+    peak_freqs = pd.DataFrame(
+        {
+            "Class": label_list,
+            "Avg_Peak_Freq": class_avg_maxfreq
+        }
+    ).sort_values(by=["Class"], ignore_index=True)
     return peak_freqs.set_index("Class")
 
 
@@ -682,7 +758,7 @@ def init_exp_env(mode, savepath, **kwargs):
             savepath_exp = f'{savepath}/Trials/Exp{serial_exp}/'
         else:
             raise ValueError(
-                'Incorrect mode selected; choose "pretrain", "train", or "eval".'
+                'Wrong mode selected; choose "pretrain", "train", or "eval".'
             )
     if not os.path.exists(savepath_exp):
         os.makedirs(savepath_exp)
@@ -725,7 +801,7 @@ def init_output_env(savepath, mode, **kwargs):
         return savepath_run, serial_run
     else:
         raise ValueError(
-                'Incorrect mode selected; choose "pretrain", "train", or "eval".'
+                'Wrong mode selected; choose "pretrain", "train", or "eval".'
             )
 
 
@@ -1011,40 +1087,3 @@ def start_tensorboard(logdir, tbport):
     tbpid = p.pid
     print(f"Tensorboard server available at http://localhost:{tbport}; PID={tbpid}")
     return tbpid
-
-
-# def set_Tst_index(M, fname_dataset, indexpath, reserve=0.0, exclude=True):
-#     with h5py.File(fname_dataset, 'r') as f:
-#         DataSpec = '/4.0/Spectrogram'
-#         m, _, _ = f[DataSpec].shape
-#     index = np.arange(0, m)
-#     if exclude:
-#         idx_ex = load_TraVal_index(fname_dataset, indexpath)
-#         idx_ex = sorted(set(np.concatenate(idx_ex).flatten()))
-#         index_avail = np.setdiff1d(index, idx_ex)
-#     else:
-#         index_avail = index
-#     index_tst = np.random.choice(
-#         index_avail,
-#         size=int(M * (1+reserve)),
-#         replace=False
-#     )
-#     return index_tst
-
-
-# def set_M(fname_dataset, indexpath, exclude=True):
-#     with h5py.File(fname_dataset, 'r') as f:
-#         DataSpec = '/4.0/Spectrogram'
-#         m, _, _ = f[DataSpec].shape
-#     print('Determining number of prediction samples...')
-#     print(f'{m} samples in dataset...')
-#     if exclude:
-#         idx_tra, idx_val = load_TraVal_index(fname_dataset, indexpath)
-#         M_TraVal = len(idx_tra) + len(idx_val)
-#         print(f'{M_TraVal} training/validation samples...')
-#         M = m - M_TraVal
-#         print(f'{m} - {M_TraVal} = {M} prediction samples to be used.')
-#     else:
-#         M = m
-#         print(f'{M} prediction samples to be used.')
-#     return M
