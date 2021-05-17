@@ -1,9 +1,10 @@
 # RISCluster
+***
 RISCluster is a package that implements **deep embedded clustering** (DEC) of
 seismic data recorded on the Ross Ice Shelf, Antarctica from 2014-2017. This
 package is an accompaniment to a paper submitted to the Journal of Geophysical Research (Jenkins II et al., submitted).
 
-RISCluster is in the process of being restructured so that it can be easily installed
+RISCluster is in the process of being restructured so that it can be installed
 and run on a Mac or Linux environment.
 
 This repository is a PyTorch implementation of DEC. The workflow is as follows:
@@ -11,7 +12,7 @@ This repository is a PyTorch implementation of DEC. The workflow is as follows:
 2. Construct a convolutional auto-encoder (AEC)
 3. Tune, train, and validate AEC
 4. Incorporate clustering layer into AEC model architecture
-5. Intialize clusters (K-Means, GMM, K-Medioids available)
+5. Intialize clusters (K-Means, GMM available)
 6. Train the DEC model: clustering and model training are simultaneous.
 7. Once trained, infer class labels for remainder of the data set.
 
@@ -24,10 +25,10 @@ The following steps will set up a Conda environment and install RISProcess, and
 have been tested on MacOS 11.1 and Red Hat Enterprise Linux 7.9.  If you have
 a CUDA-enabled machine (i.e., not MacOS), you can install the CUDA version of
 RISCluster.  Unfortunately, Pytorch & CUML are not implemented for MacOS, so
-you will need to install the GPU version if you use a Mac, or if your Linux
-machine is not CUDA-capable.
+you will need to install the CPU version if you use a Mac, or if your Linux
+machine is not CUDA-capable.  This package has not been tested on Windows.
 
-#### CUDA-enabled RISCluster (Linux-only)
+#### CUDA-enabled RISCluster (Linux)
 1. Open a terminal and navigate to the directory you would like to download the
  **RISCluster_CUDA.yml** environment file.
 2. Save **RISCluster_CUDA.yml** to your computer by running the following:
@@ -36,7 +37,7 @@ machine is not CUDA-capable.
 4. Once the environment is set up and the package is installed, activate your
 environment by running `conda activate RISCluster_CUDA` in terminal.
 
-#### CPU-based RISCluster
+#### CPU-based RISCluster (Mac or Linux)
 1. Open a terminal and navigate to the directory you would like to download the
  **RISCluster_CPU.yml** environment file.
 2. Save **RISCluster_CPU.yml** to your computer by running the following:
@@ -48,8 +49,11 @@ environment by running `conda activate RISCluster_CUDA` in terminal.
 4. Once the environment is set up and the package is installed, activate your
 environment by running `conda activate RISCluster_CPU` in terminal.
 
+### Usage
+Please refer to
+
 ### References
-*Submitted*: William F. Jenkins II, Peter Gerstoft, Michael J. Bianco, Peter D. Bromirski; *Unsupervised Deep Clustering of Seismic Data: Monitoring the Ross Ice Shelf, Antarctica.* Submitted to Journal of Geophysical Research on 20 Jan 2021; doi: https://doi.org/10.1002/essoar.10505894.1
+*Submitted*: William F. Jenkins II, Peter Gerstoft, Michael J. Bianco, Peter D. Bromirski; *Unsupervised Deep Clustering of Seismic Data: Monitoring the Ross Ice Shelf, Antarctica.* Submitted to Journal of Geophysical Research on 20 Jan 2021; doi: https://doi.org/10.1002/essoar.10505894.2
 
 Dylan Snover, Christopher W. Johnson, Michael J. Bianco, Peter Gerstoft; *Deep Clustering to Identify Sources of Urban Seismic Noise in Long Beach, California.* Seismological Research Letters 2020; doi: https://doi.org/10.1785/0220200164
 
