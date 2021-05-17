@@ -651,14 +651,6 @@ def plotter_mp(
         for i, fig in enumerate(figures)]
 
 
-def save_DEC_output(x, label, x_rec, z, idx, savepath):
-    # print(f'x={type(x)} | label={type(label)} | x_r={type(x_rec)} | z={type(z)} | idx={type(idx)} | path={type(savepath)}')
-    fig = view_DEC_output(x, label, x_rec, z, idx, show=False)
-    # print(f'{savepath}{idx:07d}.png')
-    fig.savefig(f'{savepath}/{idx:07d}.png', dpi=300)
-    return None
-
-
 def view_centroid_output(centroids, X_r, figtitle, show=True):
     '''Reconstructs spectrograms from cluster centroids.'''
     n, o = list(X_r.size())[2:]
