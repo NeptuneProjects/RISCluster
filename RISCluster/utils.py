@@ -225,7 +225,7 @@ class LabelCatalogue(object):
         return df.sort_values(by="station", ignore_index=True)
 
 
-    def get_peak_frequency(self, fname_dataset, batch_size=2048, workers=12):
+    def get_peak_freq(self, fname_dataset, batch_size=2048, workers=12):
 
         _, _, fvec = load_images(fname_dataset, [[0]])
 
