@@ -218,7 +218,13 @@ class LabelCatalogue(object):
 
         label_matrix_dict = []
 
-        df = pd.DataFrame({"station": self.station_list, "N": count, "percent": percent})
+        df = pd.DataFrame(
+            {
+                "station": self.station_list,
+                "N": count,
+                "percent": percent
+            }
+        )
         df = pd.concat([df, pd.DataFrame(label_matrix)], axis=1)
         for col in [1, range(3, 3 + len(self.label_list))]:
             df.iloc[:, col] = df.iloc[:, col].astype("int")
@@ -242,12 +248,16 @@ class LabelCatalogue(object):
             labels_subset = self.df.loc[mask]
 
             subset = Subset(dataset, labels_subset.Index)
-            dataloader = DataLoader(subset, batch_size=batch_size, num_workers=workers)
+            dataloader = DataLoader(
+                subset,
+                batch_size=batch_size,
+                num_workers=workers
+            )
             batch_avg_maxfreq = np.zeros(len(dataloader))
             pbar = tqdm(
                 dataloader,
                 bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
-                desc=f"Label {j+1}/{len(label_list)} (Class {label})",
+                desc=f"Label {j+1}/{len(self.label_list)} (Class {label})",
                 leave=True,
                 position=0
             )
@@ -259,9 +269,14 @@ class LabelCatalogue(object):
                 batch_avg_maxfreq[i] = maxfreq.mean()
 
             class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
-            print(f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz", flush=True)
+            print(
+                f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz",
+                flush=True
+            )
 
-        peak_freqs = pd.DataFrame({"Class": label_list, "Avg_Peak_Freq": class_avg_maxfreq}).sort_values(by=["Class"], ignore_index=True)
+        peak_freqs = pd.DataFrame(
+            {"Class": self.label_list, "Avg_Peak_Freq": class_avg_maxfreq}
+        ).sort_values(by=["Class"], ignore_index=True)
         return peak_freqs.set_index("Class")
 
     # Not yet implemented: ====================================================
