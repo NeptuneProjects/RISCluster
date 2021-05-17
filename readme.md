@@ -17,6 +17,7 @@ This repository is a PyTorch implementation of DEC. The workflow is as follows:
 7. Once trained, infer class labels for remainder of the data set.
 
 ### Installation
+***
 Pre-requisites:
 [Anaconda](https://anaconda.org) or
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
