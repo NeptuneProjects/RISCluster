@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+'''Contains classes and functions for reading and processing environmental
+data.
+
+William Jenkins, wjenkins [at] ucsd [dot] edu
+Scripps Institution of Oceanography, UC San Diego
+May 2021
+'''
+
 from datetime import datetime, timedelta
 import glob
 import os

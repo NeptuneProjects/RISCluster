@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-'''Contains necessary functions, routines, plotting wrappers, and data
-recording for DEC model initialization, training, validation, and inference.
+'''Contains necessary functions, routines, and data recording for DEC model
+initialization, training, validation, and inference.
 
 William Jenkins, wjenkins [at] ucsd [dot] edu
 Scripps Institution of Oceanography, UC San Diego
-January 2021
+May 2021
 '''
 
 from datetime import datetime
@@ -22,7 +22,6 @@ if sys.platform == 'darwin':
     from sklearn.manifold import TSNE
 elif sys.platform == 'linux':
     from cuml import KMeans, TSNE
-    # import cupy
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 import torch

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+'''Contains necessary functions, routines, and plotting wrappers for analyzing
+DEC workflow and producing paper figures.
+
+William Jenkins, wjenkins [at] ucsd [dot] edu
+Scripps Institution of Oceanography, UC San Diego
+May 2021
+'''
+
 import os
 
 import cmocean.cm as cmo
