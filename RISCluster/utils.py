@@ -92,8 +92,8 @@ class LabelCatalogue(object):
 
 
     def build_df(self, paths):
-        data1 = pd.read_csv(paths[0])
-        data2 = pd.read_csv(self.paths[1]).drop(columns=["idx"])
+        data1 = pd.read_csv(paths[0]).drop(columns=["Index"])
+        data2 = pd.read_csv(self.paths[1])
         df = pd.concat(
             [data1, data2],
             axis=1
@@ -247,7 +247,7 @@ class LabelCatalogue(object):
             mask = self.df.label == label
             labels_subset = self.df.loc[mask]
 
-            subset = Subset(dataset, labels_subset.Index)
+            subset = Subset(dataset, labels_subset.idx)
             dataloader = DataLoader(
                 subset,
                 batch_size=batch_size,
