@@ -24,19 +24,19 @@ class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.Conv2d(1, 8, kernel_size=(3,3), stride=(2,2), padding=(1,1), bias=True),
             nn.ReLU(True),
-            nn.Conv2d(8, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.Conv2d(8, 16, kernel_size=(3,3), stride=(2,2), padding=(1,1), bias=True),
             nn.ReLU(True),
-            nn.Conv2d(16, 32, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.Conv2d(16, 32, kernel_size=(3,3), stride=(2,2), padding=(1,1), bias=True),
             nn.ReLU(True),
-            nn.Conv2d(32, 64, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+            nn.Conv2d(32, 64, kernel_size=(3,3), stride=(2,2), padding=(1,1), bias=True),
             nn.ReLU(True),
-            nn.Conv2d(64, 128, kernel_size=(3,3), stride=(2,2), padding=(1,0)),
+            nn.Conv2d(64, 128, kernel_size=(3,3), stride=(2,2), padding=(1,0), bias=True),
             nn.ReLU(True),
 
             nn.Flatten(),
-            nn.Linear(1152, 9),
+            nn.Linear(1152, 9, bias=True),
             nn.ReLU(True)
         )
 
@@ -57,19 +57,19 @@ class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()
         self.latent2dec = nn.Sequential(
-            nn.Linear(9, 1152),
+            nn.Linear(9, 1152, bias=True),
             nn.ReLU(True)
         )
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(2,2), padding=(1,0)), # <---- Experimental
+            nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(2,2), padding=(1,0), bias=True), # <---- Experimental
             nn.ReLU(True),  # <---- Experimental
-            nn.ConvTranspose2d(64, 32, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
+            nn.ConvTranspose2d(64, 32, kernel_size=(3,3), stride=(2,2), padding=(0,1), bias=True),
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 16, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
+            nn.ConvTranspose2d(32, 16, kernel_size=(3,3), stride=(2,2), padding=(0,1), bias=True),
             nn.ReLU(True),
-            nn.ConvTranspose2d(16, 8, kernel_size=(3,3), stride=(2,2), padding=(0,0)),
+            nn.ConvTranspose2d(16, 8, kernel_size=(3,3), stride=(2,2), padding=(0,0), bias=True),
             nn.ReLU(True),
-            nn.ConvTranspose2d(8, 1, kernel_size=(3,3), stride=(2,2), padding=(0,1)),
+            nn.ConvTranspose2d(8, 1, kernel_size=(3,3), stride=(2,2), padding=(0,1), bias=True),
         )
 
     def forward(self, x):

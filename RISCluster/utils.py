@@ -27,34 +27,336 @@ import h5py
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader, Subset
+from torch.utils.data import Dataset, DataLoader, Subset, TensorDataset
 from torchvision import transforms
 from tqdm import tqdm
 
 
-class H5SeismicDataset(Dataset):
-    """Loads samples from H5 dataset for use in native PyTorch dataloader."""
-    def __init__(self, fname, transform=None):
+class Configuration():
+
+
+    def __init__(self, init_path):
+        self.init_path = init_path
+        self.datatype = {
+            'n_epochs': 'int',
+            'show': 'bool',
+            'send_message': 'bool',
+            'early_stopping': 'bool',
+            'patience': 'int',
+            'km_metrics': 'bool',
+            'tb': 'bool',
+            'tbport': 'int',
+            'workers': 'int',
+            'batch_size': 'int',
+            'lr': 'float',
+            'n_clusters': 'int',
+            'gamma': 'float',
+            'tol': 'float',
+            'update_interval': 'int'
+        }
+
+
+    def calc_tuning_runs(self):
+        self.runs = 1
+        for k in self.hp:
+            self.runs *= len(self.hp[k])
+        return self.runs
+
+
+    def init_exp_env(self):
+        self.serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
+        if self.mode == 'train':
+            self.savepath_exp = os.path.join(self.savepath, 'Models', self.model, f'Exp{self.serial_exp}')
+        elif self.mode == 'predict':
+            fname = os.path.abspath(os.path.join(self.saved_weights, os.pardir))
+            self.savepath_exp = os.path.join(fname, 'Prediction')
+        elif self.mode == 'fit':
+            fname = os.path.abspath(os.path.join(self.saved_weights, os.pardir))
+            self.savepath_exp = os.path.join(fname, 'GMM')
+
+        # elif self.model != 'GMM' and self.mode == 'predict':
+            # self.savepath_exp = os.path.join(self.parampath, 'Output', f'Exp{self.serial_exp}')
+        else:
+            raise ValueError(
+                'Wrong mode selected; choose "pretrain" or "train".'
+            )
+        os.makedirs(self.savepath_exp, exist_ok=True)
+
+        print('New experiment file structure created at:\n'
+              f'{self.savepath_exp}')
+        return self.savepath_exp, self.serial_exp
+
+
+    def init_output_env(self, **kwargs):
+        self.serial_run = datetime.now().strftime('%Y%m%dT%H%M%S')
+        if self.mode == 'train':
+            if self.model == 'AEC':
+                fname = f'Run_BatchSz={kwargs.get("batch_size")}_' + \
+                        f'LR={kwargs.get("lr")}'
+            elif self.model == 'DEC':
+                fname = f'Run_Clusters={kwargs.get("n_clusters")}_' + \
+                        f'BatchSz={kwargs.get("batch_size")}_' + \
+                        f'LR={kwargs.get("lr")}_' + \
+                        f'gamma={kwargs.get("gamma")}_' + \
+                        f'tol={kwargs.get("tol")}'
+            self.savepath_run = os.path.join(self.savepath_exp, fname)
+            self.savepath_chkpnt = os.path.join(self.savepath_run, 'tmp')
+            os.makedirs(self.savepath_run, exist_ok=True)
+            os.makedirs(self.savepath_chkpnt, exist_ok=True)
+            return self.serial_run, self.savepath_run, self.savepath_chkpnt
+
+        elif self.mode == 'predict':
+            pass
+        elif self.mode == 'fit':
+            fname = f'n_clusters={kwargs.get("n_clusters")}'
+            self.savepath_run = os.path.join(self.savepath_exp, fname)
+            os.makedirs(self.savepath_run, exist_ok=True)
+            return self.serial_run, self.savepath_run
+
+        #     n_clusters = kwargs.get('n_clusters')
+        #     with open(f'{savepath}{n_clusters}_Clusters', 'w') as f:
+        #         pass
+        #     savepath_run = []
+        #     for label in range(n_clusters):
+        #         savepath_cluster = f'{savepath}Cluster{label:02d}'
+        #         if not os.path.exists(savepath_cluster):
+        #             os.makedirs(savepath_cluster)
+        #         savepath_run.append(savepath_cluster)
+        #     return savepath_run, serial_run
+        # else:
+        #     raise ValueError(
+        #             'Wrong mode selected; choose "pretrain", "train", or "predict".'
+        #         )
+
+
+    def load_config(self):
+        self.config = configparser.ConfigParser()
+        self.config.read_file(open(self.init_path))
+        self.section = self.config.sections()
+        self.hp = dict()
+
+        for section in self.section:
+            for k, v in self.config.items(section):
+
+                if section == "HYPERPARAMETERS":
+                    if self.datatype[k] == "int":
+                        v=[int(i) for i in v.split(', ')]
+                    elif self.datatype[k] == "float":
+                        v=[float(i) for i in v.split(', ')]
+                    self.hp[k] = v
+
+                else:
+                    if k in self.datatype.keys():
+                        if self.datatype[k] == "int":
+                            v = int(v)
+                        elif self.datatype[k] == "bool":
+                            v = self.config[section].getboolean(k)
+
+                    if k == "img_index":
+                        v = [int(i) for i in v.split(',')]
+                    if k == "klist":
+                        v = np.arange(int(v.split(',')[0]), int(v.split(',')[1])+1)
+
+                    setattr(self, k, v)
+
+        if self.mode == 'predict':
+            self.verb = 'prediction'
+            if self.model == 'DEC':
+                self.n_clusters = int(parse_nclusters(self.saved_weights))
+            else:
+                self.n_clusters = None
+        elif self.mode == 'train':
+            self.verb = 'training'
+        elif self.mode == 'fit':
+            self.verb = 'fitting'
+        self.tbpid = None
+
+        if self.model == 'AEC' and len(self.hp.keys()) > 2:
+            self.hp = {k: v for k, v in self.hp.items() if (k == 'batch_size') or (k == 'lr')}
+        self.runs = self.calc_tuning_runs()
+
+
+    def load_TraVal_index(self):
+        with open(self.indexpath, 'rb') as f:
+            data = pickle.load(f)
+            self.index_tra = data['index_tra']
+            self.index_val = data['index_val']
+        return self.index_tra, self.index_val
+
+
+    def save_exp_config(self):
+        fname = os.path.join(self.savepath_exp, f'ExpConfig{self.serial_exp}')
+        copyfile(self.init_path, f'{fname}.ini')
+        with open(f'{fname}.txt', 'w') as f:
+            f.write(str(self.__dict__))
+        with open(f'{fname}.pkl', 'wb') as f:
+            pickle.dump(self.__dict__, f)
+
+
+    def set_device(self, cuda_device=None):
+        if torch.cuda.is_available() and (cuda_device is not None):
+            self.device = torch.device(f'cuda:{cuda_device}')
+        elif torch.cuda.is_available():
+            self.device = torch.device('cuda')
+            print('CUDA device available, using GPU.')
+        else:
+            self.device = torch.device('cpu')
+            print('CUDA device not available, using CPU.')
+        return self.device
+
+
+    def start_tensorboard(self):
+        cmd = f"python -m tensorboard.main --logdir=. --port={self.tbport} --samples_per_plugin images=1000"
+        p = subprocess.Popen(cmd, cwd=self.savepath_exp, shell=True)
+        self.tbpid = p.pid
+        print(f"Tensorboard server available at http://localhost:{self.tbport}; PID={self.tbpid}")
+        return self.tbpid
+
+
+
+
+
+class SeismicDataset(Dataset):
+
+    class SpecgramNormalizer(object):
+
+        def __init__(self, transform=None):
+            self.transform = transform
+
+        def __call__(self, X):
+            n, o = X.shape
+            if self.transform == "sample_normalization":
+                X /= np.abs(X).max(axis=(0,1))
+            elif self.transform == "sample_norm_cent":
+                X = (X - X.mean()) / np.abs(X).max()
+            elif self.transform == "vec_norm":
+                X = np.reshape(X, (1,-1))
+                X /= np.linalg.norm(X)
+                X = np.reshape(X, (n, o))
+
+            return X
+
+
+    class SpecgramCrop(object):
+        """Crop & reshape data."""
+        def __call__(self, X):
+            return X[:-1, 1:]
+
+
+    class SpecgramToTensor(object):
+        """Convert ndarrays in sample to Tensors."""
+        def __call__(self, X):
+            X = np.expand_dims(X, axis=0)
+            return torch.from_numpy(X)
+
+    def __init__(
+            self,
+            fname,
+            ftype,
+            transform=transforms.Compose(
+                [
+                    SpecgramCrop(),
+                    SpecgramNormalizer(transform='vec_norm'),
+                    SpecgramToTensor()
+                ]
+            )
+        ):
         self.transform = transform
         self.fname = fname
+        self.ftype = ftype
+        if self.ftype == 'np':
+            self.data = np.load(self.fname)
 
 
     def __len__(self):
-        m, _, _ = query_dbSize(self.fname)
-        return m
+        if self.ftype == 'np':
+            return self.data.shape[0]
+        elif self.ftype == 'h5':
+            m, _, _ = query_dbSize(self.fname)
+            return m
+
 
 
     def __getitem__(self, idx):
-        X = torch.from_numpy(self.read_h5(self.fname, idx))
+        if self.ftype == 'np':
+            X = torch.from_numpy(self.data[idx,:])
+        elif self.ftype == 'h5':
+            X = torch.from_numpy(self.read_h5(self.fname, idx))
         if self.transform:
             X = self.transform(X)
         return idx, X
-
 
     def read_h5(self, fname, idx):
         with h5py.File(fname, 'r') as f:
             DataSpec = '/4.0/Spectrogram'
             return f[DataSpec][idx]
+
+
+# class H5SeismicDataset(Dataset):
+#     """Loads samples from H5 dataset for use in native PyTorch dataloader."""
+#     def __init__(
+#             self,
+#             fname,
+#             transform=transforms.Compose(
+#                 [
+#                     SpecgramCrop(),
+#                     SpecgramNormalizer(transform='vec_norm'),
+#                     SpecgramToTensor()
+#                 ]
+#             )
+#         ):
+#         self.transform = transform
+#         self.fname = fname
+#
+#
+#     def __len__(self):
+#         m, _, _ = query_dbSize(self.fname)
+#         return m
+#
+#
+#     def __getitem__(self, idx):
+#         X = torch.from_numpy(self.read_h5(self.fname, idx))
+#         if self.transform:
+#             X = self.transform(X)
+#         return idx, X
+#
+#
+#     def read_h5(self, fname, idx):
+#         with h5py.File(fname, 'r') as f:
+#             DataSpec = '/4.0/Spectrogram'
+#             return f[DataSpec][idx]
+
+
+def save_data(data, path, overwrite=False, ftype='np'):
+    if os.path.exists(fname) and not overwrite:
+        ow = input(f"You are about to overwrite {fname}; do you want to proceed? [y/n]:  ")
+        if ow == 'n':
+            return
+    if ftype == 'np':
+        np.save(fname1, data)
+    else:
+        pass
+
+
+def dataset_to_RAM(dataset):
+    bsz = 4096
+    dl = DataLoader(dataset, batch_size=bsz, pin_memory=True)
+    pbar = tqdm(
+        dl,
+        leave=True,
+        desc="Loading Data",
+        unit="batch",
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    )
+    m = dataset.__len__()
+    _, n, o, p = next(iter(dl))[1].shape
+    index = torch.zeros(m, dtype=torch.int)
+    data = torch.zeros(m, n, o, p)
+
+    for b, batch in enumerate(pbar):
+        index[b * bsz:(b*bsz) + len(batch[0])], data[b * bsz:(b * bsz) + len(batch[1]),:] = batch
+
+    return TensorDataset(index, data)
 
 
 class LabelCatalogue(object):
@@ -280,39 +582,39 @@ class LabelCatalogue(object):
         return peak_freqs.set_index("Class")
 
 
-class SpecgramShaper(object):
-    """Crop & reshape data."""
-    def __init__(self, n=None, o=None, transform='sample_norm_cent'):
-        self.n = n
-        self.o = o
-        self.transform = transform
-
-
-    def __call__(self, X):
-        if self.n is not None and self.o is not None:
-            N, O = X.shape
-        else:
-            X = X[:-1, 1:]
-        if self.transform is not None:
-            if self.transform == "sample_norm":
-                X /= np.abs(X).max(axis=(0,1))
-            elif self.transform == "sample_norm_cent":
-                # X = (X - X.mean(axis=(0,1))) / \
-                # np.abs(X).max(axis=(0,1))
-                X = (X - X.mean()) / np.abs(X).max()
-            else:
-                raise ValueError("Unsupported transform.")
-        else:
-            print("Test failed.")
-
-        X = np.expand_dims(X, axis=0)
-        return X
-
-
-class SpecgramToTensor(object):
-    """Convert ndarrays in sample to Tensors."""
-    def __call__(self, X):
-        return torch.from_numpy(X)
+# class SpecgramNormalizer(object):
+#
+#     def __init__(self, transform='vec_norm'):
+#         self.transform = transform
+#
+#     def __call__(self, X):
+#         print("normalize")
+#         n, o = X.shape
+#         if self.transform == "sample_normalization":
+#             X /= np.abs(X).max(axis=(0,1))
+#         elif self.transform == "sample_norm_cent":
+#             X = (X - X.mean()) / np.abs(X).max()
+#         elif self.transform == "vec_norm":
+#             X = np.reshape(X, (1,-1))
+#             X /= np.linalg.norm(X)
+#             X = np.reshape(X, (n, o))
+#
+#         return X
+#
+#
+# class SpecgramCrop(object):
+#     """Crop & reshape data."""
+#     def __call__(self, X):
+#         print("crop")
+#         return X[:-1, 1:]
+#
+#
+# class SpecgramToTensor(object):
+#     """Convert ndarrays in sample to Tensors."""
+#     def __call__(self, X):
+#         print("to tensor")
+#         X = np.expand_dims(X, axis=0)
+#         return torch.from_numpy(X)
 
 
 def add_to_history(ll, lv):
@@ -339,16 +641,22 @@ def calc_tuning_runs(hyperparameters):
     tuning_runs = 1
     for key in hyperparameters:
         tuning_runs *= len(hyperparameters[key])
-
     return(tuning_runs)
 
 
-def config_training(universal, parameters, hyperparameters=None):
+def calc_tuning_runs_(hyperparameters):
+    tuning_runs = 1
+    for key in hyperparameters.__dict__:
+        tuning_runs *= len(hyperparameters.__dict__[key])
+    return(tuning_runs)
+
+
+def config_training(universal, parameters, hp=None):
     config = configparser.ConfigParser()
     config['UNIVERSAL'] = universal
     config['PARAMETERS'] = parameters
-    if hyperparameters is not None:
-        config['HYPERPARAMETERS'] = hyperparameters
+    if hp is not None:
+        config['HYPERPARAMETERS'] = hp
     fname = f"{universal['configpath']}/init_{parameters['mode']}.ini"
     with open(fname, 'w') as configfile:
         config.write(configfile)
@@ -367,6 +675,47 @@ def distance_matrix(x, y, f):
                 f
             )
     return dist
+
+
+def ConvertH5toNP():
+    parser = argparse.ArgumentParser(
+        description="Converts spectrograms in H5 file to Numpy file."
+    )
+    parser.add_argument('source', help='Path to source dataset.')
+    parser.add_argument('dest', help='Path to destination.')
+    parser.add_argument('--workers', help='Number of CPU workers.', nargs='?', const=1, default=1, type=int)
+    args = parser.parse_args()
+
+    bsz = 4096
+
+    print(f'Loading data from {args.source}')
+    dataset = utils.SeismicDataset(args.source, 'h5')
+
+    dataloader = DataLoader(
+        dataset,
+        batch_size=bsz,
+        num_workers=args.workers,
+        pin_memory=True
+    )
+
+    pbar = tqdm(
+        dataloader,
+        leave=True,
+        desc="Loading",
+        unit="batch",
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    )
+
+    x_array = np.zeros((len(dataloader.dataset), 1, 87, 100), dtype=np.float32)
+
+    for b, batch in enumerate(tqdm(dataloader)):
+        _, x = batch
+        x_array[b * bsz:(b*bsz) + x.size(0), :] = x.detach().cpu().numpy()
+
+    print('Saving data...', end='', flush=True)
+    np.save(os.path.join(args.dest, 'X'), x_array)
+    print('complete.')
+    return
 
 
 def ExtractH5Dataset():
@@ -711,25 +1060,27 @@ def get_timefreqvec(fname_dataset):
     return tvec, fvec
 
 
+# This function has been moved to Configuration class. Delete once testing is
+# complete.
 def init_exp_env(mode, savepath, **kwargs):
-    if mode == 'batch_predict':
-        init_file = kwargs.get("init_file")
-        exper = init_file.split("/")[-2][10:]
-        serial_exp = exper[3:]
-        run = f'Run{init_file.split("/")[-1][9:-4]}'
-        savepath_exp = f'{savepath}/Trials/{exper}/{run}/'
+    # if mode == 'batch_predict':
+    #     init_file = kwargs.get("init_file")
+    #     exper = init_file.split("/")[-2][10:]
+    #     serial_exp = exper[3:]
+    #     run = f'Run{init_file.split("/")[-1][9:-4]}'
+    #     savepath_exp = f'{savepath}/Trials/{exper}/{run}/'
+    # else:
+    serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
+    if mode == 'pretrain':
+        savepath_exp = f'{savepath}/Models/AEC/Exp{serial_exp}/'
+    elif mode == 'train':
+        savepath_exp = f'{savepath}/Models/DEC/Exp{serial_exp}/'
+    elif mode == 'predict':
+        savepath_exp = f'{savepath}/Trials/Exp{serial_exp}/'
     else:
-        serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
-        if mode == 'pretrain':
-            savepath_exp = f'{savepath}/Models/AEC/Exp{serial_exp}/'
-        elif mode == 'train':
-            savepath_exp = f'{savepath}/Models/DEC/Exp{serial_exp}/'
-        elif mode == 'predict':
-            savepath_exp = f'{savepath}/Trials/Exp{serial_exp}/'
-        else:
-            raise ValueError(
-                'Wrong mode selected; choose "pretrain", "train", or "eval".'
-            )
+        raise ValueError(
+            'Wrong mode selected; choose "pretrain", "train", or "predict".'
+        )
     if not os.path.exists(savepath_exp):
         os.makedirs(savepath_exp)
     print('New experiment file structure created at:\n'
@@ -771,7 +1122,7 @@ def init_output_env(savepath, mode, **kwargs):
         return savepath_run, serial_run
     else:
         raise ValueError(
-                'Wrong mode selected; choose "pretrain", "train", or "eval".'
+                'Wrong mode selected; choose "pretrain", "train", or "predict".'
             )
 
 
@@ -818,7 +1169,7 @@ def load_labels(exppath):
     label_list = np.unique(label)
     return label, index, label_list
 
-
+# This function is now in Configuration class.
 def load_TraVal_index(fname_dataset, loadpath):
     with open(loadpath, 'rb') as f:
         data = pickle.load(f)
@@ -835,20 +1186,21 @@ def load_weights(model, fname, device):
 
 
 def make_dir(savepath_new, savepath_run="."):
-    path = f"{savepath_run}/{savepath_new}"
+    # path = f"{savepath_run}/{savepath_new}"
+    path = os.path.join(savepath_run, savepath_new)
     if not os.path.exists(path):
         os.makedirs(path)
     return path
 
-
-def make_exp(exppath, **kwargs):
-    serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
-    savepath_exp = f"{exppath}/{serial_exp}"
-    savepath_AEC = f"{savepath_exp}/AEC"
-    savepath_DEC = f"{savepath_exp}/DEC"
-    if not os.path.exists(savepath_exp):
-        os.makedirs(savepath_exp)
-    return savepath_exp, serial_exp
+# It appears this function is unused.
+# def make_exp(exppath, **kwargs):
+#     serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
+#     savepath_exp = f"{exppath}/{serial_exp}"
+#     savepath_AEC = f"{savepath_exp}/AEC"
+#     savepath_DEC = f"{savepath_exp}/DEC"
+#     if not os.path.exists(savepath_exp):
+#         os.makedirs(savepath_exp)
+#     return savepath_exp, serial_exp
 
 
 def measure_class_inertia(data, centroids, n_clusters):
@@ -1038,7 +1390,8 @@ def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
     print(savepath)
     return index_tra, index_val, savepath
 
-
+# This function is now implemented in Configuration class. Remove once testing
+# is complete.
 def set_device(cuda_device=None):
     if torch.cuda.is_available() and (cuda_device is not None):
         device = torch.device(f'cuda:{cuda_device}')

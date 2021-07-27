@@ -483,47 +483,44 @@ def cluster_gallery(
 def compare_images(
         model,
         epoch,
-        image_index,
-        fname_dataset,
-        device,
-        savepath=None,
-        show=True,
+        config,
+        savepath=None
     ):
-    tvec, fvec = utils.get_timefreqvec(fname_dataset)
-    dataset = utils.H5SeismicDataset(
-        fname_dataset,
-        transform = transforms.Compose(
-            [utils.SpecgramShaper(), utils.SpecgramToTensor()]
-        )
-
-    )
-    subset = Subset(dataset, image_index)
-    dataloader = DataLoader(subset, batch_size=len(image_index))
+    tvec, fvec = utils.get_timefreqvec(config.fname_dataset)
+    # dataset = utils.H5SeismicDataset(
+    #     fname_dataset,
+    #     transform = transforms.Compose(
+    #         [utils.SpecgramShaper(), utils.SpecgramToTensor()]
+    #     )
+    #
+    # )
+    dataset = utils.SeismicDataset(config.fname_dataset, config.datafiletype)
+    subset = Subset(dataset, config.img_index)
+    dataloader = DataLoader(subset, batch_size=len(config.img_index))
     model.eval()
 
     for batch in dataloader:
         idx, X = batch
-        Xr, z = model(X.to(device))
+        Xr, z = model(X.to(config.device))
 
-    figtitle = f'Pre-training: Epoch {epoch}'
+    figtitle = f'{config.model} Training: Epoch {epoch}'
     if savepath is not None:
-        savepath_snap = savepath + '/snapshots/'
+        savepath_snap = os.path.join(savepath, 'snapshots')
         if not os.path.exists(savepath_snap):
             os.makedirs(savepath_snap)
 
     fig = view_specgram_training(
-        X,
-        Xr, z,
+        X, Xr, z,
         figtitle,
-        image_index,
+        config.img_index,
         tvec,
         fvec,
-        fname_dataset,
-        show=show
+        config.fname_dataset,
+        show=config.show
     )
     if savepath is not None:
-        figname = savepath_snap + f'AEC_Training_Epoch_Single_{epoch:03d}.png'
-        fig.savefig(figname, dpi=300)
+        figname = os.path.join(savepath_snap, f'AEC_Training_Epoch_Single_{epoch:03d}.png')
+        fig.savefig(figname, dpi=300, facecolor='w')
     return fig
 
 
@@ -1058,7 +1055,7 @@ def view_history_AEC(path, show=False):
     fig = plt.figure(figsize=(6, 4), dpi=150)
     plt.plot(df.index, df["Training Loss"], color='k', linestyle='solid')
     plt.plot(df.index, df["Validation Loss"], color='k', linestyle='dashdot')
-    plt.xlim(0, max(df.index))
+    plt.xlim(1, max(df.index))
     plt.yscale('log')
     plt.grid(which="both")
     plt.xlabel('Epoch')
@@ -1499,10 +1496,17 @@ def view_specgram_training(
         station = metadata[i]['station']
         time_on = metadata[counter]['spec_start']
 
+        plotX = np.reshape(X[i,:], (n,o))
+        plotXr = np.reshape(X_r[i,:], (n,o))
+        Xmax = np.amax(np.concatenate((plotX, plotXr)))
+        plotX = plotX / Xmax
+        plotXr = plotXr / Xmax
+        cmax = np.amax(np.concatenate((plotX, plotXr)))
+
         ax1 = fig.add_subplot(gs[counter,0])
-        plt.imshow(np.reshape(X[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
+        plt.imshow(plotX, cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
         plt.colorbar(orientation='vertical', pad=0)
-        plt.clim(0,1)
+        plt.clim(0, cmax)
         plt.xlabel('Time (s)')
         plt.ylabel('Frequency (Hz)')
         plt.title('Input\n' + r'$\bm{x}$', x=0.55)
@@ -1539,9 +1543,9 @@ def view_specgram_training(
         ax2.add_artist(con)
 
         ax3 = fig.add_subplot(gs[counter,2])
-        plt.imshow(np.reshape(X_r[i,:,:,:], (n,o)), cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
+        plt.imshow(plotXr, cmap=cmap, extent=extent, aspect='auto', origin='lower', interpolation="none")
         plt.colorbar(orientation='vertical', pad=0)
-        plt.clim(0,1)
+        plt.clim(0, cmax)
         plt.title("Output\n" + r"$\bm{x}'$", x=0.55)
 
         xy2 = (1.8, arrow_yloc)

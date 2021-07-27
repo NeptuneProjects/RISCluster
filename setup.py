@@ -14,7 +14,8 @@ def setup_package():
             'console_scripts': [
                 'query_H5size=RISCluster.utils:query_H5size',
                 'ExtractH5Dataset=RISCluster.utils:ExtractH5Dataset',
-                'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex'
+                'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex',
+                'ConvertH5toNP=RISCluster.utils:ConvertH5toNP'
             ]
         },
         install_requires=[
