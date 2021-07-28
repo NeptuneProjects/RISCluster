@@ -977,7 +977,7 @@ def view_DEC_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
 
 def view_detections(fname_dataset, img_index, figsize=(12,9), show=True):
     '''Plots selected spectrograms & traces.'''
-    sample_index = np.arange(0, len(image_index))
+    sample_index = np.arange(0, len(img_index))
 
     dataset = utils.SeismicDataset(fname_dataset, 'h5')
     subset = Subset(dataset, img_index)
@@ -1005,7 +1005,7 @@ def view_detections(fname_dataset, img_index, figsize=(12,9), show=True):
     tvec, fvec = utils.get_timefreqvec(fname_dataset)
 
     extent = [min(tvec), max(tvec), min(fvec), max(fvec)]
-    metadata = utils.get_metadata(sample_index, image_index, fname_dataset)
+    metadata = utils.get_metadata(sample_index, img_index, fname_dataset)
     fontsize = 16
     fig = plt.figure(figsize=figsize, dpi=150)
     cmap = 'cmo.ice_r'
@@ -1023,7 +1023,7 @@ def view_detections(fname_dataset, img_index, figsize=(12,9), show=True):
         station = metadata[counter]['station']
         time_on = metadata[counter]['spec_start']
         plt.title(f'Station {station}, {time_on[:-4]}', size=fontsize)
-                  # f'Index: {image_index[sample_index[i]]}')
+                  # f'Index: {img_index[sample_index[i]]}')
 
         tvec = np.linspace(extent[0], extent[1], tr.shape[1])
 
