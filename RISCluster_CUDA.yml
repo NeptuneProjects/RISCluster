@@ -6,9 +6,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.8
+  - python=3.9
   - cmocean
-  - cudatoolkit=10.2.*
+  - cudatoolkit=11.*
   - h5py
   - jupyterlab
   - matplotlib
@@ -19,7 +19,7 @@ dependencies:
   - python-dotenv
   - pytorch::pytorch
   - pytorch::torchvision
-  - rapidsai::cuml=0.18
+  - rapidsai::cuml=21.06
   - scikit-learn
   - scipy
   - tensorboard
