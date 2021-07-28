@@ -9,7 +9,7 @@ def setup_package():
         author='William F. Jenkins II',
         author_email='wjenkins@ucsd.edu',
         packages=['RISCluster'],
-        scripts=['RISCluster/runDEC'],
+        # scripts=['RISCluster/runDEC'],
         entry_points = {
             'console_scripts': [
                 'query_H5size=RISCluster.utils:query_H5size',
