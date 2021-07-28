@@ -5,6 +5,7 @@ import configparser
 from datetime import datetime
 import os
 import sys
+import time
 
 import matplotlib
 import multiprocessing as mp
@@ -54,6 +55,7 @@ def main(init_path=None, cuda_device=None):
 
     if config.tb:
         config.start_tensorboard()
+        time.sleep(5)
 
     config.save_exp_config()
 
