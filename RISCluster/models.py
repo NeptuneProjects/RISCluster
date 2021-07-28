@@ -614,6 +614,9 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
             tb,
             **hpkwargs
         )
+
+    torch.cuda.empty_cache()
+
     toc = datetime.now()
     print(f'Training complete at {toc}; time elapsed = {toc-tic}.')
 
