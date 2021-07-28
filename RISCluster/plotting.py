@@ -975,17 +975,13 @@ def view_DEC_output(x, label, x_rec, z, idx, figsize=(12,9), show=False):
     return fig
 
 
-def view_detections(fname_dataset, image_index, figsize=(12,9), show=True):
+def view_detections(fname_dataset, img_index, figsize=(12,9), show=True):
     '''Plots selected spectrograms & traces.'''
     sample_index = np.arange(0, len(image_index))
-    dataset = utils.H5SeismicDataset(
-        fname_dataset,
-        transform = transforms.Compose(
-            [utils.SpecgramShaper(), utils.SpecgramToTensor()]
-        )
-    )
-    subset = Subset(dataset, image_index)
-    dataloader = DataLoader(subset, batch_size=len(image_index))
+
+    dataset = utils.SeismicDataset(fname_dataset, 'h5')
+    subset = Subset(dataset, img_index)
+    dataloader = DataLoader(subset, batch_size=len(img_index))
 
     for batch in dataloader:
         idx, X = batch
