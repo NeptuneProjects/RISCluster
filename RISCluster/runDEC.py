@@ -3,7 +3,6 @@
 import argparse
 import configparser
 from datetime import datetime
-import faulthandler
 import os
 import sys
 import time
@@ -13,9 +12,6 @@ import multiprocessing as mp
 
 from RISCluster import production
 from RISCluster.utils import Configuration, notify
-
-faulthandler.enable()
-
 
 def main(init_path=None, cuda_device=None):
     """This command line function is the primary script that performs
