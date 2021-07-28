@@ -9,7 +9,7 @@ import sys
 import matplotlib
 import multiprocessing as mp
 
-from RISCluster import production_
+from RISCluster import production
 from RISCluster.utils import Configuration, notify
 
 
@@ -69,11 +69,11 @@ def main(init_path=None, cuda_device=None):
     if config.mode == "train":
         print('='*80)
         print(f'Executing training mode for {config.model}')
-        model = production_.train(config)
+        model = production.train(config)
     elif config.mode == "predict":
-        model = production_.predict(config)
+        model = production.predict(config)
     elif config.mode == "fit":
-        production_.gmm_fit(config)
+        production.gmm_fit(config)
 
     print('-'*100)
     toc = datetime.now()

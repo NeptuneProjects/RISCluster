@@ -21,7 +21,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 
-from RISCluster import models_, utils
+from RISCluster import models, utils
 from RISCluster.networks import AEC, DEC, init_weights
 
 
@@ -88,7 +88,7 @@ def predict(config):
 
         model = DEC(config.n_clusters).to(config.device)
 
-    models_.model_prediction(
+    models.model_prediction(
         config,
         model,
         dataloader,
@@ -155,7 +155,7 @@ def train(config):
 
         config.init_output_env(**hpkwargs)
 
-        models_.model_training(
+        models.model_training(
             config,
             model,
             dataloaders,
@@ -179,6 +179,6 @@ def gmm_fit(config):
         print(f'GMM Run {run_count}/{config.runs}: n_clusters={n_clusters}')
         print('-' * 25)
         config.init_output_env(n_clusters=n_clusters)
-        models_.gmm_fit(config, dataset, n_clusters)
+        models.gmm_fit(config, dataset, n_clusters)
         run_count += 1
     return
