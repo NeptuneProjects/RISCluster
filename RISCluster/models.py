@@ -661,7 +661,7 @@ def gmm(z_array, n_clusters):
         gmm_weights[i] = counts[i] / M
 
     GMM = GaussianMixture(
-        n_components=model.n_clusters,
+        n_components=n_clusters,
         max_iter=1000,
         n_init=1,
         weights_init=gmm_weights,
