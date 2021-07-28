@@ -67,16 +67,15 @@ def main(init_path=None, cuda_device=None):
         raise ValueError(f'Index file not found: {config.indexpath}')
     if config.model == 'DEC' and not os.path.exists(config.saved_weights):
         raise ValueError(f'Saved weights file not found: {config.saved_weights}')
-    # ==== Train AEC or DEC ===================================================
+    # ==== ML Production ======================================================
+    print('='*80)
+    print(f'Executing {config.verb} mode for {config.model}')
     if config.mode == "train":
-        print('='*80)
-        print(f'Executing training mode for {config.model}')
         model = production.train(config)
     elif config.mode == "predict":
         model = production.predict(config)
     elif config.mode == "fit":
         production.gmm_fit(config)
-
     print('-'*100)
     toc = datetime.now()
     msgcontent = f'{config.model} {config.verb} completed at {toc}.' + \

@@ -55,9 +55,9 @@ def measure_clusters(data, metrics):
 def gmm_fit(config, z_array, n_clusters):
     tic = datetime.now()
     print('Performing GMM...', end="", flush=True)
-    # labels, centroids = gmm(z_array, n_clusters)
-    labels = np.random.randint(10)
-    centroids = np.random.rand(2,10)
+    labels, centroids = gmm(z_array, n_clusters)
+    # labels = np.random.randint(10)
+    # centroids = np.random.rand(2,10)
     print('complete.')
 
 
