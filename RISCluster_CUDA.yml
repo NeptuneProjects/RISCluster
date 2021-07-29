@@ -6,9 +6,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.8
   - cmocean
-  - cudatoolkit=11.*
+  - cudatoolkit=10.2.*
   - h5py
   - jupyterlab
   - matplotlib
@@ -17,15 +17,16 @@ dependencies:
   - pandas
   - pydotplus
   - python-dotenv
-  - pytorch::pytorch
-  - pytorch::torchvision
-  - rapidsai::cuml=21.06
+  - pytorch::pytorch=1.8.0
+  - pytorch::torchvision=0.9.0
+  - rapidsai::cuml=0.18
   - scikit-learn
   - scipy
+  - seaborn
   - tensorboard
   - tqdm
   - pip
   - pip:
     - git+https://github.com/NeptuneProjects/RISCluster.git
     - git+https://github.com/NeptuneProjects/RISProcess.git
-    - torchinfo
+    - torchsummary
