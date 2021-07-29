@@ -9,14 +9,14 @@ def setup_package():
         author='William F. Jenkins II',
         author_email='wjenkins@ucsd.edu',
         packages=['RISCluster'],
-        # scripts=['RISCluster/runDEC'],
+        scripts=['RISCluster/runDC'],
         entry_points = {
             'console_scripts': [
                 'query_H5size=RISCluster.utils:query_H5size',
                 'ExtractH5Dataset=RISCluster.utils:ExtractH5Dataset',
                 'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex',
                 'ConvertH5toNP=RISCluster.utils:ConvertH5toNP',
-                'runDC=RISCluster.runDEC:main'
+                # 'runDC=RISCluster.runDEC:main'
             ]
         },
         install_requires=[
