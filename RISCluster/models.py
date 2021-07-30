@@ -482,8 +482,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
             n_clusters=n_clusters
         )
         cluster_weights = torch.from_numpy(centroids).to(device)
-        print(cluster_weights.shape)
-        print(model.state_dict()['clustering.weights'])
         with torch.no_grad():
             model.state_dict()["clustering.weights"].copy_(cluster_weights)
         torch.save(
@@ -496,31 +494,31 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         p = target_distribution(q)
         epoch = 0
 
-        # tsne_results = tsne(z_array0)
-        #
-        # plotargs = (
-        #         fignames,
-        #         figpaths,
-        #         tb,
-        #         model,
-        #         tra_loader,
-        #         device,
-        #         config.fname_dataset,
-        #         z_array0,
-        #         z_array0,
-        #         labels_prev,
-        #         labels_prev,
-        #         centroids,
-        #         centroids,
-        #         tsne_results,
-        #         epoch,
-        #         config.show
-        # )
-        # plot_process = threading.Thread(
-        #     target=plotting.plotter_mp,
-        #     args=plotargs
-        # )
-        # plot_process.start()
+        tsne_results = tsne(z_array0)
+
+        plotargs = (
+                fignames,
+                figpaths,
+                tb,
+                model,
+                tra_loader,
+                device,
+                config.fname_dataset,
+                z_array0,
+                z_array0,
+                labels_prev,
+                labels_prev,
+                centroids,
+                centroids,
+                tsne_results,
+                epoch,
+                config.show
+        )
+        plot_process = threading.Thread(
+            target=plotting.plotter_mp,
+            args=plotargs
+        )
+        plot_process.start()
 
         iters = list()
         rec_losses = list()
@@ -638,33 +636,33 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
 
                 n_iter += 1
 
-            # Save figures every 4 epochs or at end of training ===============
-            # if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-            #     _, _, z_array1 = infer(tra_loader, model, device)
-            #     tsne_results = tsne(z_array1)
-            #     plotargs = (
-            #             fignames,
-            #             figpaths,
-            #             tb,
-            #             model,
-            #             tra_loader,
-            #             device,
-            #             config.fname_dataset,
-            #             z_array0,
-            #             z_array1,
-            #             labels_prev,
-            #             labels,
-            #             centroids,
-            #             model.clustering.weights.detach().cpu().numpy(),
-            #             tsne_results,
-            #             epoch,
-            #             config.show
-            #     )
-            #     plot_process = threading.Thread(
-            #         target=plotting.plotter_mp,
-            #         args=plotargs
-            #     )
-            #     plot_process.start()
+            Save figures every 4 epochs or at end of training ===============
+            if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
+                _, _, z_array1 = infer(tra_loader, model, device)
+                tsne_results = tsne(z_array1)
+                plotargs = (
+                        fignames,
+                        figpaths,
+                        tb,
+                        model,
+                        tra_loader,
+                        device,
+                        config.fname_dataset,
+                        z_array0,
+                        z_array1,
+                        labels_prev,
+                        labels,
+                        centroids,
+                        model.clustering.weights.detach().cpu().numpy(),
+                        tsne_results,
+                        epoch,
+                        config.show
+                )
+                plot_process = threading.Thread(
+                    target=plotting.plotter_mp,
+                    args=plotargs
+                )
+                plot_process.start()
 
             if finished:
                 break
@@ -833,13 +831,13 @@ def kmeans(z_array, n_clusters):
 def initialize_clusters(model, dataloader, config, n_clusters=None):
 
     if config.init == 'load':
+        print('Loading cluster initialization...', end='', flush=True)
         path = os.path.abspath(os.path.join(config.saved_weights, os.pardir))
         path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
-        print(path)
         labels = np.load(os.path.join(path, 'labels.npy'))
         centroids = np.load(os.path.join(path, 'centroids.npy'))
     if config.init == "rand": # Random Initialization (for testing)
-        print('Initiating clusters with random points...')
+        print('Initiating clusters with random points...', end='', flush=True)
         labels, centroids = np.random.randint(0, n_clusters, (100)), np.random.uniform(size=(n_clusters,9))
     else:
         _, _, z_array = batch_eval(dataloader, model, config.device)
@@ -849,10 +847,6 @@ def initialize_clusters(model, dataloader, config, n_clusters=None):
         elif config.init == "gmm": # GMM Initialization:
             print('Initiating clusters with GMM...', end="", flush=True)
             labels, centroids = gmm(z_array, model.n_clusters)
-
-    print(centroids)
-    print(centroids.shape)
-    print(type(centroids))
 
     return labels, centroids
 
