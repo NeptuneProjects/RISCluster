@@ -514,7 +514,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 epoch,
                 config.show
         )
-        plotting.plotter_mp(*args)
+        plotting.plotter_mp(*plotargs)
         # plot_process = threading.Thread(
         #     target=plotting.plotter_mp,
         #     args=plotargs
@@ -659,7 +659,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                         epoch,
                         config.show
                 )
-                plotting.plotter_mp(*args)
+                plotting.plotter_mp(*plotargs)
                 # plot_process = threading.Thread(
                 #     target=plotting.plotter_mp,
                 #     args=plotargs
