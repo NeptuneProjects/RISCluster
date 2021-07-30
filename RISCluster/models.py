@@ -44,7 +44,8 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     n_clusters = len(label_list)
 
     silh_scores = None
-    silh_scores = cupy.asnumpy(silhouette_samples(z, labels))
+    silh_scores = silhouette_samples(z, labels)
+    silh_scores = cupy.asnumpy(silh_scores)
     silh_scores_avg = np.mean(silh_scores)
 
     _, _, n, o = x.shape
@@ -120,7 +121,7 @@ def gmm_fit(config, z_array, n_clusters):
 
     print('Performing clustering metrics...', end='', flush=True)
     x = np.load(config.fname_dataset + '.npy')
-    inner_product, MSE, MSE_avg, MAE, MAE_avg, silh_scores = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
+    _, _, _, _, _, _, silh_scores, _ = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
     fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
     fig.savefig(config.savepath_run + 'silh_score.png', dpi=300, facecolor='w')
     print('complete.')
