@@ -514,11 +514,12 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 epoch,
                 config.show
         )
-        plot_process = threading.Thread(
-            target=plotting.plotter_mp,
-            args=plotargs
-        )
-        plot_process.start()
+        plotting.plotter_mp(*args)
+        # plot_process = threading.Thread(
+        #     target=plotting.plotter_mp,
+        #     args=plotargs
+        # )
+        # plot_process.start()
 
         iters = list()
         rec_losses = list()
@@ -658,11 +659,12 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                         epoch,
                         config.show
                 )
-                plot_process = threading.Thread(
-                    target=plotting.plotter_mp,
-                    args=plotargs
-                )
-                plot_process.start()
+                plotting.plotter_mp(*args)
+                # plot_process = threading.Thread(
+                #     target=plotting.plotter_mp,
+                #     args=plotargs
+                # )
+                # plot_process.start()
 
             if finished:
                 break
