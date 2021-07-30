@@ -835,9 +835,6 @@ def initialize_clusters(model, dataloader, config, n_clusters=None):
         path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
         labels = np.load(os.path.join(path, 'labels.npy'))
         centroids = np.load(os.path.join(path, 'centroids.npy'))
-        print(centroids)
-        print(centroids.shape)
-        print(type(centroids))
     except:
         if config.init == "rand": # Random Initialization (for testing)
             print('Initiating clusters with random points...')
@@ -850,6 +847,10 @@ def initialize_clusters(model, dataloader, config, n_clusters=None):
             elif config.init == "gmm": # GMM Initialization:
                 print('Initiating clusters with GMM...', end="", flush=True)
                 labels, centroids = gmm(z_array, model.n_clusters)
+
+    print(centroids)
+    print(centroids.shape)
+    print(type(centroids))
 
     return labels, centroids
 
