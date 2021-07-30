@@ -133,7 +133,7 @@ class ClusteringLayer(nn.Module):
         self.alpha = alpha
         if weights is None:
             initial_weights = torch.zeros(
-                self.n_clusters, self.n_features, dtype=torch.float
+                int(self.n_clusters), self.n_features, dtype=torch.float
             )
             nn.init.xavier_uniform_(initial_weights)
         else:

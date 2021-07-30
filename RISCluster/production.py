@@ -127,15 +127,17 @@ def train(config):
             num_workers=config.workers,
             pin_memory=True
         )
-        val_loader = DataLoader(
-            val_dataset,
-            batch_size=batch_size,
-            num_workers=config.workers,
-            pin_memory=True
-        )
-        dataloaders = [tra_loader, val_loader]
 
         if config.model == "AEC":
+
+            val_loader = DataLoader(
+                val_dataset,
+                batch_size=batch_size,
+                num_workers=config.workers,
+                pin_memory=True
+            )
+            dataloaders = [tra_loader, val_loader]
+
             print(f"batch_size = {batch_size} | lr = {lr}")
 
             model = AEC().to(config.device)
@@ -146,7 +148,11 @@ def train(config):
         elif config.model == "DEC":
             print(str().join([f" {k} = {v} |" for k, v in hpkwargs.items()])[:-1])
 
-            model = DEC(n_clusters=hp[2]).to(config.device)
+            dataloaders = [tra_loader]
+
+            print(hp[2])
+
+            model = DEC(n_clusters=int(hp[2])).to(config.device)
 
             metrics = [
                 nn.MSELoss(reduction='mean'),

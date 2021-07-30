@@ -17,11 +17,11 @@ import shutil
 import sys
 import threading
 
-import cupy
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.matlib
 try:
+    import cupy
     from cuml import KMeans, TSNE
     from cuml.metrics.cluster.silhouette_score \
         import cython_silhouette_samples as silhouette_samples
@@ -49,7 +49,8 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
 
     silh_scores = None
     silh_scores = silhouette_samples(z, labels)
-    silh_scores = cupy.asnumpy(silh_scores)
+    if torch.cuda.is_available():
+        silh_scores = cupy.asnumpy(silh_scores)
     silh_scores_avg = np.mean(silh_scores)
 
     _, _, n, o = x.shape
@@ -438,7 +439,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         savepath_chkpnt = config.savepath_chkpnt
 
         tra_loader = dataloaders[0]
-        val_loader = dataloaders[1]
+        # val_loader = dataloaders[1]
 
         fignames = [
             'T-SNE',
@@ -481,6 +482,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
             n_clusters=n_clusters
         )
         cluster_weights = torch.from_numpy(centroids).to(device)
+        print(cluster_weights.shape)
         with torch.no_grad():
             model.state_dict()["clustering.weights"].copy_(cluster_weights)
         torch.save(
@@ -493,31 +495,31 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         p = target_distribution(q)
         epoch = 0
 
-        tsne_results = tsne(z_array0)
-
-        plotargs = (
-                fignames,
-                figpaths,
-                tb,
-                model,
-                tra_loader,
-                device,
-                config.fname_dataset,
-                z_array0,
-                z_array0,
-                labels_prev,
-                labels_prev,
-                centroids,
-                centroids,
-                tsne_results,
-                epoch,
-                config.show
-        )
-        plot_process = threading.Thread(
-            target=plotting.plotter_mp,
-            args=plotargs
-        )
-        plot_process.start()
+        # tsne_results = tsne(z_array0)
+        #
+        # plotargs = (
+        #         fignames,
+        #         figpaths,
+        #         tb,
+        #         model,
+        #         tra_loader,
+        #         device,
+        #         config.fname_dataset,
+        #         z_array0,
+        #         z_array0,
+        #         labels_prev,
+        #         labels_prev,
+        #         centroids,
+        #         centroids,
+        #         tsne_results,
+        #         epoch,
+        #         config.show
+        # )
+        # plot_process = threading.Thread(
+        #     target=plotting.plotter_mp,
+        #     args=plotargs
+        # )
+        # plot_process.start()
 
         iters = list()
         rec_losses = list()
@@ -636,32 +638,32 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 n_iter += 1
 
             # Save figures every 4 epochs or at end of training ===============
-            if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-                _, _, z_array1 = infer(tra_loader, model, device)
-                tsne_results = tsne(z_array1)
-                plotargs = (
-                        fignames,
-                        figpaths,
-                        tb,
-                        model,
-                        tra_loader,
-                        device,
-                        config.fname_dataset,
-                        z_array0,
-                        z_array1,
-                        labels_prev,
-                        labels,
-                        centroids,
-                        model.clustering.weights.detach().cpu().numpy(),
-                        tsne_results,
-                        epoch,
-                        config.show
-                )
-                plot_process = threading.Thread(
-                    target=plotting.plotter_mp,
-                    args=plotargs
-                )
-                plot_process.start()
+            # if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
+            #     _, _, z_array1 = infer(tra_loader, model, device)
+            #     tsne_results = tsne(z_array1)
+            #     plotargs = (
+            #             fignames,
+            #             figpaths,
+            #             tb,
+            #             model,
+            #             tra_loader,
+            #             device,
+            #             config.fname_dataset,
+            #             z_array0,
+            #             z_array1,
+            #             labels_prev,
+            #             labels,
+            #             centroids,
+            #             model.clustering.weights.detach().cpu().numpy(),
+            #             tsne_results,
+            #             epoch,
+            #             config.show
+            #     )
+            #     plot_process = threading.Thread(
+            #         target=plotting.plotter_mp,
+            #         args=plotargs
+            #     )
+            #     plot_process.start()
 
             if finished:
                 break
