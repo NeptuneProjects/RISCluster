@@ -833,6 +833,7 @@ def initialize_clusters(model, dataloader, config, n_clusters=None):
     try:
         path = os.path.abspath(os.path.join(config.saved_weights, os.pardir))
         path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
+        print('path')
         labels = np.load(os.path.join(path, 'labels.npy'))
         centroids = np.load(os.path.join(path, 'centroids.npy'))
     except:

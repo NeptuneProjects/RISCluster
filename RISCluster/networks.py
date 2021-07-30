@@ -128,12 +128,12 @@ class ClusteringLayer(nn.Module):
     """
     def __init__(self, n_clusters, n_features=9, alpha=1.0, weights=None):
         super(ClusteringLayer, self).__init__()
-        self.n_features = n_features
-        self.n_clusters = n_clusters
+        self.n_features = int(n_features)
+        self.n_clusters = int(n_clusters)
         self.alpha = alpha
         if weights is None:
             initial_weights = torch.zeros(
-                int(self.n_clusters), self.n_features, dtype=torch.float
+                self.n_clusters, self.n_features, dtype=torch.float
             )
             nn.init.xavier_uniform_(initial_weights)
         else:
