@@ -1215,7 +1215,10 @@ def view_latent_space(
         else:
             xlabels = [item.get_text() for item in ax3.get_xticklabels()]
             empty_string_labels = ['']*len(xlabels)
-            ax3.set_xticklabels(empty_string_labels)
+            # ax3.set_xticklabels(empty_string_labels)
+            ax3.set_xticks(ax3.get_xticks())  # just get and reset whatever you already have
+            ax3.set_xticklabels(empty_string_labels)  # set the new/modified labels
+
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
 
     # Colorbar
