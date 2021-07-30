@@ -483,6 +483,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         )
         cluster_weights = torch.from_numpy(centroids).to(device)
         print(cluster_weights.shape)
+        print(model.state_dict()['clustering.weights'])
         with torch.no_grad():
             model.state_dict()["clustering.weights"].copy_(cluster_weights)
         torch.save(
