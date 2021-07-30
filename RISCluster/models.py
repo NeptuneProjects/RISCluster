@@ -440,7 +440,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
 
         tra_loader = dataloaders[0]
         # val_loader = dataloaders[1]
-
+        print(savepath_run)
         fignames = [
             'T-SNE',
             'Gallery',

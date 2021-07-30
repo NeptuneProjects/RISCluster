@@ -163,9 +163,8 @@ def train(config):
 
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
-        print(hpkwargs)
-
         config.init_output_env(**hpkwargs)
+        print(config.savepath_run)
 
         models.model_training(
             config,
