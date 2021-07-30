@@ -632,7 +632,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
 
             # Save figures every 4 epochs or at end of training ===============
             if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-                _, _, z_array1 = infer(tra_loader, model, device)
+                _, _, z_array1 = batch_eval(tra_loader, model, device)
                 tsne_results = tsne(z_array1)
                 plotargs = (
                         fignames,
@@ -898,7 +898,7 @@ def tsne(data):
 
 
 def batch_eval(dataloader, model, device, mute=True, keep_decoded=False):
-    '''Run DEC model in inference mode.
+    '''Run DEC model in batch_inference mode.
 
     Parameters
     ----------
