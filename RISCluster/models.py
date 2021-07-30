@@ -636,7 +636,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
 
                 n_iter += 1
 
-            Save figures every 4 epochs or at end of training ===============
+            # Save figures every 4 epochs or at end of training ===============
             if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
                 _, _, z_array1 = infer(tra_loader, model, device)
                 tsne_results = tsne(z_array1)
