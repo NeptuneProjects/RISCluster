@@ -28,6 +28,8 @@ except:
     from sklearn.manifold import TSNE
     from sklearn.metrics import silhouette_samples
 import pandas as pd
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics.pairwise import linear_kernel
 from sklearn.mixture import GaussianMixture
 import torch
 from torch.utils.data import Dataset, DataLoader
