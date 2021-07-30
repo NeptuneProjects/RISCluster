@@ -836,7 +836,7 @@ def initialize_clusters(model, dataloader, config, n_clusters=None):
         print('Loading cluster initialization...', end='', flush=True)
         path = os.path.abspath(os.path.join(config.saved_weights, os.pardir))
         path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
-        labels = np.load(os.path.join(path, 'labels.npy'))
+        labels = np.load(os.path.join(path, 'labels.npy'))[config.index_tra]
         centroids = np.load(os.path.join(path, 'centroids.npy'))
     if config.init == "rand": # Random Initialization (for testing)
         print('Initiating clusters with random points...', end='', flush=True)
