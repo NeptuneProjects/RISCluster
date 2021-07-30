@@ -103,7 +103,7 @@ class Configuration():
                         f'tol={kwargs.get("tol")}'
             print(fname)
             self.savepath_run = os.path.join(self.savepath_exp, fname)
-            print(savepath_run)
+            print(self.savepath_run)
             self.savepath_chkpnt = os.path.join(self.savepath_run, 'tmp')
             os.makedirs(self.savepath_run, exist_ok=True)
             os.makedirs(self.savepath_chkpnt, exist_ok=True)
