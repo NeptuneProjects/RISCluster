@@ -454,6 +454,8 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 exist_ok=True
             ) for i in range(len(fignames))]
 
+        print(figpaths)
+
         model.load_state_dict(
             torch.load(config.saved_weights, map_location=device), strict=False
         )
