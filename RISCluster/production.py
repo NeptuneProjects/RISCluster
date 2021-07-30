@@ -150,8 +150,6 @@ def train(config):
 
             dataloaders = [tra_loader]
 
-            print(hp[2])
-
             model = DEC(n_clusters=int(hp[2])).to(config.device)
 
             metrics = [
