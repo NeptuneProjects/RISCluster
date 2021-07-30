@@ -1605,6 +1605,7 @@ def view_TSNE(results, labels, title, show=False):
 
     textsize = 14
     colors = cmap_lifeaquatic(len(counts))
+    print(labels.shape, results[:,0].shape, results[:,1].shape)
     data = np.stack([(labels+1), results[:,0], results[:,1]], axis=1)
     df = pd.DataFrame(data=data, columns=["Class", "x", "y"])
     df["Class"] = df["Class"].astype('int').astype('category')
