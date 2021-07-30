@@ -208,11 +208,8 @@ def model_prediction(
             'CDF',
             'PDF'
         ]
-        figpaths = [
-            os.makedirs(
-                os.path.join(savepath_run, fignames[i]),
-                exist_ok=True
-            ) for i in range(len(fignames))]
+        figpaths = [os.path.join(savepath_run, name) for name in fignames]
+        [os.makedirs(path, exist_ok=True) for path in figpaths]
 
         z_array_AEC = np.load(os.path.join(AEC_path, 'Prediction', 'Z_AEC.npy'))
         labels_GMM = np.load(os.path.join(AEC_path, 'GMM', f'n_clusters={n_clusters}', 'labels.npy'))
@@ -439,8 +436,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         savepath_chkpnt = config.savepath_chkpnt
 
         tra_loader = dataloaders[0]
-        # val_loader = dataloaders[1]
-        print(savepath_run)
+
         fignames = [
             'T-SNE',
             'Gallery',
@@ -448,13 +444,8 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
             'CDF',
             'PDF'
         ]
-        figpaths = [
-            os.makedirs(
-                os.path.join(savepath_run, fignames[i]),
-                exist_ok=True
-            ) for i in range(len(fignames))]
-
-        print(figpaths)
+        figpaths = [os.path.join(savepath_run, name) for name in fignames]
+        [os.makedirs(path, exist_ok=True) for path in figpaths]
 
         model.load_state_dict(
             torch.load(config.saved_weights, map_location=device), strict=False

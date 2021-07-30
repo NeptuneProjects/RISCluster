@@ -89,7 +89,6 @@ class Configuration():
 
 
     def init_output_env(self, **kwargs):
-        print(kwargs)
         self.serial_run = datetime.now().strftime('%Y%m%dT%H%M%S')
         if self.mode == 'train':
             if self.model == 'AEC':
@@ -101,9 +100,7 @@ class Configuration():
                         f'LR={kwargs.get("lr")}_' + \
                         f'gamma={kwargs.get("gamma")}_' + \
                         f'tol={kwargs.get("tol")}'
-            print(fname)
             self.savepath_run = os.path.join(self.savepath_exp, fname)
-            print(self.savepath_run)
             self.savepath_chkpnt = os.path.join(self.savepath_run, 'tmp')
             os.makedirs(self.savepath_run, exist_ok=True)
             os.makedirs(self.savepath_chkpnt, exist_ok=True)
