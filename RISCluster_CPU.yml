@@ -24,4 +24,4 @@ dependencies:
   - pip:
     - git+https://github.com/NeptuneProjects/RISCluster.git
     - git+https://github.com/NeptuneProjects/RISProcess.git
-    - torchsummary
+    - torchinfo
