@@ -21,6 +21,7 @@ from shutil import copyfile
 import smtplib
 import ssl
 import subprocess
+import time
 
 from dotenv import load_dotenv
 import h5py
@@ -712,6 +713,7 @@ def ConvertH5toNP():
         _, x = batch
         x_array[b * bsz:(b*bsz) + x.size(0), :] = x.detach().cpu().numpy()
 
+    time.sleep(1)
     print('Saving data...', end='', flush=True)
 
     if args.dest is not None:
