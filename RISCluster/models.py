@@ -20,13 +20,11 @@ import numpy as np
 try:
     from cuml import KMeans, TSNE
     from cuml.metrics.cluster.silhouette_score \
-        import cython_silhouette_score as silhouette_score
-    from cuml.metrics.cluster.silhouette_score \
         import cython_silhouette_samples as silhouette_samples
 except:
     from sklearn.cluster import KMeans
     from sklearn.manifold import TSNE
-    from sklearn.metrics import silhouette_score, silhouette_samples
+    from sklearn.metrics import silhouette_samples
 from sklearn.mixture import GaussianMixture
 import torch
 from torch.utils.data import Dataset, DataLoader

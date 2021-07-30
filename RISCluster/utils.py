@@ -689,7 +689,7 @@ def ConvertH5toNP():
     bsz = 4096
 
     print(f'Loading data from {args.source}')
-    dataset = utils.SeismicDataset(args.source, 'h5')
+    dataset = SeismicDataset(args.source, 'h5')
 
     dataloader = DataLoader(
         dataset,
