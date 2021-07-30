@@ -35,7 +35,6 @@ def analyze_dec(
         dataloader,
         device,
         fname_dataset,
-        index_tra,
         data_a,
         data_b,
         labels_a,
@@ -73,7 +72,6 @@ def analyze_dec(
         model,
         dataloader.dataset,
         fname_dataset,
-        index_tra,
         device,
         data_b,
         labels_b,
@@ -90,14 +88,14 @@ def analyze_dec(
     #     p,
     #     show
     # )
-    fig3 = centroid_distances(
-        data_b,
-        labels_b,
-        centroids_b,
-        n_clusters,
-        p,
-        show
-    )
+    # fig3 = centroid_distances(
+    #     data_b,
+    #     labels_b,
+    #     centroids_b,
+    #     n_clusters,
+    #     p,
+    #     show
+    # )
     fig4 = view_latent_space(
         data_a,
         data_b,
@@ -134,7 +132,7 @@ def analyze_dec(
         show,
         latex
     )
-    return [fig1, fig2, fig3, fig4, fig5, fig6]
+    return [fig1, fig2, fig4, fig5, fig6]
 
 
 def cmap_lifeaquatic(N=None):
@@ -311,7 +309,6 @@ def cluster_gallery(
         model,
         dataset,
         fname_dataset,
-        index_tra,
         device,
         z_array,
         labels,
@@ -560,7 +557,6 @@ def plotter_mp(
         dataloader,
         device,
         fname_dataset,
-        index_tra,
         data_a,
         data_b,
         labels_a,
@@ -593,9 +589,6 @@ def plotter_mp(
 
     fname_dataset : str
         Path to dataset
-
-    index_tra: array
-        Indeces of data samples to be used for DEC training.
 
     data_a : array (M,D)
         Latent data from model initialization [m_samples,d_features]
@@ -638,7 +631,6 @@ def plotter_mp(
         dataloader,
         device,
         fname_dataset,
-        index_tra,
         data_a,
         data_b,
         labels_a,

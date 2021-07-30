@@ -33,6 +33,8 @@ def load_data(config):
 
         if config.mode == 'train':
             index_tra, index_val = config.load_TraVal_index()
+            config.index_tra = index_tra
+            config.index_val = index_val
             tra_dataset = Subset(dataset, index_tra)
             val_dataset = Subset(dataset, index_val)
             del dataset

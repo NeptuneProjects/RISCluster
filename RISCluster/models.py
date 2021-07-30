@@ -9,11 +9,13 @@ May 2021
 '''
 
 from datetime import datetime
+import fnmatch
 import multiprocessing as mp
-import threading
 import os
+import pickle
 import shutil
 import sys
+import threading
 
 import cupy
 import matplotlib.pyplot as plt
@@ -124,8 +126,12 @@ def gmm_fit(config, z_array, n_clusters):
     print('Performing clustering metrics...', end='', flush=True)
     x = np.load(config.fname_dataset + '.npy')
     _, _, _, _, _, _, silh_scores, _ = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
-    fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
-    fig.savefig(os.path.join(config.savepath_run, 'silh_score.png'), dpi=300, facecolor='w')
+    fig1 = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
+    fig1.savefig(os.path.join(config.savepath_run, 'silh_score.png'), dpi=300, facecolor='w')
+
+    tsne_results = tsne(z_array)
+    fig2 = view_TSNE(tsne_results, labels, 'GMM', config.show)
+    fig2.savefig(os.path.join(config.savepath_run, 't-SNE.png'), dpi=300, facecolor='w')
     print('complete.')
 
     toc = datetime.now()
@@ -141,6 +147,7 @@ def model_prediction(
     tic = datetime.now()
     print(f'Evaluating data using {config.model} model...')
     device = config.device
+    n_clusters = config.n_clusters
     savepath = config.savepath_exp
 
     model.load_state_dict(torch.load(config.saved_weights, map_location=device))
@@ -160,7 +167,7 @@ def model_prediction(
     )
 
     if config.model == 'DEC':
-        q_array = np.zeros((len(dataloader.dataset), model.n_clusters),dtype=np.float32)
+        q_array = np.zeros((len(dataloader.dataset), n_clusters),dtype=np.float32)
         for b, batch in enumerate(tqdm(dataloader)):
             _, batch = batch
             x = batch.to(device)
@@ -178,6 +185,63 @@ def model_prediction(
         np.save(os.path.join(config.savepath_exp, 'Xr_DEC'), xr_array)
         np.save(os.path.join(config.savepath_exp, 'labels'), labels)
         np.save(os.path.join(config.savepath_exp, 'centroids'), centroids)
+        print('complete.')
+
+        print('Performing clustering metrics...', end='', flush=True)
+        x = np.load(config.fname_dataset + '.npy')
+        _, _, _, _, _, _, silh_scores, _ = cluster_metrics(config.savepath_exp, labels, x, z_array, centroids)
+        fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
+        fig.savefig(os.path.join(config.savepath_exp, 'silh_score.png'), dpi=300, facecolor='w')
+        print('complete.')
+
+        print('Creating figures...', end='', flush=True)
+        AEC_path = os.path.abspath(os.path.join(os.pardir, os.pardir))
+        AEC_path = fnmatch.filter([f for f in os.listdir(AEC_path) if os.path.isfile(f)], '*.pkl')
+        AEC_path = pickle.load(open(AEC_path, 'rb'))[0]['saved_weights']
+        AEC_path = os.path.abspath(os.path.join(AEC_path, os.pardir))
+
+        fignames = [
+            'T-SNE',
+            'Gallery',
+            'LatentSpace',
+            'CDF',
+            'PDF'
+        ]
+        figpaths = [
+            os.makedirs(
+                os.path.join(savepath_run, fignames[i]),
+                exist_ok=True
+            ) for i in range(len(fignames))]
+
+        z_array_AEC = np.load(os.path.join(AEC_path, 'Prediction', 'Z_AEC.npy'))
+        labels_GMM = np.load(os.path.join(AEC_path, 'GMM', f'n_clusters={n_clusters}', 'labels.npy'))
+        centroids_GMM = np.load(os.path.join(AEC_path, 'GMM', f'n_clusters={n_clusters}', 'centroids.npy'))
+
+        tsne_results = tsne(z_array)
+        plotargs = (
+                fignames,
+                figpaths,
+                tb,
+                model,
+                dataloader,
+                device,
+                config.fname_dataset,
+                z_array_AEC,
+                z_array,
+                labels,
+                labels_GMM,
+                centroids_GMM,
+                centroids,
+                tsne_results,
+                epoch,
+                config.show
+        )
+        plot_process = threading.Thread(
+            target=plotting.plotter_mp,
+            args=plotargs
+        )
+        plot_process.start()
+
         print('complete.')
 
     elif config.model == 'AEC':
@@ -379,7 +443,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         fignames = [
             'T-SNE',
             'Gallery',
-            'DistMatrix',
             'LatentSpace',
             'CDF',
             'PDF'
@@ -430,29 +493,31 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         p = target_distribution(q)
         epoch = 0
 
-        # tsne_results = tsne(z_array0)
+        tsne_results = tsne(z_array0)
 
-        # plotargs = (
-        #         fignames,
-        #         figpaths,
-        #         tb,
-        #         model,
-        #         tra_loader,
-        #         device,
-        #         config.fname_dataset,
-        #         config.index_tra,
-        #         z_array0,
-        #         z_array0,
-        #         labels_prev,
-        #         labels_prev,
-        #         centroids,
-        #         centroids,
-        #         tsne_results,
-        #         epoch,
-        #         config.show
-        # )
-        # plot_process = threading.Thread(target=plotting.plotter_mp, args=plotargs)
-        # plot_process.start()
+        plotargs = (
+                fignames,
+                figpaths,
+                tb,
+                model,
+                tra_loader,
+                device,
+                config.fname_dataset,
+                z_array0,
+                z_array0,
+                labels_prev,
+                labels_prev,
+                centroids,
+                centroids,
+                tsne_results,
+                epoch,
+                config.show
+        )
+        plot_process = threading.Thread(
+            target=plotting.plotter_mp,
+            args=plotargs
+        )
+        plot_process.start()
 
         iters = list()
         rec_losses = list()
@@ -570,37 +635,33 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
 
                 n_iter += 1
 
-            # epoch_val_mse = validation(model, val_loader, metric_mse, config)[0]
-            # tb.add_scalar('Validation MSE', epoch_val_mse, iter+1)
-
             # Save figures every 4 epochs or at end of training ===============
-            # if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
-                # _, _, z_array1 = infer(tra_loader, model, device)
-                # tsne_results = tsne(z_array1)
-                # plotargs = (
-                #         fignames,
-                #         figpaths,
-                #         tb,
-                #         model,
-                #         tra_loader,
-                #         device,
-                #         config.fname_dataset,
-                #         config.index_tra,
-                #         z_array0,
-                #         z_array1,
-                #         labels_prev,
-                #         labels,
-                #         centroids,
-                #         model.clustering.weights.detach().cpu().numpy(),
-                #         tsne_results,
-                #         epoch,
-                #         config.show
-                # )
-                # plot_process = threading.Thread(
-                #     target=plotting.plotter_mp,
-                #     args=plotargs
-                # )
-                # plot_process.start()
+            if ((epoch % 4 == 0) and not (epoch == 0)) or finished:
+                _, _, z_array1 = infer(tra_loader, model, device)
+                tsne_results = tsne(z_array1)
+                plotargs = (
+                        fignames,
+                        figpaths,
+                        tb,
+                        model,
+                        tra_loader,
+                        device,
+                        config.fname_dataset,
+                        z_array0,
+                        z_array1,
+                        labels_prev,
+                        labels,
+                        centroids,
+                        model.clustering.weights.detach().cpu().numpy(),
+                        tsne_results,
+                        epoch,
+                        config.show
+                )
+                plot_process = threading.Thread(
+                    target=plotting.plotter_mp,
+                    args=plotargs
+                )
+                plot_process.start()
 
             if finished:
                 break
