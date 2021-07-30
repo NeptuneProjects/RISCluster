@@ -15,6 +15,7 @@ import os
 import shutil
 import sys
 
+import cupy
 import matplotlib.pyplot as plt
 import numpy as np
 try:
@@ -25,6 +26,7 @@ except:
     from sklearn.cluster import KMeans
     from sklearn.manifold import TSNE
     from sklearn.metrics import silhouette_samples
+import pandas as pd
 from sklearn.mixture import GaussianMixture
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -35,19 +37,70 @@ from tqdm import tqdm
 from RISCluster import plotting, utils
 
 
-def measure_clusters(data, metrics):
-    # 1. Load labels
-    # 2. Get indeces of data assigned to each class
-    # Iterating through each class:
-        # 3. Load the data
-        # 4. Get cluster statistics
-        # 5. Create figures for dataset
-    np.load()
+def cluster_metrics(path, labels, x, z, centroids, save=True):
 
+    label_list = np.unique(labels)
+    n_clusters = len(label_list)
 
+    silh_scores = None
+    silh_scores = cupy.asnumpy(silhouette_samples(z, labels))
+    silh_scores_avg = np.mean(silh_scores)
 
-    return
+    _, _, n, o = x.shape
+    M = np.zeros((n_clusters,), dtype=int)
+    X_ip_avg = np.zeros((n_clusters,))
+    X_MSE = np.zeros((n_clusters, n*o))
+    X_MAE = np.zeros((n_clusters, n*o))
+    X_MSE_avg = np.zeros((n_clusters,))
+    X_MAE_avg = np.zeros((n_clusters,))
+    class_silh_scores = np.zeros((n_clusters,))
 
+    for j in range(n_clusters):
+
+        # Data Space Metrics:
+
+        x_j = np.reshape(x[labels==j], (-1, 8700))
+        M[j] = len(x_j)
+        x_mean = np.mean(x_j, axis=0).reshape((1,-1))
+        x_mean = np.matlib.repmat(x_mean, M[j], 1)
+        # Inner Product
+        X_ip = linear_kernel(x_j, x_mean[0].reshape(1, -1)).flatten()
+        X_ip_avg[j] = np.mean(X_ip)
+        # MSE
+        X_MSE[j] = mean_squared_error(x_mean, x_j, multioutput='raw_values')
+        X_MSE_avg[j] = np.mean(X_MSE)
+        # MAE
+        X_MAE[j] = mean_absolute_error(x_mean, x_j, multioutput='raw_values')
+        X_MAE_avg[j] = np.mean(X_MAE)
+
+        # Latent Space Metrics:
+
+        # Silhouette Score
+        class_silh_scores[j] = np.mean(silh_scores[labels==j])
+
+    if save:
+        np.save(os.path.join(path, 'X_ip'), X_ip_avg)
+        np.save(os.path.join(path, 'X_MSE'), X_MSE)
+        np.save(os.path.join(path, 'X_MSE_avg'), X_MSE_avg)
+        np.save(os.path.join(path, 'X_MAE'), X_MAE)
+        np.save(os.path.join(path, 'X_MAE_avg'), X_MAE_avg)
+        np.save(os.path.join(path, 'silh_scores'), silh_scores)
+        df = pd.DataFrame(
+            data={
+                'class': label_list,
+                'N': M,
+                'inner_product': X_ip_avg,
+                'MSE_avg': X_MSE_avg,
+                'MAE_avg': X_MAE_avg,
+                'silh_score': class_silh_scores
+            }
+        )
+        df.loc['mean'] = df.mean()
+        df.loc['mean']['class', 'N'] = None
+        df.loc['mean']['silh_score'] = silh_scores_avg
+        df.to_csv(os.path.join(path, 'cluster_performance.csv'))
+
+    return M, X_ip_avg, X_MSE, X_MSE_avg, X_MAE, X_MAE_avg, silh_scores, df
 
 
 def gmm_fit(config, z_array, n_clusters):
@@ -64,9 +117,15 @@ def gmm_fit(config, z_array, n_clusters):
     np.save(os.path.join(config.savepath_run, 'centroids'), centroids)
     print('complete.')
 
+    print('Performing clustering metrics...', end='', flush=True)
+    x = np.load(config.fname_dataset + 'npy')
+    inner_product, MSE, MSE_avg, MAE, MAE_avg, silh_scores = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
+    fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
+    fig.savefig(config.savepath_run + 'silh_score.png', dpi=300, facecolor='w')
+    print('complete.')
+
     toc = datetime.now()
     print(f'GMM complete at {toc}; time elapsed = {toc-tic}.')
-
 
 
 def model_prediction(
@@ -351,8 +410,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         labels_prev, centroids = initialize_clusters(
             model,
             tra_loader,
-            device,
-            config.init,
+            config,
             n_clusters=n_clusters
         )
         cluster_weights = torch.from_numpy(centroids).to(device)
@@ -704,18 +762,25 @@ def kmeans(z_array, n_clusters):
     return labels, centroids
 
 
-def initialize_clusters(model, dataloader, device, init, n_clusters=None):
-    if init == "kmeans":
-        print('Initiating clusters with k-means...', end="", flush=True)
-        _, _, z_array = batch_eval(dataloader, model, device)
-        labels, centroids = kmeans(z_array, model.n_clusters)
-    elif init == "gmm": # GMM Initialization:
-        print('Initiating clusters with GMM...', end="", flush=True)
-        _, _, z_array = batch_eval(dataloader, model, device)
-        labels, centroids = gmm(z_array, model.n_clusters)
-    elif init == "rand": # Random Initialization (for testing)
-        print('Initiating clusters with random points...')
-        labels, centroids = np.random.randint(0, n_clusters, (100)), np.random.uniform(size=(n_clusters,9))
+def initialize_clusters(model, dataloader, config, n_clusters=None):
+    try:
+        path = os.path.abspath(os.path.join(config.saved_weights, os.pardir))
+        path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
+        labels = np.load(os.path.join(path, 'labels.npy'))
+        centroids = np.load(os.path.join(path, 'centroids.npy'))
+    except:
+        if config.init == "rand": # Random Initialization (for testing)
+            print('Initiating clusters with random points...')
+            labels, centroids = np.random.randint(0, n_clusters, (100)), np.random.uniform(size=(n_clusters,9))
+        else:
+            _, _, z_array = batch_eval(dataloader, model, config.device)
+            if config.init == "kmeans":
+                print('Initiating clusters with k-means...', end="", flush=True)
+                labels, centroids = kmeans(z_array, model.n_clusters)
+            elif config.init == "gmm": # GMM Initialization:
+                print('Initiating clusters with GMM...', end="", flush=True)
+                labels, centroids = gmm(z_array, model.n_clusters)
+
     return labels, centroids
 
 

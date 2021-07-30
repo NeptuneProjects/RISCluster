@@ -1425,6 +1425,48 @@ def view_series(
     return fig
 
 
+def view_silhscore(scores, labels, n_clusters, modeltype, show=True):
+
+    fig = plt.figure(figsize=(8, 2 * n_clusters), dpi=150)
+    colors = cmap_lifeaquatic()
+
+    ax = plt.gca()
+    ax.set_ylim([0, scores.shape[0] + (n_clusters + 1) * 10])
+
+    y_lower = 10
+
+    average_score = np.mean(scores)
+
+    for j in range(n_clusters):
+        color = colors[j]
+        class_scores = scores[labels == j]
+
+        class_scores.sort()
+        M = class_scores.shape[0]
+
+        y_upper = y_lower + M
+        print(type(np.arange(y_lower, y_upper)))
+        ax.fill_betweenx(np.arange(y_lower, y_upper), 0, class_scores, facecolor=color, edgecolor=color, alpha=0.7)
+        ax.text(-0.05, y_lower + 0.5 * M, str(j))
+
+        y_lower = y_upper + 10
+
+    ax.set_title(f'Silhouette Analysis for {modeltype}')
+    ax.set_xlabel('Silhouette Coefficient')
+    ax.set_ylabel('Class')
+
+    ax.axvline(average_score, color='red', linestyle='--')
+
+    ax.set_yticks([])
+    ax.set_xticks([-0.1, 0, 0.2, 0.4, 0.6, 0.8, 1])
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+
 def view_specgram(X, insp_idx, n, o, fname_dataset, sample_index, figtitle,
                   nrows=2, ncols=2, figsize=(12,9), show=True):
     '''Plots selected spectrograms from input data.'''
