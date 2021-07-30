@@ -682,7 +682,7 @@ def ConvertH5toNP():
         description="Converts spectrograms in H5 file to Numpy file."
     )
     parser.add_argument('source', help='Path to source dataset.')
-    parser.add_argument('dest', help='Path to destination.')
+    parser.add_argument('--dest', help='Path to destination.')
     parser.add_argument('--workers', help='Number of CPU workers.', nargs='?', const=1, default=1, type=int)
     args = parser.parse_args()
 
@@ -713,7 +713,13 @@ def ConvertH5toNP():
         x_array[b * bsz:(b*bsz) + x.size(0), :] = x.detach().cpu().numpy()
 
     print('Saving data...', end='', flush=True)
-    np.save(os.path.join(args.dest, 'X'), x_array)
+
+    if args.dest is not None:
+        dest = args.dest
+    else:
+        dest = args.source
+
+    np.save(dest, x_array)
     print('complete.')
     return
 
