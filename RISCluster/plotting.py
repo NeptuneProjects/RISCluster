@@ -1445,7 +1445,6 @@ def view_silhscore(scores, labels, n_clusters, modeltype, show=True):
         M = class_scores.shape[0]
 
         y_upper = y_lower + M
-        print(type(np.arange(y_lower, y_upper)))
         ax.fill_betweenx(np.arange(y_lower, y_upper), 0, class_scores, facecolor=color, edgecolor=color, alpha=0.7)
         ax.text(-0.05, y_lower + 0.5 * M, str(j))
 

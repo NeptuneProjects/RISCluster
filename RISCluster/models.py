@@ -125,7 +125,7 @@ def gmm_fit(config, z_array, n_clusters):
     x = np.load(config.fname_dataset + '.npy')
     _, _, _, _, _, _, silh_scores, _ = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
     fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
-    fig.savefig(config.savepath_run + 'silh_score.png', dpi=300, facecolor='w')
+    fig.savefig(os.path.join(config.savepath_run, 'silh_score.png'), dpi=300, facecolor='w')
     print('complete.')
 
     toc = datetime.now()
