@@ -39,7 +39,7 @@ def load_data(config):
             if config.model == 'AEC':
                 val_dataset = Subset(dataset, index_val)
             else:
-                val_dataset = None
+                val_dataset = np.array([])
             del dataset
 
             if config.loadmode == 'ram':
