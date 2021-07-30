@@ -830,24 +830,24 @@ def kmeans(z_array, n_clusters):
 
 
 def initialize_clusters(model, dataloader, config, n_clusters=None):
-    try:
+
+    if config.init == 'load':
         path = os.path.abspath(os.path.join(config.saved_weights, os.pardir))
         path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
         print(path)
         labels = np.load(os.path.join(path, 'labels.npy'))
         centroids = np.load(os.path.join(path, 'centroids.npy'))
-    except:
-        if config.init == "rand": # Random Initialization (for testing)
-            print('Initiating clusters with random points...')
-            labels, centroids = np.random.randint(0, n_clusters, (100)), np.random.uniform(size=(n_clusters,9))
-        else:
-            _, _, z_array = batch_eval(dataloader, model, config.device)
-            if config.init == "kmeans":
-                print('Initiating clusters with k-means...', end="", flush=True)
-                labels, centroids = kmeans(z_array, model.n_clusters)
-            elif config.init == "gmm": # GMM Initialization:
-                print('Initiating clusters with GMM...', end="", flush=True)
-                labels, centroids = gmm(z_array, model.n_clusters)
+    if config.init == "rand": # Random Initialization (for testing)
+        print('Initiating clusters with random points...')
+        labels, centroids = np.random.randint(0, n_clusters, (100)), np.random.uniform(size=(n_clusters,9))
+    else:
+        _, _, z_array = batch_eval(dataloader, model, config.device)
+        if config.init == "kmeans":
+            print('Initiating clusters with k-means...', end="", flush=True)
+            labels, centroids = kmeans(z_array, model.n_clusters)
+        elif config.init == "gmm": # GMM Initialization:
+            print('Initiating clusters with GMM...', end="", flush=True)
+            labels, centroids = gmm(z_array, model.n_clusters)
 
     print(centroids)
     print(centroids.shape)
