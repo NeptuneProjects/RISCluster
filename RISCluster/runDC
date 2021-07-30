@@ -89,5 +89,5 @@ def main(init_path=None, cuda_device=None):
 
 
 if __name__ == '__main__':
-    # mp.set_start_method('forkserver', force=True)
+    mp.set_start_method('forkserver', force=True)
     main()
