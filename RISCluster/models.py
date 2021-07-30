@@ -118,7 +118,7 @@ def gmm_fit(config, z_array, n_clusters):
     print('complete.')
 
     print('Performing clustering metrics...', end='', flush=True)
-    x = np.load(config.fname_dataset + 'npy')
+    x = np.load(config.fname_dataset + '.npy')
     inner_product, MSE, MSE_avg, MAE, MAE_avg, silh_scores = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
     fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
     fig.savefig(config.savepath_run + 'silh_score.png', dpi=300, facecolor='w')
