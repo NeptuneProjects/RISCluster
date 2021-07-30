@@ -36,14 +36,18 @@ def load_data(config):
             config.index_tra = index_tra
             config.index_val = index_val
             tra_dataset = Subset(dataset, index_tra)
-            val_dataset = Subset(dataset, index_val)
+            if config.model == 'AEC':
+                val_dataset = Subset(dataset, index_val)
+            else:
+                val_dataset = None
             del dataset
 
             if config.loadmode == 'ram':
                 print("Loading Training Data to Memory:")
                 tra_dataset = utils.dataset_to_RAM(tra_dataset)
-                print("Loading Validation Data to Memory:")
-                val_dataset = utils.dataset_to_RAM(val_dataset)
+                if config.model == 'AEC' and val_dataset is not None:
+                    print("Loading Validation Data to Memory:")
+                    val_dataset = utils.dataset_to_RAM(val_dataset)
 
             return tra_dataset, val_dataset
 
