@@ -18,6 +18,7 @@ import sys
 import cupy
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.matlib
 try:
     from cuml import KMeans, TSNE
     from cuml.metrics.cluster.silhouette_score \
