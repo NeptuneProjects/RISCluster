@@ -1428,7 +1428,7 @@ def view_series(
 
 def view_silhscore(scores, labels, n_clusters, modeltype, show=True):
 
-    fig = plt.figure(figsize=(8, 2 * n_clusters), dpi=150)
+    fig = plt.figure(figsize=(8, n_clusters), dpi=150)
     colors = cmap_lifeaquatic()
 
     ax = plt.gca()
@@ -1447,7 +1447,7 @@ def view_silhscore(scores, labels, n_clusters, modeltype, show=True):
 
         y_upper = y_lower + M
         ax.fill_betweenx(np.arange(y_lower, y_upper), 0, class_scores, facecolor=color, edgecolor=color, alpha=0.7)
-        ax.text(-0.05, y_lower + 0.5 * M, str(j))
+        ax.text(-0.05, y_lower + 0.5 * M, str(j+1), size=14)
 
         y_lower = y_upper + 10
 
@@ -1458,7 +1458,7 @@ def view_silhscore(scores, labels, n_clusters, modeltype, show=True):
     ax.axvline(average_score, color='red', linestyle='--')
 
     ax.set_yticks([])
-    ax.set_xticks([-0.1, 0, 0.2, 0.4, 0.6, 0.8, 1])
+    ax.set_xticks([-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1])
 
     if show:
         plt.show()
@@ -1637,7 +1637,7 @@ def view_TSNE(results, labels, title, show=False):
     plt.grid(axis='y', linestyle='--')
     plt.xticks(label_list+1, label_list+1)
 #     plt.ylim([0, 1.25 * max(counts)])
-    plt.ylim([0, 30000])
+    plt.ylim([0, 12000])
     ax2.set_xlabel('Class', fontsize=textsize)
     ax2.set_ylabel('Detections', fontsize=textsize)
     plt.title('Class Assignments, $N_{train}$ = ' + f'{len(labels)}', fontsize=textsize)
