@@ -1212,6 +1212,8 @@ def view_latent_space(
         if l == 0:
             label = ax3.set_xlabel("$i$", size=14)
             ax3.xaxis.set_label_coords(-0.03, 0)
+            ax3.set_xticks(ax3.get_xticks())  # just get and reset whatever you already have
+            ax3.set_xticklabels(empty_string_labels)  # set the new/modified labels
         else:
             xlabels = [item.get_text() for item in ax3.get_xticklabels()]
             empty_string_labels = ['']*len(xlabels)
