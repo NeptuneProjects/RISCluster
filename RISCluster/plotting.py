@@ -1176,6 +1176,9 @@ def view_latent_space(
                 plt.text(0.03, 1.1, f"z", size=fontsize, transform=ax1.transAxes)
         plt.title(f"$j={l+1}$", size=14)
 
+        ax1.set_xticks(ax1.get_xticks())  # just get and reset whatever you already have
+        ax1.set_xlim(left=0, right=len(data_a))  # set the new/modified labels
+
         distance_d = utils.fractional_distance(centroids_b[l], data_b, p)
         sort_index_d = np.argsort(distance_d)
         distance_d = distance_d[sort_index_d]
@@ -1209,18 +1212,19 @@ def view_latent_space(
                 plt.text(centroids_ind[ll], 1.1*(ll+1), f"$\pmb{{\mu}}_{labels_not[ll]+1}$", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
             else:
                 plt.text(centroids_ind[ll], 1.1*(ll+1), f"u{labels_not[ll]+1}", size=6, backgroundcolor='w', ha='center', bbox=dict(boxstyle='square,pad=0', facecolor='w', alpha=1, edgecolor='w'))
+
+        ax3.set_xticks(ax3.get_xticks())  # just get and reset whatever you already have
         if l == 0:
             label = ax3.set_xlabel("$i$", size=14)
             ax3.xaxis.set_label_coords(-0.03, 0)
-            ax3.set_xticks(ax3.get_xticks())  # just get and reset whatever you already have
-            ax3.set_xticklabels(empty_string_labels)  # set the new/modified labels
+
         else:
             xlabels = [item.get_text() for item in ax3.get_xticklabels()]
             empty_string_labels = ['']*len(xlabels)
             # ax3.set_xticklabels(empty_string_labels)
-            ax3.set_xticks(ax3.get_xticks())  # just get and reset whatever you already have
             ax3.set_xticklabels(empty_string_labels)  # set the new/modified labels
 
+        ax3.set_xlim(left=0, right=len(data_a))  # set the new/modified labels
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
 
     # Colorbar
