@@ -165,7 +165,8 @@ def model_prediction(
         leave=True,
         desc="Loading",
         unit="batch",
-        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+        position=0
     )
 
     if config.model == 'DEC':
