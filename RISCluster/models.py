@@ -16,6 +16,7 @@ import pickle
 import shutil
 import sys
 import threading
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -180,6 +181,8 @@ def model_prediction(
         labels = np.argmax(q_array.data, axis=1)
         centroids = model.clustering.weights.detach().cpu().numpy()
 
+        time.sleep(1)
+
         print('Saving data...', end="", flush=True)
         np.save(os.path.join(config.savepath_exp, 'q_DEC'), q_array)
         np.save(os.path.join(config.savepath_exp, 'Z_DEC'), z_array)
@@ -196,10 +199,9 @@ def model_prediction(
         print('complete.')
 
         print('Creating figures...', end='', flush=True)
-        AEC_path = os.path.abspath(os.path.join(os.pardir, os.pardir))
-        AEC_path = fnmatch.filter([f for f in os.listdir(AEC_path) if os.path.isfile(f)], '*.pkl')
-        AEC_path = pickle.load(open(AEC_path, 'rb'))[0]['saved_weights']
-        AEC_path = os.path.abspath(os.path.join(AEC_path, os.pardir))
+        AEC_path = os.path.abspath(os.path.join(savepath_exp, os.pardir, os.pardir))
+        config_file = fnmatch.filter([f for f in os.listdir(AEC_path) if os.path.isfile(os.path.join(AEC_path, f))], '*.pkl')[0]
+        AEC_path = pickle.load(open(os.path.join(AEC_path, config_file), 'rb'))['saved_weights']
 
         fignames = [
             'T-SNE',
