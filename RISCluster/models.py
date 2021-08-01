@@ -187,22 +187,22 @@ def model_prediction(
         time.sleep(1)
         print()
         print('Saving data...', end="", flush=True)
-        np.save(os.path.join(config.savepath_exp, 'q_DEC'), q_array)
-        np.save(os.path.join(config.savepath_exp, 'Z_DEC'), z_array)
-        np.save(os.path.join(config.savepath_exp, 'Xr_DEC'), xr_array)
-        np.save(os.path.join(config.savepath_exp, 'labels_DEC'), labels)
-        np.save(os.path.join(config.savepath_exp, 'centroids_DEC'), centroids)
+        np.save(os.path.join(savepath, 'q_DEC'), q_array)
+        np.save(os.path.join(savepath, 'Z_DEC'), z_array)
+        np.save(os.path.join(savepath, 'Xr_DEC'), xr_array)
+        np.save(os.path.join(savepath, 'labels_DEC'), labels)
+        np.save(os.path.join(savepath, 'centroids_DEC'), centroids)
         print('complete.')
 
         print('Performing clustering metrics...', end='', flush=True)
         x = np.load(config.fname_dataset + '.npy')
-        _, _, _, _, _, _, silh_scores, _ = cluster_metrics(config.savepath_exp, labels, x, z_array, centroids)
+        _, _, _, _, _, _, silh_scores, _ = cluster_metrics(savepath, labels, x, z_array, centroids)
         fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
-        fig.savefig(os.path.join(config.savepath_exp, 'silh_score.png'), dpi=300, facecolor='w')
+        fig.savefig(os.path.join(savepath, 'silh_score.png'), dpi=300, facecolor='w')
         print('complete.')
 
         print('Creating figures...', end='', flush=True)
-        AEC_path = os.path.abspath(os.path.join(config.savepath_exp, os.pardir, os.pardir))
+        AEC_path = os.path.abspath(os.path.join(savepath, os.pardir, os.pardir))
         config_file = fnmatch.filter([f for f in os.listdir(AEC_path) if os.path.isfile(os.path.join(AEC_path, f))], '*.pkl')[0]
         AEC_path = pickle.load(open(os.path.join(AEC_path, config_file), 'rb'))['saved_weights']
 
@@ -213,7 +213,7 @@ def model_prediction(
             'CDF',
             'PDF'
         ]
-        figpaths = [os.path.join(savepath_run, name) for name in fignames]
+        figpaths = [os.path.join(savepath, name) for name in fignames]
         [os.makedirs(path, exist_ok=True) for path in figpaths]
 
         z_array_AEC = np.load(os.path.join(AEC_path, 'Prediction', 'Z_AEC.npy'))
@@ -271,11 +271,11 @@ def model_prediction(
         print(f'Dataset MSE = {total_loss:.4e}')
 
         print('Saving data...', end="", flush=True)
-        with open(os.path.join(config.savepath_exp, 'MSE.txt'), 'w') as f:
+        with open(os.path.join(savepath, 'MSE.txt'), 'w') as f:
             f.write(f'MSE = {total_loss:.4e}')
-        np.save(os.path.join(config.savepath_exp, 'Loss_AEC'), total_loss)
-        np.save(os.path.join(config.savepath_exp, 'Z_AEC'), z_array)
-        np.save(os.path.join(config.savepath_exp, 'Xr_AEC'), xr_array)
+        np.save(os.path.join(savepath, 'Loss_AEC'), total_loss)
+        np.save(os.path.join(savepath, 'Z_AEC'), z_array)
+        np.save(os.path.join(savepath, 'Xr_AEC'), xr_array)
         print('complete.')
 
 
