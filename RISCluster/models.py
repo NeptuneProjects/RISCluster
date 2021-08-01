@@ -655,8 +655,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                         model.clustering.weights.detach().cpu().numpy(),
                         tsne_results,
                         epoch,
-                        config.show,
-                        tb=tb
+                        config.show
                 )
                 plotkwargs = {'tb': tb}
                 # plotting.plotter_mp(*plotargs)
