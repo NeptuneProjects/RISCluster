@@ -236,7 +236,7 @@ def model_prediction(
                 centroids_GMM,
                 centroids,
                 tsne_results,
-                epoch,
+                0,
                 config.show
         )
         plot_process = threading.Thread(
