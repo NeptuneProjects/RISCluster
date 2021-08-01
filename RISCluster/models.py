@@ -183,7 +183,7 @@ def model_prediction(
 
         del batch, x, q, xr, z
 
-        time.sleep(1)
+        time.sleep(3)
 
         print('Saving data...', end="", flush=True)
         np.save(os.path.join(config.savepath_exp, 'q_DEC'), q_array)
@@ -201,7 +201,7 @@ def model_prediction(
         print('complete.')
 
         print('Creating figures...', end='', flush=True)
-        AEC_path = os.path.abspath(os.path.join(savepath_exp, os.pardir, os.pardir))
+        AEC_path = os.path.abspath(os.path.join(config.savepath_exp, os.pardir, os.pardir))
         config_file = fnmatch.filter([f for f in os.listdir(AEC_path) if os.path.isfile(os.path.join(AEC_path, f))], '*.pkl')[0]
         AEC_path = pickle.load(open(os.path.join(AEC_path, config_file), 'rb'))['saved_weights']
 
