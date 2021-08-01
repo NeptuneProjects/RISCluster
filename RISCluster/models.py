@@ -507,13 +507,16 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 centroids,
                 tsne_results,
                 epoch,
-                config.show,
-                tb=tb
+                config.show
         )
+        plotkwargs = {
+            'tb': tb
+        }
         # plotting.plotter_mp(*plotargs)
         plot_process = threading.Thread(
             target=plotting.plotter_mp,
-            args=plotargs
+            args=plotargs,
+            kwargs=plotkwargs
         )
         plot_process.start()
 
@@ -655,10 +658,12 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                         config.show,
                         tb=tb
                 )
+                plotkwargs = {'tb': tb}
                 # plotting.plotter_mp(*plotargs)
                 plot_process = threading.Thread(
                     target=plotting.plotter_mp,
-                    args=plotargs
+                    args=plotargs,
+                    kwargs=plotkwargs
                 )
                 plot_process.start()
 
@@ -734,8 +739,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
             tb,
             **hpkwargs
         )
-
-    torch.cuda.empty_cache()
 
     toc = datetime.now()
     print(f'Training complete at {toc}; time elapsed = {toc-tic}.')
