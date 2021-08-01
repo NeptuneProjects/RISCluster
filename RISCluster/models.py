@@ -181,6 +181,8 @@ def model_prediction(
         labels = np.argmax(q_array.data, axis=1)
         centroids = model.clustering.weights.detach().cpu().numpy()
 
+        del batch, x, q, xr, z
+
         time.sleep(1)
 
         print('Saving data...', end="", flush=True)
