@@ -165,8 +165,7 @@ def model_prediction(
         leave=True,
         desc="Loading",
         unit="batch",
-        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
-        position=0
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
     )
 
     if config.model == 'DEC':
@@ -202,9 +201,9 @@ def model_prediction(
         print('complete.')
 
         print('Creating figures...', end='', flush=True)
-        AEC_path = os.path.abspath(os.path.join(savepath, os.pardir, os.pardir))
-        config_file = fnmatch.filter([f for f in os.listdir(AEC_path) if os.path.isfile(os.path.join(AEC_path, f))], '*.pkl')[0]
-        AEC_path = pickle.load(open(os.path.join(AEC_path, config_file), 'rb'))['saved_weights']
+        AEC_configpath = os.path.abspath(os.path.join(savepath, os.pardir, os.pardir))
+        AEC_configname = fnmatch.filter([f for f in os.listdir(AEC_configpath) if os.path.isfile(os.path.join(AEC_configpath, f))], '*.pkl')[0]
+        AEC_configpath = pickle.load(open(os.path.join(AEC_configpath, AEC_configname), 'rb'))['saved_weights']
 
         fignames = [
             'T-SNE',
@@ -216,9 +215,10 @@ def model_prediction(
         figpaths = [os.path.join(savepath, name) for name in fignames]
         [os.makedirs(path, exist_ok=True) for path in figpaths]
 
-        z_array_AEC = np.load(os.path.join(AEC_path, 'Prediction', 'Z_AEC.npy'))
-        labels_GMM = np.load(os.path.join(AEC_path, 'GMM', f'n_clusters={n_clusters}', 'labels.npy'))
-        centroids_GMM = np.load(os.path.join(AEC_path, 'GMM', f'n_clusters={n_clusters}', 'centroids.npy'))
+        AEC_loadpath = os.path.abspath(os.path.join(AEC_configpath, os.pardir))
+        z_array_AEC = np.load(os.path.join(AEC_loadpath, 'Prediction', 'Z_AEC.npy'))
+        labels_GMM = np.load(os.path.join(AEC_loadpath, 'GMM', f'n_clusters={n_clusters}', 'labels.npy'))
+        centroids_GMM = np.load(os.path.join(AEC_loadpath, 'GMM', f'n_clusters={n_clusters}', 'centroids.npy'))
 
         tsne_results = tsne(z_array)
         plotargs = (
