@@ -565,7 +565,7 @@ def plotter_mp(
         tsne_results,
         epoch,
         show,
-        tb=None
+        tb=None,
         latex=False
     ):
     '''Wrapper function for plotting DEC training and performance.

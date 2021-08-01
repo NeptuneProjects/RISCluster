@@ -236,8 +236,7 @@ def model_prediction(
                 centroids,
                 tsne_results,
                 0,
-                config.show,
-                tb=None,
+                config.show
         )
         plot_process = threading.Thread(
             target=plotting.plotter_mp,
