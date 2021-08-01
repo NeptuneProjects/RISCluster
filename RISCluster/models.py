@@ -200,7 +200,7 @@ def model_prediction(
         fig.savefig(os.path.join(savepath, 'silh_score.png'), dpi=300, facecolor='w')
         print('complete.')
 
-        print('Creating figures...', end='', flush=True)
+        print('Creating figures...')
         AEC_configpath = os.path.abspath(os.path.join(savepath, os.pardir, os.pardir))
         AEC_configname = fnmatch.filter([f for f in os.listdir(AEC_configpath) if os.path.isfile(os.path.join(AEC_configpath, f))], '*.pkl')[0]
         AEC_configpath = pickle.load(open(os.path.join(AEC_configpath, AEC_configname), 'rb'))['saved_weights']
@@ -224,7 +224,6 @@ def model_prediction(
         plotargs = (
                 fignames,
                 figpaths,
-                tb,
                 model,
                 dataloader,
                 device,
@@ -237,7 +236,8 @@ def model_prediction(
                 centroids,
                 tsne_results,
                 0,
-                config.show
+                config.show,
+                tb=None,
         )
         plot_process = threading.Thread(
             target=plotting.plotter_mp,
@@ -496,7 +496,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         plotargs = (
                 fignames,
                 figpaths,
-                tb,
                 model,
                 tra_loader,
                 device,
@@ -509,7 +508,8 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 centroids,
                 tsne_results,
                 epoch,
-                config.show
+                config.show,
+                tb=tb
         )
         # plotting.plotter_mp(*plotargs)
         plot_process = threading.Thread(
@@ -641,7 +641,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 plotargs = (
                         fignames,
                         figpaths,
-                        tb,
                         model,
                         tra_loader,
                         device,
@@ -654,7 +653,8 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                         model.clustering.weights.detach().cpu().numpy(),
                         tsne_results,
                         epoch,
-                        config.show
+                        config.show,
+                        tb=tb
                 )
                 # plotting.plotter_mp(*plotargs)
                 plot_process = threading.Thread(

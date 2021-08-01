@@ -552,7 +552,6 @@ def label_offset(ax, axis="y"):
 def plotter_mp(
         fignames,
         figpaths,
-        tb,
         model,
         dataloader,
         device,
@@ -566,6 +565,7 @@ def plotter_mp(
         tsne_results,
         epoch,
         show,
+        tb=None
         latex=False
     ):
     '''Wrapper function for plotting DEC training and performance.
@@ -644,8 +644,9 @@ def plotter_mp(
     )
     [fig.savefig(os.path.join(figpaths[i], f'{fignames[i]}_{epoch:03d}.png'), dpi=300) \
         for i, fig in enumerate(figures)]
-    [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
-        for i, fig in enumerate(figures)]
+    if tb is not None:
+        [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
+            for i, fig in enumerate(figures)]
 
 
 def view_centroid_output(centroids, X_r, figtitle, show=True):
