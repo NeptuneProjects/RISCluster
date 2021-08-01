@@ -183,8 +183,8 @@ def model_prediction(
 
         del batch, x, q, xr, z
 
-        time.sleep(3)
-
+        time.sleep(1)
+        print()
         print('Saving data...', end="", flush=True)
         np.save(os.path.join(config.savepath_exp, 'q_DEC'), q_array)
         np.save(os.path.join(config.savepath_exp, 'Z_DEC'), z_array)
