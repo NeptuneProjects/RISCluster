@@ -67,7 +67,7 @@ def main(init_path=None, cuda_device=None):
     if config.model == 'DEC' and not os.path.exists(config.saved_weights):
         raise ValueError(f'Saved weights file not found: {config.saved_weights}')
     # ==== ML Production ======================================================
-    print('='*80)
+    print('='*100)
     print(f'Executing {config.verb} mode for {config.model}')
     if config.mode == "train":
         model = production.train(config)
