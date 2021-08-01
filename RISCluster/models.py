@@ -184,8 +184,8 @@ def model_prediction(
         np.save(os.path.join(config.savepath_exp, 'q_DEC'), q_array)
         np.save(os.path.join(config.savepath_exp, 'Z_DEC'), z_array)
         np.save(os.path.join(config.savepath_exp, 'Xr_DEC'), xr_array)
-        np.save(os.path.join(config.savepath_exp, 'labels'), labels)
-        np.save(os.path.join(config.savepath_exp, 'centroids'), centroids)
+        np.save(os.path.join(config.savepath_exp, 'labels_DEC'), labels)
+        np.save(os.path.join(config.savepath_exp, 'centroids_DEC'), centroids)
         print('complete.')
 
         print('Performing clustering metrics...', end='', flush=True)
@@ -226,8 +226,8 @@ def model_prediction(
                 config.fname_dataset,
                 z_array_AEC,
                 z_array,
-                labels,
                 labels_GMM,
+                labels,
                 centroids_GMM,
                 centroids,
                 tsne_results,
@@ -239,7 +239,6 @@ def model_prediction(
             args=plotargs
         )
         plot_process.start()
-
         print('complete.')
 
     elif config.model == 'AEC':
