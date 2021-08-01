@@ -642,7 +642,7 @@ def plotter_mp(
         show,
         latex
     )
-    [fig.savefig(f"{figpaths[i]}/{fignames[i]}_{epoch:03d}.png", dpi=300) \
+    [fig.savefig(os.path.join(figpaths[i], f'{fignames[i]}_{epoch:03d}.png'), dpi=300) \
         for i, fig in enumerate(figures)]
     [tb.add_figure(f"{fignames[i]}", fig, global_step=epoch, close=True) \
         for i, fig in enumerate(figures)]
