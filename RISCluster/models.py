@@ -170,7 +170,7 @@ def model_prediction(
 
     if config.model == 'DEC':
         q_array = np.zeros((len(dataloader.dataset), n_clusters),dtype=np.float32)
-        for b, batch in enumerate(tqdm(pbar)):
+        for b, batch in enumerate(pbar):
             _, batch = batch
             x = batch.to(device)
             q, xr, z = model(x)
