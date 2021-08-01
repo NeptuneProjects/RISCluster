@@ -195,13 +195,14 @@ class Configuration():
 
 
     def set_device(self, cuda_device=None):
-        if torch.cuda.is_available() and (cuda_device is not None):
-            self.device = torch.device(f'cuda:{cuda_device}')
-        elif torch.cuda.is_available():
-            self.device = torch.device('cuda')
-            print('CUDA device available, using GPU.')
+        if torch.cuda.is_available():
+            if cuda_device is not None:
+                device = torch.device(f'cuda:{cuda_device}')
+            else:
+                device = torch.device('cuda')
+            print(f'CUDA device available, using GPU ({device}).')
         else:
-            self.device = torch.device('cpu')
+            device = torch.device('cpu')
             print('CUDA device not available, using CPU.')
         return self.device
 
