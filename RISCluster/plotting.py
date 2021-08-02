@@ -356,7 +356,7 @@ def cluster_gallery(
         # load_index = query[sort_index]
         # distance = distance[sort_index]
         sort_index = np.argsort(distance)
-        disp_index = [0, 999, 1999, 2999, 3999, 4999]
+        disp_index = [0, 4999, 9999, 14999, 19999, 24999]
         load_index = query[sort_index][disp_index]
 
         subset = Subset(dataset, load_index)
