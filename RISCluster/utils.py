@@ -215,9 +215,6 @@ class Configuration():
         return self.tbpid
 
 
-
-
-
 class SeismicDataset(Dataset):
 
     class SpecgramNormalizer(object):
@@ -998,12 +995,13 @@ def get_peak_frequency(
     for j, label in enumerate(label_list):
         mask = labels.label == label
         labels_subset = labels.loc[mask]
-        dataset = H5SeismicDataset(
-            fname_dataset,
-            transform = transforms.Compose(
-                [SpecgramShaper(), SpecgramToTensor()]
-            )
-        )
+        # dataset = H5SeismicDataset(
+        #     fname_dataset,
+        #     transform = transforms.Compose(
+        #         [SpecgramShaper(), SpecgramToTensor()]
+        #     )
+        # )
+        dataset = utils.SeismicDataset(fname_dataset, 'h5')
         subset = Subset(dataset, labels_subset.index)
         dataloader = DataLoader(
             subset,
