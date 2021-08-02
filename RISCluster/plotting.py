@@ -429,7 +429,7 @@ def cluster_gallery(
             plt.yticks([])
             if l == 0:
                 if latex:
-                    plt.ylabel(fr"$\pmb{{z}}_{{\{disp_index[i]+1}}}$", rotation=0, va="center", ha="right", size=fontsize)
+                    plt.ylabel(f"$\pmb{{z}}_{{\{disp_index[i]+1}}}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
                     plt.ylabel(f"z_{disp_index[i]+1}", rotation=0, va="center", ha="right")
 
@@ -441,7 +441,7 @@ def cluster_gallery(
 
             if l == 0:
                 if latex:
-                    plt.ylabel(fr"$\pmb{{x}}_{{\{disp_index[i]+1}}}$", rotation=0, va="center", ha="right", size=fontsize)
+                    plt.ylabel(f"$\pmb{{x}}_{{\{disp_index[i]+1}}}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
                     plt.ylabel(f"x_{disp_index[i]+1}", rotation=0, va="center", ha="right")
 
