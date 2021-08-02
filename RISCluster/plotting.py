@@ -1288,7 +1288,6 @@ def view_series(
         times=None,
         vlines=None,
         freq="month",
-        label_list=[i for i in range(8)],
         log=False,
         maxcounts=False,
         figsize=(12,9),
@@ -1298,7 +1297,8 @@ def view_series(
     ):
     df_env = EnvironmentCatalogue(station, aws, path_to_data).df
     catalogue = utils.LabelCatalogue([path_to_catalogue, path_to_labels])
-    counts = catalogue.gather_counts(station=station, freq=freq, label_list=label_list)
+    label_list = catalogue.label_list
+    counts = catalogue.gather_counts(station=station, freq=freq)
     if times is not None:
         mask = (df_env.index >= times[0]) & (df_env.index <= times[1])
         df_env = df_env.loc[mask]

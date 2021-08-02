@@ -437,7 +437,7 @@ class LabelCatalogue(object):
             mask = (self.df["station"] == station) & \
                 (self.df['label'] == label)
             subset = self.df.loc[mask].drop(
-                columns=["network","station","peak","unit"]
+                columns = ["network", "station", "peak", "unit", "idx"]
             )
             counts = subset.resample(freqcode).count().rename(
                 columns={"label": f"{label+1}"}
