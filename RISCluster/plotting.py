@@ -428,9 +428,9 @@ def cluster_gallery(
             plt.yticks([])
             if l == 0:
                 if latex:
-                    plt.ylabel(fr"$\pmb{{z}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
+                    plt.ylabel(fr"$\pmb{{z}}_{load_index[i]+1}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
-                    plt.ylabel(f"z_{i+1}", rotation=0, va="center", ha="right")
+                    plt.ylabel(f"z_{load_index[i]+1}", rotation=0, va="center", ha="right")
 
             # Spectrogram
             ax = fig.add_subplot(gs_sub[1])
@@ -440,9 +440,9 @@ def cluster_gallery(
 
             if l == 0:
                 if latex:
-                    plt.ylabel(fr"$\pmb{{x}}_{i+1}$", rotation=0, va="center", ha="right", size=fontsize)
+                    plt.ylabel(fr"$\pmb{{x}}_{load_index[i]+1}$", rotation=0, va="center", ha="right", size=fontsize)
                 else:
-                    plt.ylabel(f"x_{i+1}", rotation=0, va="center", ha="right")
+                    plt.ylabel(f"x_{load_index[i]+1}", rotation=0, va="center", ha="right")
 
             # Seismogram
             ax = fig.add_subplot(gs_sub[2])
