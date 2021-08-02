@@ -4,9 +4,9 @@ channels:
   - pytorch
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.8
   - cmocean
-  - h5py
+  - h5py=3.2.*
   - jupyterlab
   - matplotlib
   - numpy
@@ -17,7 +17,7 @@ dependencies:
   - pytorch::pytorch=1.8.1
   - pytorch::torchvision
   - scikit-learn
-  - scipy
+  - scipy=1.6.*
   - tensorboard
   - tqdm
   - pip
