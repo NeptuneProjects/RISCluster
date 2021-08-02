@@ -1342,9 +1342,6 @@ def view_series(
 
     alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-    print(env_vars)
-    print(labels)
-
     gs = fig.add_gridspec(len(env_vars) + len(labels), 1, height_ratios=heights, hspace=0.4)
 
     params = dict(
