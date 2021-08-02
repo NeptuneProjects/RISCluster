@@ -1295,6 +1295,12 @@ def view_series(
         showlabels=True,
         show=False
     ):
+
+    rc_fonts = {
+        "text.usetex": False,
+        'mathtext.default': 'regular'
+    }
+
     df_env = EnvironmentCatalogue(station, aws, path_to_data).df
     catalogue = utils.LabelCatalogue([path_to_catalogue, path_to_labels])
     label_list = catalogue.label_list
@@ -1306,6 +1312,7 @@ def view_series(
         counts = counts.loc[mask]
     # =======================================
     fig = plt.figure(figsize=figsize)
+    plt.rcParams.update(rc_fonts)
 
     fontsize = 16
     if times is not None:
@@ -1349,7 +1356,7 @@ def view_series(
         ylabels=[
             "Tide (m)",
             "% Sea Ice\n    Coverage",
-            "Temperature\n          ($^\degree$C)",
+            "Temperature\n          (\u00B0C)",
             "Wind Speed\n         (m/s)",
             "Net Surf.\n Melt Energy",
             "Wave\nAmplitude"],
