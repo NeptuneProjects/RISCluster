@@ -121,6 +121,8 @@ def gmm_fit(config, z_array, n_clusters):
 
 
     print('Saving data......', end="", flush=True)
+    A = [{'idx': i, 'label': labels[i]} for i in np.arange(M)]
+    utils.save_labels(A, config.savepath_run)
     np.save(os.path.join(config.savepath_run, 'labels'), labels)
     np.save(os.path.join(config.savepath_run, 'centroids'), centroids)
     print('complete.')
@@ -185,6 +187,8 @@ def model_prediction(
 
         time.sleep(1)
         print('Saving data...', end="", flush=True)
+        A = [{'idx': i, 'label': labels[i]} for i in np.arange(M)]
+        utils.save_labels(A, savepath)
         np.save(os.path.join(savepath, 'q_DEC'), q_array)
         np.save(os.path.join(savepath, 'Z_DEC'), z_array)
         np.save(os.path.join(savepath, 'Xr_DEC'), xr_array)

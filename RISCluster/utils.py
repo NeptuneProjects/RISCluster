@@ -1376,9 +1376,9 @@ def save_history(history, path):
 
 def save_labels(label_list, savepath, serial=None):
     if serial is not None:
-        fname = f'{savepath}/Labels{serial}.csv'
+        fname = os.path.join(savepath, f'Labels{serial}.csv')
     else:
-        fname = f'{savepath}/Labels.csv'
+        fname = os.path.join(savepath, 'Labels.csv')
     keys = label_list[0].keys()
     if not os.path.exists(fname):
         with open(fname, 'w') as csvfile:
