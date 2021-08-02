@@ -5,8 +5,11 @@ seismic data recorded on the Ross Ice Shelf, Antarctica from 2014-2017. This
 package is an accompaniment to a paper submitted to the Journal of Geophysical Research (Jenkins II et al., submitted).
 
 <p><img src="RISArrayMap.jpg"/></p>
+
 Figure 1.  34-station passive seismic array deployed on the Ross Ice Shelf, Antarctica from 2014-2017.
+
 ***
+
 ### Installation
 Pre-requisites:
 [Anaconda](https://anaconda.org) or
