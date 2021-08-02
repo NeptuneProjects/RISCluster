@@ -9,7 +9,7 @@ dependencies:
   - python=3.8
   - cmocean
   - cudatoolkit=10.2.*
-  - h5py
+  - h5py=3.2.*
   - jupyterlab
   - matplotlib
   - numpy
