@@ -7,6 +7,7 @@ package is an accompaniment to a paper submitted to the Journal of Geophysical R
 <p><img src="RISArrayMap.jpg"/>
 Figure 1.  34-station passive seismic array deployed on the Ross Ice Shelf, Antarctica from 2014-2017.
 </p>
+
 ***
 
 ### Installation
