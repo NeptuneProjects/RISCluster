@@ -357,7 +357,10 @@ def cluster_gallery(
         # distance = distance[sort_index]
         sort_index = np.argsort(distance)
         disp_index = [0, 4999, 9999, 14999, 19999, 24999]
-        load_index = query[sort_index][disp_index]
+        try:
+            load_index = query[sort_index][disp_index]
+        except:
+            return fig
 
         subset = Subset(dataset, load_index)
         dataloader = DataLoader(subset, batch_size=N)
