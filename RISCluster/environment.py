@@ -39,17 +39,17 @@ class EnvironmentCatalogue(object):
             sta_ind += 1
         elif station == "RS17":
             sta_ind -= 2
-        data = loadmat(f"{path}/Tide/RIS_Tides.mat")["z"][sta_ind,:]
+        data = loadmat(os.path.join(path, 'Tide', 'RIS_Tides.mat'))["z"][sta_ind,:]
         df_tide = pd.DataFrame(data={"tide": data}, index=pd.date_range("2014-12-01", "2016-12-01", freq="10min"), columns=["tide"])
         # Load sea ice concentration:
-        data = loadmat(f"{path}/Ice/NSIDC-0051.mat")
+        data = loadmat(os.path.join(path, 'Ice', 'NSIDC-0051.mat'))
         df_ice = pd.DataFrame(data={"sea_ice_conc": data["C"].squeeze()*100}, index=pd.to_datetime(data["date"]), columns=['sea_ice_conc'])
         # Load meteo data:
-        df_meteo = read_meteo(f"{path}/Meteo/{aws}*.txt")
+        df_meteo = read_meteo(os.path.join(path, 'Meteo', f'{aws}*.txt'))
         # Load ERA5 data:
-        df_energy = read_ERA5(f"{path}/ERA5/SDM_jan2016_ERA5.csv")
+        df_energy = read_ERA5(os.path.join(path, 'ERA5', 'SDM_jan2016_ERA5.csv'))
         # Load Wave Amplitude data:
-        df_wave = read_KPDR(f"{path}/Seismo/KPDR_0.001_0.04.mat")
+        df_wave = read_KPDR(os.path.join(path, 'Seismo', 'KPDR_0.001_0.04.mat'))
 
         # Combine datasets into one dataframe:
         df = pd.concat([df_tide, df_ice, df_meteo, df_energy, df_wave], axis=1)

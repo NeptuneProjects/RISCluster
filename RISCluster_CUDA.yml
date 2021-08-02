@@ -21,7 +21,7 @@ dependencies:
   - pytorch::torchvision=0.9.0
   - rapidsai::cuml=0.18
   - scikit-learn
-  - scipy
+  - scipy=1.6.*
   - seaborn
   - tensorboard
   - tqdm
