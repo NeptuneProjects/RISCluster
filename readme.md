@@ -5,6 +5,9 @@ seismic data recorded on the Ross Ice Shelf, Antarctica from 2014-2017. This
 package is an accompaniment to a paper submitted to the Journal of Geophysical Research (Jenkins II et al., submitted).
 
 ![RISArrayMap][RISArrayMap.jpg]
+<p>
+    <img src="RISArrayMap.jpg"/>
+</p>
 
 ***
 ### Installation
