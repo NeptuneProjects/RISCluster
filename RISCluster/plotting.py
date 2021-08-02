@@ -329,7 +329,7 @@ def cluster_gallery(
     if latex:
         params = {
             'text.usetex': True,
-            'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
+            'text.latex.preamble': r'\usepackage{amsmath}\usepackage{amsbsy}'
         }
         plt.rcParams.update(params)
     fig = plt.figure(figsize=(len(label_list),2*N), dpi=150)
@@ -1121,7 +1121,7 @@ def view_latent_space(
     if latex:
         params = {
             'text.usetex': True,
-            'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amsbsy}']
+            'text.latex.preamble': r'\usepackage{amsmath}\usepackage{amsbsy}'
         }
         plt.rcParams.update(params)
     fontsize = 18
