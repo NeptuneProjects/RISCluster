@@ -1220,6 +1220,35 @@ def measure_class_inertia(data, centroids, n_clusters):
     return inertia
 
 
+def measure_label_change(labels1, labels2):
+    pd.set_option('display.float_format', lambda x: '%.3f' % x)
+    label_list = np.unique(labels1)
+    counts = np.zeros((len(label_list), len(label_list)), dtype=int)
+    total_counts = np.zeros(len(label_list), dtype=int)
+    percentages = np.zeros(len(label_list))
+
+    M = len(labels1)
+    for label in label_list:
+        labels1_subset = labels1[labels1 == label]
+        labels2_subset = labels2[labels1 == label]
+        label_change_index = np.where(labels1_subset != labels2_subset)[0]
+        new_labels = labels2_subset[label_change_index]
+        counts_, _ = np.histogram(new_labels, bins=len(label_list))
+        counts[label, :] = counts_
+        total_counts[label] = counts_.sum()
+        percentages[label] = 100 * counts_.sum() / M
+
+
+    data = {'N_j': total_counts, '%N': percentages}
+    data.update({f'Class {label+1}': counts[label,:] for label in label_list})
+    df = pd.DataFrame(data=data)
+    df = df.append(df.sum(numeric_only=True), ignore_index=True)
+    df[[label for label in df.columns.values if label != '%N']] = df[[label for label in df.columns.values if label != '%N']].astype('int')
+    df.index.names = ['Orig']
+
+    return df
+
+
 def notify(msgsubj, msgcontent):
     '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012
     Scripps Institution of Oceanography, UC San Diego
