@@ -1296,10 +1296,7 @@ def view_series(
         show=False
     ):
 
-    rc_fonts = {
-        "text.usetex": False,
-        'mathtext.default': 'regular'
-    }
+    rc_fonts = {"text.usetex": False, 'mathtext.default': 'regular'}
 
     df_env = EnvironmentCatalogue(station, aws, path_to_data).df
     catalogue = utils.LabelCatalogue([path_to_catalogue, path_to_labels])
@@ -1442,6 +1439,10 @@ def view_series(
 def view_silhscore(scores, labels, n_clusters, modeltype, show=True):
 
     fig = plt.figure(figsize=(8, n_clusters), dpi=150)
+
+    rc_fonts = {"text.usetex": False, 'mathtext.default': 'regular'}
+    plt.rcParams.update(rc_fonts)
+
     colors = cmap_lifeaquatic()
 
     ax = plt.gca()
@@ -1632,8 +1633,8 @@ def view_TSNE(results, labels, title, show=False):
     df["Class"] = df["Class"].astype('int').astype('category')
 
     fig = plt.figure(figsize=(6,8))
-    params = {'mathtext.default': 'regular' }
-    plt.rcParams.update(params)
+    rc_fonts = {"text.usetex": False, 'mathtext.default': 'regular'}
+    plt.rcParams.update(rc_fonts)
     # gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
 
     # ax1 = fig.add_subplot(gs[0])
