@@ -1393,9 +1393,11 @@ def view_series(
         ax.grid(axis="x")
         ax.set_xlim(df_env.index[0], df_env.index[-1])
         if j == len(labels)-1:
+            ax.set_xticks(xticks)
+            # ax.set_xticks(ax.get_xticks())  # just get and reset whatever you already have
             ax.set_xticklabels(xlabels, rotation=xlabelrotation, ha=xlabelalignment, size=fontsize)
             ax.spines["bottom"].set_visible(True)
-            ax.set_xticks(xticks)
+
         else:
             ax.set_xticklabels([])
             ax.set_xticks(xticks)
