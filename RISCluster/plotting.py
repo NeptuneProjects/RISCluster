@@ -1627,9 +1627,9 @@ def view_TSNE(results, labels, title, show=False):
     fig = plt.figure(figsize=(6,8))
     params = {'mathtext.default': 'regular' }
     plt.rcParams.update(params)
-    gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
+    # gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[3, 1])
 
-    ax1 = fig.add_subplot(gs[0])
+    # ax1 = fig.add_subplot(gs[0])
     for j in range(len(df["Class"].cat.categories)):
         plt.plot(df[df.Class == df["Class"].cat.categories[j]].x, df[df.Class == df["Class"].cat.categories[j]].y, 'o', alpha=0.2, c=colors[j], ms=6, mec="w", mew=0.5, rasterized=True, label=j+1)
     plt.axis('off')
@@ -1638,29 +1638,29 @@ def view_TSNE(results, labels, title, show=False):
         lh._legmarker.set_alpha(1)
     plt.title(title, fontsize=textsize)
 
-    ax2 = fig.add_subplot(gs[1])
-    arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8, color='k')
-    plt.grid(axis='y', linestyle='--')
-    plt.xticks(label_list+1, label_list+1)
-#     plt.ylim([0, 1.25 * max(counts)])
-    plt.ylim([0, 12000])
-    ax2.set_xlabel('Class', fontsize=textsize)
-    ax2.set_ylabel('Detections', fontsize=textsize)
-    plt.title('Class Assignments, $N_{train}$ = ' + f'{len(labels)}', fontsize=textsize)
-
-    N = counts.sum()
-    def CtP(x):
-        return 100 * x / N
-
-    def PtC(x):
-        return x * N / 100
-
-    ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
-    ax3.set_ylabel('$\%N_{train}$', fontsize=textsize)
-    for i in range(len(np.unique(labels))):
-        plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
-
-    fig.subplots_adjust(left=0.15, right=0.9)
+#     ax2 = fig.add_subplot(gs[1])
+#     arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8, color='k')
+#     plt.grid(axis='y', linestyle='--')
+#     plt.xticks(label_list+1, label_list+1)
+# #     plt.ylim([0, 1.25 * max(counts)])
+#     plt.ylim([0, 12000])
+#     ax2.set_xlabel('Class', fontsize=textsize)
+#     ax2.set_ylabel('Detections', fontsize=textsize)
+#     plt.title('Class Assignments, $N_{train}$ = ' + f'{len(labels)}', fontsize=textsize)
+#
+#     N = counts.sum()
+#     def CtP(x):
+#         return 100 * x / N
+#
+#     def PtC(x):
+#         return x * N / 100
+#
+#     ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
+#     ax3.set_ylabel('$\%N_{train}$', fontsize=textsize)
+#     for i in range(len(np.unique(labels))):
+#         plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
+#
+#     fig.subplots_adjust(left=0.15, right=0.9)
 
     if show:
         plt.show()
