@@ -352,9 +352,11 @@ def cluster_gallery(
         query = np.where(labels == label)[0]
         z_sub = z_array[query]
         distance = utils.fractional_distance(centroids[l], z_sub, p)
-        sort_index = np.argsort(distance)[0:N]
-        load_index = query[sort_index]
-        distance = distance[sort_index]
+        # sort_index = np.argsort(distance)[0:N]
+        # load_index = query[sort_index]
+        # distance = distance[sort_index]
+        sort_index = np.argsort(distance)
+        load_index = query[sort_index][[0, 999, 1999, 2999, 3999, 4999]]
 
         subset = Subset(dataset, load_index)
         dataloader = DataLoader(subset, batch_size=N)
