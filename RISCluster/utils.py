@@ -539,12 +539,14 @@ class LabelCatalogue(object):
 
         _, _, fvec = load_images(fname_dataset, [[0]])
 
-        dataset = H5SeismicDataset(
-            fname_dataset,
-            transform = transforms.Compose(
-                [SpecgramShaper(), SpecgramToTensor()]
-            )
-        )
+        # dataset = H5SeismicDataset(
+        #     fname_dataset,
+        #     transform = transforms.Compose(
+        #         [SpecgramShaper(), SpecgramToTensor()]
+        #     )
+        # )
+
+        dataset = SeismicDataset(fname_dataset, 'h5')
 
         class_avg_maxfreq = np.zeros(len(self.label_list))
         for j, label in enumerate(self.label_list):
