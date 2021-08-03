@@ -187,7 +187,7 @@ def model_prediction(
 
         time.sleep(1)
         print('Saving data...', end="", flush=True)
-        M = int(q_array.size[0])
+        M = q_array.shape[0]
         A = [{'idx': i, 'label': labels[i]} for i in np.arange(M)]
         utils.save_labels(A, savepath)
         np.save(os.path.join(savepath, 'q_DEC'), q_array)
