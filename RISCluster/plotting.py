@@ -476,6 +476,47 @@ def cluster_gallery(
     cbar.set_label('Latent Feature Value')
     cbar.ax.tick_params(labelsize=10)
 
+    # Add Annotations
+#     fig.suptitle('Classes', size=20, weight='bold')
+    ax.annotate(
+        'Classes',
+        xy=(0.54, 0.97),
+        xytext=(0.54, 0.965),
+        xycoords='figure fraction',
+        textcoords='figure fraction',
+        fontsize=18,
+        ha='center',
+        bbox=dict(boxstyle='square, pad=0.15', fc='white', ec='none'),
+        arrowprops=dict(arrowstyle='-[, widthB=12.5, lengthB=0.5', lw=2)
+    )
+    ax.annotate(
+        'Centroids',
+        xy=(0.03, 0.88),
+        xytext=(0.02, 0.88),
+        xycoords='figure fraction',
+        textcoords='figure fraction',
+        fontsize=18,
+        ha='center',
+        va='center',
+        rotation=90,
+        bbox=dict(boxstyle='square, pad=0.15', fc='white', ec='none'),
+        arrowprops=dict(arrowstyle='-[, widthB=2.75, lengthB=0.5', lw=2)
+    )
+    ax.annotate(
+        'Data Samples',
+        xy=(0.03, 0.435),
+        xytext=(0.02, 0.435),
+        xycoords='figure fraction',
+        textcoords='figure fraction',
+        fontsize=18,
+        ha='center',
+        va='center',
+        rotation=90,
+        bbox=dict(boxstyle='square, pad=0.15', fc='white', ec='none'),
+        arrowprops=dict(arrowstyle='-[, widthB=16, lengthB=0.5', lw=2)
+    )
+    fig.subplots_adjust(top=0.92)
+
     if show:
         plt.show()
     else:
