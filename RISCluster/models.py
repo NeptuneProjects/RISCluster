@@ -45,7 +45,7 @@ from RISCluster import plotting, utils
 
 def silhouette_samples_X(x, labels, RF=2):
     x_ = x[:, :, ::int(RF), ::int(RF)].squeeze()
-    _, _, n, o = x_.shape
+    _, n, o = x_.shape
     x_ = np.reshape(x_, (-1, n * o))
     scores = silhouette_samples(X_, labels)
     if torch.cuda.is_available():
