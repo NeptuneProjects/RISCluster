@@ -135,6 +135,7 @@ def gmm_fit(config, z_array, n_clusters):
 
 
     print('Saving data......', end="", flush=True)
+    M = z_array.shape[0]
     A = [{'idx': i, 'label': labels[i]} for i in np.arange(M)]
     utils.save_labels(A, config.savepath_run)
     np.save(os.path.join(config.savepath_run, 'labels'), labels)
