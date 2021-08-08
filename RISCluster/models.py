@@ -43,12 +43,21 @@ from tqdm import tqdm
 from RISCluster import plotting, utils
 
 
+def silhouette_samples_X(x, labels, RF=2):
+    x_ = x[:, :, ::int(RF), ::int(RF)].squeeze()
+    _, _, n, o = x_.shape
+    x_ = np.reshape(x_, (-1, n * o))
+    scores = silhouette_samples(X_, labels)
+    if torch.cuda.is_available():
+        scores = cupy.asnumpy(scores)
+    x_ = np.reshape(x_, (-1, n, o))
+    return scores, x_
+
+
 def cluster_metrics(path, labels, x, z, centroids, save=True):
 
     label_list = np.unique(labels)
     n_clusters = len(label_list)
-
-    # silh_scores = None
 
     x_ = x[:, :, ::3, ::3].squeeze()
     x_ = np.reshape(x_, (-1, x_.shape[1] * x_.shape[2]))
