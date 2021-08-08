@@ -393,18 +393,18 @@ def cluster_gallery(
         plt.yticks([])
         if l == 0:
             if latex:
-                plt.ylabel(r'$\pmb{\mu}_j$', rotation=0, va="center", ha="right", size=fontsize)
+                plt.ylabel(r'$\pmb{\mu}_k$', rotation=0, va="center", ha="right", size=fontsize)
             else:
                 plt.ylabel("mu", rotation=0, va="center", ha="right")
         ax.xaxis.set_label_position('top')
-        ax.set_xlabel(f"$j={label+1}$", va="bottom", size=fontsize)
+        ax.set_xlabel(f"$k={label+1}$", va="bottom", size=fontsize)
 
         # Centroid Reconstruction
         ax = fig.add_subplot(gs_sub[1])
         plt.imshow(torch.squeeze(X_c[l]).detach().cpu().numpy(), cmap=cmap_spec, aspect='auto', origin='lower', interpolation="none")
         if l == 0:
             if latex:
-                plt.ylabel(r"$g_\theta(\pmb{\mu}_j)$", rotation=0, va="center", ha="right", size=fontsize)
+                plt.ylabel(r"$g_\theta(\pmb{\mu}_k)$", rotation=0, va="center", ha="right", size=fontsize)
             else:
                 plt.ylabel("$g(mu)", rotation=0, va="center", ha="right")
 
@@ -783,7 +783,7 @@ def view_class_cdf(
 
         if ((n_clusters % 2 == 0) and (l == n_clusters - 2)) or ((n_clusters % 2 != 0) and (l == n_clusters - 1)):
             if latex:
-                plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+                plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_k\Vert_{p}$", size=fontsize)
             else:
                 plt.xlabel(f"d_{p}", size=fontsize)
             plt.ylabel("CDF", size=fontsize)
@@ -794,7 +794,7 @@ def view_class_cdf(
     allaxes = fig.get_axes()
     for j, ax in enumerate(allaxes):
         ax.set_xlim(0, max_dist)
-        ax.text(0.9*max_dist, 0.15, f"$j={j+1}$", ha="right", va="bottom", fontsize=fontsize)
+        ax.text(0.9*max_dist, 0.15, f"$k={j+1}$", ha="right", va="bottom", fontsize=fontsize)
 
     handles, labels = ax.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
@@ -889,7 +889,7 @@ def view_class_pdf(
 
         if ((n_clusters % 2 == 0) and (l == n_clusters - 2)) or ((n_clusters % 2 != 0) and (l == n_clusters - 1)):
             if latex:
-                plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_j\Vert_{p}$", size=fontsize)
+                plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_k\Vert_{p}$", size=fontsize)
             else:
                 plt.xlabel(f"d_{p}", size=fontsize)
             plt.ylabel("PDF", size=fontsize)
@@ -1201,9 +1201,9 @@ def view_latent_space(
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=np.linspace(1,d,d, dtype='int'), size=5)
             plt.ylabel('GMM', size=fontsize)
             if latex:
-                plt.title(r'$\pmb{\mu}_j$')
+                plt.title(r'$\pmb{\mu}_k$')
             else:
-                plt.title('mu_j')
+                plt.title('mu_k')
         else:
             plt.yticks(ticks=np.linspace(0,d-1,d), labels=[], size=5)
 
@@ -1220,10 +1220,10 @@ def view_latent_space(
         plt.yticks(ticks=np.linspace(0,d-1,d), labels=[])
         if l == 0:
             if latex:
-                plt.text(0.03, 1.1, f"$\pmb{{z}}_i \in Z$", size=fontsize, transform=ax1.transAxes)
+                plt.text(0.03, 1.1, f"$\pmb{{z}}_n \in Z$", size=fontsize, transform=ax1.transAxes)
             else:
                 plt.text(0.03, 1.1, f"z", size=fontsize, transform=ax1.transAxes)
-        plt.title(f"$j={l+1}$", size=14)
+        plt.title(f"$k={l+1}$", size=14)
 
         ax1.set_xticks(ax1.get_xticks())  # just get and reset whatever you already have
         ax1.set_xlim(left=0, right=len(data_a))  # set the new/modified labels
@@ -1284,7 +1284,7 @@ def view_latent_space(
     cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=axins, orientation='horizontal')
     cbar.set_label('Latent Feature Value', size=fontsize)
     if latex:
-        fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{z}}_i-\pmb{{\mu}}_j \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
+        fig.suptitle(f"Latent space sorted by $d_{{i,j}}=\Vert \pmb{{z}}_n-\pmb{{\mu}}_k \Vert_{p} \mid d_{{i+1,j}} > d_{{i,j}}$", size=18)
     else:
         fig.suptitle(f"Latent space sorted by d_{p}", size=18)
     fig.subplots_adjust(top=0.91)
