@@ -491,7 +491,9 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
 
         M = len(tra_loader.dataset)
         if config.update_interval == -1:
-            config.update_interval = int(np.ceil(M / (batch_size * 2)))
+            update_interval = int(np.ceil(M / (batch_size * 2)))
+        else:
+            update_interval = int(np.ceil(M / (batch_size * config.update_interval)))
 
         tb = SummaryWriter(log_dir = savepath_run)
         if config.tbpid is not None:
@@ -596,7 +598,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 _, batch = batch
                 x = batch.to(device)
                 # Update target distribution, check performance
-                if (batch_num % config.update_interval == 0) and not \
+                if (batch_num % update_interval == 0) and not \
                     (batch_num == 0 and epoch == 0):
                     q, labels, _ = batch_eval(tra_loader, model, device)
                     p = target_distribution(q)
