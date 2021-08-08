@@ -48,11 +48,18 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     label_list = np.unique(labels)
     n_clusters = len(label_list)
 
-    silh_scores = None
-    silh_scores = silhouette_samples(z, labels)
+    # silh_scores = None
+
+    x_ = x[:, :, ::2, ::2].squeeze()
+    x_ = np.reshape(x_, (-1, x_.shape[1] * x_.shape[2]))
+
+    silh_scores_Z = silhouette_samples(z, labels)
+    silh_scores_X = silhouette_samples(x_, labels)
     if torch.cuda.is_available():
-        silh_scores = cupy.asnumpy(silh_scores)
-    silh_scores_avg = np.mean(silh_scores)
+        silh_scores_Z = cupy.asnumpy(silh_scores_Z)
+        silh_scores_X = cupy.asnumpy(silh_scores_X)
+    silh_scores_avg_Z = np.mean(silh_scores_Z)
+    silh_scores_avg_X = np.mean(silh_scores_X)
 
     _, _, n, o = x.shape
     M = np.zeros((n_clusters,), dtype=int)
@@ -61,7 +68,8 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     X_MAE = np.zeros((n_clusters, n*o))
     X_MSE_avg = np.zeros((n_clusters,))
     X_MAE_avg = np.zeros((n_clusters,))
-    class_silh_scores = np.zeros((n_clusters,))
+    class_silh_scores_Z = np.zeros((n_clusters,))
+    class_silh_scores_X = np.zeros((n_clusters,))
 
     for j in range(n_clusters):
 
@@ -83,8 +91,11 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
 
         # Latent Space Metrics:
 
-        # Silhouette Score
-        class_silh_scores[j] = np.mean(silh_scores[labels==j])
+        # Silhouette Score - Latent Space
+        class_silh_scores_Z[j] = np.mean(silh_scores_Z[labels==j])
+
+        # Silhouette Score - Data Space
+        class_silh_scores_X[j] = np.mean(silh_scores_X[labels==j])
 
     if save:
         np.save(os.path.join(path, 'X_ip'), X_ip_avg)
@@ -92,7 +103,8 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
         np.save(os.path.join(path, 'X_MSE_avg'), X_MSE_avg)
         np.save(os.path.join(path, 'X_MAE'), X_MAE)
         np.save(os.path.join(path, 'X_MAE_avg'), X_MAE_avg)
-        np.save(os.path.join(path, 'silh_scores'), silh_scores)
+        np.save(os.path.join(path, 'silh_scores_Z'), silh_scores_Z)
+        np.save(os.path.join(path, 'silh_scores_X'), silh_scores_X)
         df = pd.DataFrame(
             data={
                 'class': label_list,
@@ -100,15 +112,17 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
                 'inner_product': X_ip_avg,
                 'MSE_avg': X_MSE_avg,
                 'MAE_avg': X_MAE_avg,
-                'silh_score': class_silh_scores
+                'silh_score_Z': class_silh_scores_Z,
+                'silh_score_X': class_silh_scores_X
             }
         )
         df.loc['mean'] = df.mean()
         df.loc['mean']['class', 'N'] = None
-        df.loc['mean']['silh_score'] = silh_scores_avg
+        df.loc['mean']['silh_score_Z'] = silh_scores_avg_Z
+        df.loc['mean']['silh_score_X'] = silh_scores_avg_X
         df.to_csv(os.path.join(path, 'cluster_performance.csv'))
 
-    return M, X_ip_avg, X_MSE, X_MSE_avg, X_MAE, X_MAE_avg, silh_scores, df
+    return M, X_ip_avg, X_MSE, X_MSE_avg, X_MAE, X_MAE_avg, silh_scores_Z, silh_scores_X, df
 
 
 def gmm_fit(config, z_array, n_clusters):
@@ -129,13 +143,16 @@ def gmm_fit(config, z_array, n_clusters):
 
     print('Performing clustering metrics...', end='', flush=True)
     x = np.load(config.fname_dataset + '.npy')
-    _, _, _, _, _, _, silh_scores, _ = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
-    fig1 = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
-    fig1.savefig(os.path.join(config.savepath_run, 'silh_score.png'), dpi=300, facecolor='w')
+    _, _, _, _, _, _, silh_scores_Z, silh_scores_X, _ = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
+    fig1 = plotting.view_silhscore(silh_scores_Z, labels, n_clusters, config.model, config.show)
+    fig1.savefig(os.path.join(config.savepath_run, 'silh_score_Z.png'), dpi=300, facecolor='w')
+
+    fig2 = plotting.view_silhscore(silh_scores_X, labels, n_clusters, config.model, config.show)
+    fig2.savefig(os.path.join(config.savepath_run, 'silh_score_X.png'), dpi=300, facecolor='w')
 
     tsne_results = tsne(z_array)
-    fig2 = view_TSNE(tsne_results, labels, 'GMM', config.show)
-    fig2.savefig(os.path.join(config.savepath_run, 't-SNE.png'), dpi=300, facecolor='w')
+    fig3 = view_TSNE(tsne_results, labels, 'GMM', config.show)
+    fig3.savefig(os.path.join(config.savepath_run, 't-SNE.png'), dpi=300, facecolor='w')
     print('complete.')
 
     toc = datetime.now()
