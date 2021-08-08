@@ -50,7 +50,7 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
 
     # silh_scores = None
 
-    x_ = x[:, :, ::2, ::2].squeeze()
+    x_ = x[:, :, ::3, ::3].squeeze()
     x_ = np.reshape(x_, (-1, x_.shape[1] * x_.shape[2]))
 
     silh_scores_Z = silhouette_samples(z, labels)
