@@ -108,7 +108,8 @@ def train(config):
     tra_dataset, val_dataset = load_data(config)
     print(f'Dataset has {len(tra_dataset)+len(val_dataset)} samples.')
     print(f'  Training subset has {len(tra_dataset)} samples.')
-    print(f'  Validation subset has {len(val_dataset)} samples.')
+    if config.model == 'AEC':
+        print(f'  Validation subset has {len(val_dataset)} samples.')
     run_count = 1
     hp_keys = [k for k in config.hp.keys()]
     hp_vals = [v for v in config.hp.values()]
