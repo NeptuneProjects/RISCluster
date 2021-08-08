@@ -47,7 +47,7 @@ def silhouette_samples_X(x, labels, RF=2):
     x_ = x[:, :, ::int(RF), ::int(RF)].squeeze()
     _, n, o = x_.shape
     x_ = np.reshape(x_, (-1, n * o))
-    scores = silhouette_samples(X_, labels)
+    scores = silhouette_samples(x_, labels)
     if torch.cuda.is_available():
         scores = cupy.asnumpy(scores)
     x_ = np.reshape(x_, (-1, n, o))
