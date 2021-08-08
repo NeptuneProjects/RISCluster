@@ -687,7 +687,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                         centroids,
                         model.clustering.weights.detach().cpu().numpy(),
                         tsne_results,
-                        epoch,
+                        epoch+1,
                         config.show
                 )
                 plotkwargs = {'tb': tb}
