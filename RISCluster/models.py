@@ -152,7 +152,7 @@ def gmm_fit(config, z_array, n_clusters):
     fig2.savefig(os.path.join(config.savepath_run, 'silh_score_X.png'), dpi=300, facecolor='w')
 
     tsne_results = tsne(z_array)
-    fig3 = view_TSNE(tsne_results, labels, 'GMM', config.show)
+    fig3 = plotting.view_TSNE(tsne_results, labels, 'GMM', config.show)
     fig3.savefig(os.path.join(config.savepath_run, 't-SNE.png'), dpi=300, facecolor='w')
     print('complete.')
 
