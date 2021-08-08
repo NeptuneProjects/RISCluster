@@ -1040,7 +1040,7 @@ def view_detections(fname_dataset, img_index, figsize=(12,9), show=True):
                 tr[i,:] = dset_arr
 
     factor = 1e-9
-    tr_max = np.max(np.abs(tr)) / factor
+    # tr_max = np.max(np.abs(tr)) / factor
 
     tvec, fvec = utils.get_timefreqvec(fname_dataset)
 
@@ -1070,7 +1070,7 @@ def view_detections(fname_dataset, img_index, figsize=(12,9), show=True):
         ax = fig.add_subplot(gs_sub[1])
         plt.plot(tvec, tr[i,:] / factor)
         plt.xlim(min(tvec), max(tvec))
-        plt.ylim(-tr_max, tr_max)
+        # plt.ylim(-tr_max, tr_max)
         ax.set_xticks(np.arange(5))
         if i == 0:
             plt.xlabel('Time (s)', size=fontsize)
