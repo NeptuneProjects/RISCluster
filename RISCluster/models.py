@@ -613,6 +613,7 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                     tb.add_scalar('delta', delta_label, n_iter)
                     labels_prev = np.copy(labels)
                     if delta_label < tol:
+                        time.sleep(2)
                         print('Stop criterion met, training complete.')
                         finished = True
                         break
