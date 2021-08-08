@@ -1068,7 +1068,8 @@ def view_detections(fname_dataset, img_index, figsize=(12,9), show=True):
         tvec = np.linspace(extent[0], extent[1], tr.shape[1])
 
         ax = fig.add_subplot(gs_sub[1])
-        plt.plot(tvec, tr[i,:] / factor)
+        # plt.plot(tvec, tr[i,:] / factor)
+        plt.plot(tvec, tr[i,:])
         plt.xlim(min(tvec), max(tvec))
         # plt.ylim(-tr_max, tr_max)
         ax.set_xticks(np.arange(5))
