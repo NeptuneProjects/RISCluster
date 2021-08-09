@@ -568,6 +568,62 @@ def compare_images(
     return fig
 
 
+def compare_silhscore(scores_Z, scores_X, label_lists, n_clusters, show=False, *args, **kwargs):
+
+    fig = plt.figure(figsize=(8,8), dpi=150)
+
+    rc_fonts = {'text.usetex': False, 'mathtext.default': 'regular'}
+    plt.rcParams.update(rc_fonts)
+    titles = ['Z (GMM)', 'Z (DEC)', 'X (GMM)', 'X (DEC)']
+
+    colors = cmap_lifeaquatic()
+
+    gs = gridspec.GridSpec(nrows=2, ncols=2, wspace=0.15, hspace=0.3)
+
+    for i in range(4):
+        if i < 2:
+            scores = scores_Z[i]
+        else:
+            scores = scores_X[i-2]
+
+        ax = fig.add_subplot(gs[i])
+        ax.set_ylim([0, scores.shape[0] + (n_clusters + 1) * 10])
+        y_lower = 10
+        average_score = np.mean(scores)
+
+        for j in range(n_clusters):
+            color = colors[j]
+            if i % 2 == 0:
+                class_scores = scores[label_lists[0] == j]
+            else:
+                class_scores = scores[label_lists[1] == j]
+            class_scores.sort()
+            M = class_scores.shape[0]
+
+            y_upper = y_lower + M
+            ax.fill_betweenx(np.arange(y_lower, y_upper), 0, class_scores, facecolor=color, edgecolor=color, alpha=0.7)
+            ax.text(-0.15, y_lower + 0.5 * M, str(j+1), size=14)
+            y_lower = y_upper + 10
+
+        ax.set_title(titles[i] + f'; Avg. Score = {average_score:.2f}')
+
+        if i == 0:
+            ax.set_xlabel('Silhouette Coefficient')
+            ax.set_ylabel('Class')
+
+        ax.axvline(average_score, color='red', linestyle='--')
+
+        ax.set_yticks([])
+        ax.set_xticks([-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1])
+
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+
 def label_offset(ax, axis="y"):
     if axis == "y":
         fmt = ax.yaxis.get_major_formatter()
