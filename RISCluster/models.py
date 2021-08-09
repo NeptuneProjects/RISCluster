@@ -59,14 +59,11 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     label_list = np.unique(labels)
     n_clusters = len(label_list)
 
-    x_ = x[:, :, ::3, ::3].squeeze()
-    x_ = np.reshape(x_, (-1, x_.shape[1] * x_.shape[2]))
-
     silh_scores_Z = silhouette_samples(z, labels, chunksize=20000)
     if torch.cuda.is_available():
         silh_scores_Z = cupy.asnumpy(silh_scores_Z)
 
-    silh_scores_X = silhouette_samples_X(x_, labels, RF=3)
+    silh_scores_X = silhouette_samples_X(x, labels, RF=3)
 
     silh_scores_avg_Z = np.mean(silh_scores_Z)
     silh_scores_avg_X = np.mean(silh_scores_X)
@@ -227,9 +224,11 @@ def model_prediction(
 
         print('Performing clustering metrics...', end='', flush=True)
         x = np.load(config.fname_dataset + '.npy')
-        _, _, _, _, _, _, silh_scores, _ = cluster_metrics(savepath, labels, x, z_array, centroids)
-        fig = plotting.view_silhscore(silh_scores, labels, n_clusters, config.model, config.show)
-        fig.savefig(os.path.join(savepath, 'silh_score.png'), dpi=300, facecolor='w')
+        _, _, _, _, _, _, silh_scores_Z, silh_scores_X, _ = cluster_metrics(savepath, labels, x, z_array, centroids)
+        fig = plotting.view_silhscore(silh_scores_Z, labels, n_clusters, config.model, config.show)
+        fig.savefig(os.path.join(savepath, 'silh_score_Z.png'), dpi=300, facecolor='w')
+        fig = plotting.view_silhscore(silh_scores_X, labels, n_clusters, config.model, config.show)
+        fig.savefig(os.path.join(savepath, 'silh_score_X.png'), dpi=300, facecolor='w')
         print('complete.')
 
         print('Creating figures...')
