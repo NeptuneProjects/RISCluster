@@ -480,8 +480,8 @@ def cluster_gallery(
 #     fig.suptitle('Classes', size=20, weight='bold')
     ax.annotate(
         'Classes',
-        xy=(0.54, 0.97),
-        xytext=(0.54, 0.965),
+        xy=(0.51, 0.97),
+        xytext=(0.5, 0.965),
         xycoords='figure fraction',
         textcoords='figure fraction',
         fontsize=18,
@@ -504,8 +504,8 @@ def cluster_gallery(
     )
     ax.annotate(
         'Data Samples',
-        xy=(0.03, 0.435),
-        xytext=(0.02, 0.435),
+        xy=(0.03, 0.45),
+        xytext=(0.02, 0.45),
         xycoords='figure fraction',
         textcoords='figure fraction',
         fontsize=18,
