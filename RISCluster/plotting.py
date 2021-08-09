@@ -14,7 +14,7 @@ import cmocean.cm as cmo
 import h5py
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
-from matplotlib.patches import ConnectionPatch
+from matplotlib.patches import ConnectionPatch, Patch
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -1078,7 +1078,7 @@ def view_class_pdf_paper(
             axb2.set_xticklabels([])
             axb2.set_yticklabels([])
 
-    proxies = [mpatches.Patch(color=colors[i], label=str(i+1), alpha=0.5) for i in range(n_clusters)]
+    proxies = [Patch(color=colors[i], label=str(i+1), alpha=0.5) for i in range(n_clusters)]
 
     handles, labels = axb1.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
