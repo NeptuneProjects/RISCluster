@@ -920,6 +920,181 @@ def view_class_pdf(
     return fig
 
 
+def view_class_pdf_paper(
+        data_a,
+        data_b,
+        labels_a,
+        labels_b,
+        centroids_a,
+        centroids_b,
+        n_clusters,
+        p=2,
+        show=True,
+        latex=False
+    ):
+    def _roundup(x):
+        return int(np.ceil(x / 10.0)) * 10
+
+    label_list, counts_a = np.unique(labels_a, return_counts=True)
+    _, counts_b = np.unique(labels_b, return_counts=True)
+    dx = 1
+    nbins = 400
+    X = np.linspace(0, 40, nbins)
+
+    fig = plt.figure(figsize=(12, 2.5*int(np.ceil(n_clusters/2))), dpi=150)
+    fontsize = 20
+    if latex:
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=r'\usepackage{amsmath}')
+    gs = gridspec.GridSpec(nrows=int(np.ceil(n_clusters/2)), ncols=2, hspace=0.3, wspace=0.05)
+    colors = cmap_lifeaquatic(n_clusters)
+    xlim0 = 0
+    xlim1 = 4
+    xlim2 = 10
+    xlim3 = 30
+    ylim = 0.3
+    max_dist = 0
+
+    for l in range(n_clusters):
+        gs_sub = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[l], hspace=0, wspace=0.05, width_ratios=[1, 2])
+
+        distance_a = utils.fractional_distance(centroids_a[l], data_a, p)
+        sort_index_a = np.argsort(distance_a)
+        distance_a = distance_a[sort_index_a]
+        labels_a_ = labels_a[sort_index_a]
+        distance_b = utils.fractional_distance(centroids_b[l], data_b, p)
+        sort_index_b = np.argsort(distance_b)
+        distance_b = distance_b[sort_index_b]
+        labels_b_ = labels_b[sort_index_b]
+
+        max_dist_ = np.max([distance_a.max(), distance_b.max()])
+        max_dist_ = _roundup(max_dist_)
+        if max_dist_ > max_dist:
+            max_dist = max_dist_
+
+        axa1 = fig.add_subplot(gs_sub[0])
+        for ll in range(n_clusters):
+            query_a = np.where(labels_a_ == label_list[ll])[0]
+            distance_a_ = distance_a[query_a]
+            hist_a = np.histogram(distance_a_, bins=X)[0].astype('float')
+            hist_a /= hist_a.sum()
+            plt.plot(X[:-1], hist_a, color=colors[ll], label=f"{ll+1}")
+            plt.fill_between(X[:-1], 0, hist_a, color=colors[ll], alpha=0.2)
+        plt.xticks([])
+        plt.ylim(0, ylim)
+        if latex:
+            plt.title(fr"Class PDFs relative to $\pmb{{\mu}}_{l+1}$", loc="left", size=fontsize)
+        else:
+            plt.title(f"Class PDFs relative to mu_{l+1}", loc="left", size=fontsize)
+
+        axa2 = fig.add_subplot(gs_sub[1])
+        for ll in range(n_clusters):
+            query_a = np.where(labels_a_ == label_list[ll])[0]
+            distance_a_ = distance_a[query_a]
+            hist_a = np.histogram(distance_a_, bins=X)[0].astype('float')
+            hist_a /= hist_a.sum()
+            plt.plot(X[:-1], hist_a, color=colors[ll], label=f"{ll+1}")
+            plt.fill_between(X[:-1], 0, hist_a, color=colors[ll], alpha=0.2)
+        plt.xticks([])
+        plt.ylim(0, ylim)
+        plt.text(1, 0.9, 'GMM', ha='right', va='top', transform=axa2.transAxes, fontsize=fontsize)
+
+
+        axb1 = fig.add_subplot(gs_sub[2])
+        for ll in range(n_clusters):
+            query_b = np.where(labels_b_ == label_list[ll])[0]
+            distance_b_ = distance_b[query_b]
+            hist_b = np.histogram(distance_b_, bins=X)[0].astype('float')
+            hist_b /= hist_b.sum()
+            plt.plot(X[:-1], hist_b, color=colors[ll], label=f"{ll+1}")
+            plt.fill_between(X[:-1], 0, hist_b, color=colors[ll], alpha=0.2)
+        plt.ylim(0, ylim)
+
+        axb2 = fig.add_subplot(gs_sub[3])
+        for ll in range(n_clusters):
+            query_b = np.where(labels_b_ == label_list[ll])[0]
+            distance_b_ = distance_b[query_b]
+            hist_b = np.histogram(distance_b_, bins=X)[0].astype('float')
+            hist_b /= hist_b.sum()
+
+            plt.plot(X[:-1], hist_b, color=colors[ll], label=f"{ll+1}")
+            plt.fill_between(X[:-1], 0, hist_b, color=colors[ll], alpha=0.2)
+        plt.ylim(0, ylim)
+        plt.text(1, 0.9, 'DEC', ha='right', va='top', transform=axb2.transAxes, fontsize=fontsize)
+
+        axa1.spines['right'].set_visible(False)
+        axa2.spines['left'].set_visible(False)
+        axa2.tick_params(labelleft=False, left=False)
+        axa1.set_xlim(xlim0, xlim1)
+        axa2.set_xlim(xlim2, xlim3)
+
+        axb1.spines['right'].set_visible(False)
+        axb2.spines['left'].set_visible(False)
+        axb2.tick_params(labelleft=False, left=False)
+        axb1.set_xlim(xlim0, xlim1)
+        axb2.set_xlim(xlim2, xlim3)
+
+        # Create axis breaks
+        d = 0.075
+        kwargs = dict(transform=axa1.transAxes, color='k', clip_on=False)
+        axa1.plot((1, 1), (1-d, 1+d), **kwargs)
+        kwargs = dict(transform=axa2.transAxes, color='k', clip_on=False)
+        axa2.plot((0, 0), (1-d, 1+d), **kwargs)
+        kwargs = dict(transform=axb1.transAxes, color='k', clip_on=False)
+        axb1.plot((1, 1), (-d, +d), **kwargs)
+        axb1.plot((1, 1), (1-d, 1+d), **kwargs)
+        kwargs = dict(transform=axb2.transAxes, color='k', clip_on=False)
+        axb2.plot((0, 0), (-d, +d), **kwargs)
+        axb2.plot((0, 0), (1-d, 1+d), **kwargs)
+
+
+        if ((n_clusters % 2 == 0) and (l == n_clusters - 2)) or ((n_clusters % 2 != 0) and (l == n_clusters - 1)):
+            if latex:
+                plt.xlabel(fr"$d=\Vert\pmb{{z}} - \pmb{{\mu}}_k\Vert_{p}$", size=fontsize, ha='right')
+            else:
+                plt.xlabel(f"d_{p}", size=fontsize)
+            axb1.set_ylabel("PDF", size=fontsize)
+
+            axa1.set_xticklabels([])
+            axa1.set_yticklabels([])
+            axa2.set_xticklabels([])
+            axa2.set_yticklabels([])
+
+            plt.draw()
+            xtl = axb1.get_xticklabels()
+            xtl[0].set_horizontalalignment('left')
+            xtl[-1].set_horizontalalignment('right')
+            xtl = axb2.get_xticklabels()
+            xtl[0].set_horizontalalignment('left')
+            xtl[-1].set_horizontalalignment('right')
+
+        else:
+            axa1.set_xticklabels([])
+            axa1.set_yticklabels([])
+            axa2.set_xticklabels([])
+            axa2.set_yticklabels([])
+            axb1.set_xticklabels([])
+            axb1.set_yticklabels([])
+            axb2.set_xticklabels([])
+            axb2.set_yticklabels([])
+
+    proxies = [mpatches.Patch(color=colors[i], label=str(i+1), alpha=0.5) for i in range(n_clusters)]
+
+    handles, labels = axb1.get_legend_handles_labels()
+    if len(label_list) % 2 != 0:
+        leg = fig.legend(handles=proxies, loc=(0.54, 0.1), ncol=int(np.ceil(n_clusters/2)), fontsize=fontsize-2)
+    else:
+        leg = fig.legend(handles=proxies, loc=(0.09, 0.005), ncol=n_clusters, fontsize=fontsize-4)
+        plt.subplots_adjust(bottom=0.15)
+    leg.set_title("Classes", prop={'size':'xx-large'})
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
+    return fig
+
+
 def view_cluster_stats(k_list, inertia, silh, gap_g, gap_u, show=False):
     def _make_patch_spines_invisible(ax):
         ax.set_frame_on(True)
