@@ -47,7 +47,7 @@ def silhouette_samples_X(x, labels, RF=2):
     x_ = x[:, :, ::int(RF), ::int(RF)].squeeze()
     _, n, o = x_.shape
     x_ = np.reshape(x_, (-1, n * o))
-    scores = silhouette_samples(x_, labels)
+    scores = silhouette_samples(x_, labels, chunksize=20000)
     if torch.cuda.is_available():
         scores = cupy.asnumpy(scores)
     x_ = np.reshape(x_, (-1, n, o))
@@ -62,7 +62,7 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     x_ = x[:, :, ::3, ::3].squeeze()
     x_ = np.reshape(x_, (-1, x_.shape[1] * x_.shape[2]))
 
-    silh_scores_Z = silhouette_samples(z, labels)
+    silh_scores_Z = silhouette_samples(z, labels, chunksize=20000)
     if torch.cuda.is_available():
         silh_scores_Z = cupy.asnumpy(silh_scores_Z)
 
