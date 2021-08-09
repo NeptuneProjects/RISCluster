@@ -63,10 +63,11 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     x_ = np.reshape(x_, (-1, x_.shape[1] * x_.shape[2]))
 
     silh_scores_Z = silhouette_samples(z, labels)
-    silh_scores_X = silhouette_samples(x_, labels)
     if torch.cuda.is_available():
         silh_scores_Z = cupy.asnumpy(silh_scores_Z)
-        silh_scores_X = cupy.asnumpy(silh_scores_X)
+
+    silh_scores_X = silhouette_samples_X(x_, labels, RF=3)
+
     silh_scores_avg_Z = np.mean(silh_scores_Z)
     silh_scores_avg_X = np.mean(silh_scores_X)
 
