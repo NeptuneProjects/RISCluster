@@ -605,11 +605,11 @@ def compare_silhscore(scores_Z, scores_X, label_lists, n_clusters, show=False, x
             ax.text(-0.15, y_lower + 0.5 * M, str(j+1), size=14)
             y_lower = y_upper + 10
 
-        ax.set_title(titles[i] + f'; Avg. Score = {average_score:.2f}')
+        ax.set_title(titles[i] + f'; Avg. Score = {average_score:.2f}', size=16)
 
         if i == 0:
-            ax.set_xlabel('Silhouette Coefficient')
-            ax.set_ylabel('Class')
+            ax.set_xlabel('Silhouette Coefficient', size=16)
+            ax.set_ylabel('Class', size=16)
 
         ax.axvline(average_score, color='red', linestyle='--')
 
