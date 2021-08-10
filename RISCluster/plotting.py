@@ -491,8 +491,8 @@ def cluster_gallery(
     )
     ax.annotate(
         'Centroids',
-        xy=(0.03, 0.88),
-        xytext=(0.02, 0.88),
+        xy=(0.035, 0.88),
+        xytext=(0.025, 0.88),
         xycoords='figure fraction',
         textcoords='figure fraction',
         fontsize=18,
@@ -504,8 +504,8 @@ def cluster_gallery(
     )
     ax.annotate(
         'Data Samples',
-        xy=(0.03, 0.435),
-        xytext=(0.02, 0.435),
+        xy=(0.035, 0.435),
+        xytext=(0.025, 0.435),
         xycoords='figure fraction',
         textcoords='figure fraction',
         fontsize=18,
