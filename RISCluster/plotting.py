@@ -568,7 +568,7 @@ def compare_images(
     return fig
 
 
-def compare_silhscore(scores_Z, scores_X, label_lists, n_clusters, show=False, xlim=[-1, 1]*args, **kwargs):
+def compare_silhscore(scores_Z, scores_X, label_lists, n_clusters, show=False, xlim=[-1, 1]):
 
     fig = plt.figure(figsize=(8,8), dpi=150)
 
