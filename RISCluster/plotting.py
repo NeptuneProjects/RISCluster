@@ -568,13 +568,20 @@ def compare_images(
     return fig
 
 
-def compare_silhscore(scores_Z, scores_X, label_lists, n_clusters, show=False, xlim=[-1, 1]):
+def compare_silhscore(scores_Z, scores_X, label_lists, n_clusters, show=False, latex=False, xlim=[-1, 1]):
 
-    fig = plt.figure(figsize=(8,8), dpi=150)
-
-    rc_fonts = {'text.usetex': False, 'mathtext.default': 'regular'}
+    fig = plt.figure(figsize=(6,8), dpi=150)
+    if latex:
+        rc_fonts = {
+            'text.usetex': True,
+            'text.latex.preamble': r'\usepackage{amsmath}\usepackage{amsbsy}'
+        }
+        titles = [r'$\mathrm{GMM:\ }Z$', r'$\mathrm{DEC:\ }Z$', r'$\mathrm{GMM:\ }X$', r'$\mathrm{DEC:\ }X$']
+    else:
+        rc_fonts = {'text.usetex': False, 'mathtext.default': 'regular'}
+        titles = ['Z (GMM)', 'Z (DEC)', 'X (GMM)', 'X (DEC)']
     plt.rcParams.update(rc_fonts)
-    titles = ['Z (GMM)', 'Z (DEC)', 'X (GMM)', 'X (DEC)']
+
 
     colors = cmap_lifeaquatic()
 
@@ -601,21 +608,38 @@ def compare_silhscore(scores_Z, scores_X, label_lists, n_clusters, show=False, x
             M = class_scores.shape[0]
 
             y_upper = y_lower + M
-            ax.fill_betweenx(np.arange(y_lower, y_upper), 0, class_scores, facecolor=color, edgecolor=color, alpha=0.7)
-            ax.text(-0.15, y_lower + 0.5 * M, str(j+1), size=14)
+            ax.fill_betweenx(np.arange(y_lower, y_upper), 0, class_scores, facecolor=color, edgecolor=color, alpha=0.6)
+            ax.text(-0.15, y_lower + 0.5 * M, fr'${j+1}$', size=14, va='center')
             y_lower = y_upper + 10
 
-        ax.set_title(titles[i] + f'; Avg. Score = {average_score:.2f}', size=16)
 
-        if i == 0:
-            ax.set_xlabel('Silhouette Coefficient', size=16)
-            ax.set_ylabel('Class', size=16)
+
+        ax.set_title(titles[i], size=15)
+
+        if i == 2:
+            ax.set_xlabel(r'$\mathrm{Silhouette\ Coefficient}$', va='top', size=16, labelpad=15)
+            ax.set_ylabel(r'$\mathrm{Class}$', size=16)
 
         ax.axvline(average_score, color='red', linestyle='--')
 
+        ax.annotate(
+            fr'$\mathrm{{Avg.}} = {average_score:.2f}$',
+            xy=(average_score, 0),
+            xycoords='data',
+            xytext=(average_score, -0.1*len(scores)),
+            textcoords='data',
+            ha='center',
+            va='top',
+            arrowprops=dict(arrowstyle='-|>', lw=1, facecolor='k'),
+            bbox=dict(boxstyle='square, pad=0', fc='none', ec='none')
+        )
+
         ax.set_yticks([])
-        ax.set_xticks([-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1])
+        ax.set_xticks(np.linspace(-1, 1, 11))
         ax.set_xlim(xlim)
+
+        figlabel = 'abcd'
+        ax.text(xlim[0]-0.2, 1.05*len(scores), f'{figlabel[i]})', size=18)
 
 
     if show:
