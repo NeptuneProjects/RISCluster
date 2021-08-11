@@ -1617,6 +1617,7 @@ def view_series(
         times=None,
         vlines=None,
         freq="month",
+        threshold=None,
         log=False,
         maxcounts=False,
         figsize=(12,9),
@@ -1628,7 +1629,7 @@ def view_series(
     rc_fonts = {"text.usetex": False, 'mathtext.default': 'regular'}
 
     df_env = EnvironmentCatalogue(station, aws, path_to_data).df
-    catalogue = utils.LabelCatalogue([path_to_catalogue, path_to_labels])
+    catalogue = utils.LabelCatalogue([path_to_catalogue, path_to_labels], threshold)
     label_list = catalogue.label_list
     counts = catalogue.gather_counts(station=station, freq=freq)
     if times is not None:
