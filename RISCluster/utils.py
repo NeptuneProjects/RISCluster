@@ -359,7 +359,7 @@ def dataset_to_RAM(dataset):
 
 
 class LabelCatalogue(object):
-    def __init__(self, paths, label_list=None):
+    def __init__(self, paths, label_list=None, threshold=None):
         self.paths = paths
         self.freq = None
         self.df = self.build_df(self.paths)
@@ -368,6 +368,9 @@ class LabelCatalogue(object):
         else:
             self.label_list = np.sort(pd.unique(self.df["label"]))
         self.station_list = pd.unique(self.df["station"])
+        if threshold is not None:
+            self.threshold = threshold
+            self.apply_threshold()
 
 
     def amplitude_statistics(self):
@@ -581,6 +584,13 @@ class LabelCatalogue(object):
             {"Class": self.label_list, "Avg_Peak_Freq": class_avg_maxfreq}
         ).sort_values(by=["Class"], ignore_index=True)
         return peak_freqs.set_index("Class")
+
+
+    def apply_threshold(self, threshold=None):
+        if threshold is not None:
+            self.threshold = threshold
+        self.df = self.df[self.df['peak'] > self.threshold]
+        return self.df
 
 
 # class SpecgramNormalizer(object):
