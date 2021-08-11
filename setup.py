@@ -36,7 +36,7 @@ def setup_package():
             'tensorboard',
             'tqdm'
         ],
-        version='0.0b0',
+        version='0.2b',
         license='MIT',
         description="Package provides Pytorch implementation of deep embedded \
             clustering for data recorded on the Ross Ice Shelf, Antarctica."
