@@ -589,7 +589,19 @@ class LabelCatalogue(object):
     def apply_threshold(self, threshold=None):
         if threshold is not None:
             self.threshold = threshold
-        self.df = self.df[self.df['peak'] > self.threshold]
+        if isinstance(self.threshold, float):
+            print(self.threshold)
+            self.df = self.df[self.df['peak'] >= self.threshold]
+        elif isinstance(self.threshold, list):
+            if len(self.threshold) != 2:
+                raise ValueError('Threshold requires 1 or 2 values!')
+
+            lo = min(self.threshold)
+            if lo == 0:
+                lo -= 1 # Catches values ~0 missed due to floating point error
+            hi = max(self.threshold)
+            self.df = self.df[(self.df['peak'] >= lo) & (self.df['peak'] < hi)]
+
         return self.df
 
 

@@ -503,7 +503,7 @@ def cluster_gallery(
         arrowprops=dict(arrowstyle='-[, widthB=2.75, lengthB=0.5', lw=2)
     )
     ax.annotate(
-        'Data Samples',
+        'Signal Samples',
         xy=(0.035, 0.435),
         xytext=(0.025, 0.435),
         xycoords='figure fraction',
