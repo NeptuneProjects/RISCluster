@@ -2,7 +2,7 @@
 
 RISCluster is a package that implements deep embedded clustering (DEC) and Gaussian mixture model (GMM) clustering of
 seismic data recorded on the Ross Ice Shelf, Antarctica from 2014-2017. This
-package is an accompaniment to a [paper published in the Journal of Geophysical Research: Solid Earth](https://doi.org/10.1029/2021JB021716).
+package is an accompaniment to the [paper published in the Journal of Geophysical Research: Solid Earth](https://doi.org/10.1029/2021JB021716).
 
 <p><img src="RISArrayMap.jpg"/>
 Figure 1.  34-station passive seismic array deployed on the Ross Ice Shelf, Antarctica from 2014-2017.
@@ -16,11 +16,12 @@ Pre-requisites:
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 
 The following steps will set up a Conda environment and install RISProcess, and
-have been tested on MacOS 11.1 and Red Hat Enterprise Linux 7.9.  If you have
+have been tested on MacOS 11.1 and Red Hat Enterprise Linux 7.9. If you have
 a CUDA-enabled machine (i.e., not MacOS), you can install the CUDA version of
-RISCluster.  Unfortunately, Pytorch & CUML are not implemented for MacOS, so
-you will need to install the CPU version if you use a Mac, or if your Linux
-machine is not CUDA-capable.  This package has not been tested on Windows.
+RISCluster. Unfortunately, PyTorch GPU & RAPIDS libraries are not implemented
+for MacOS, so you will need to install the CPU version if you use a Mac, or if
+your Linux machine is not CUDA-capable. This package has not been tested on
+Windows.
 
 #### CUDA-enabled RISCluster (Linux)
 1. Open a terminal and navigate to the directory you would like to download the
