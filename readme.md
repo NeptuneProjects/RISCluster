@@ -2,7 +2,7 @@
 
 RISCluster is a package that implements deep embedded clustering (DEC) and Gaussian mixture model (GMM) clustering of
 seismic data recorded on the Ross Ice Shelf, Antarctica from 2014-2017. This
-package is an accompaniment to a [paper published to the Journal of Geophysical Research](https://doi.org/10.1029/2021JB021716).
+package is an accompaniment to a [paper published in the Journal of Geophysical Research: Solid Earth](https://doi.org/10.1029/2021JB021716).
 
 <p><img src="RISArrayMap.jpg"/>
 Figure 1.  34-station passive seismic array deployed on the Ross Ice Shelf, Antarctica from 2014-2017.
