@@ -1316,10 +1316,18 @@ def notify(msgsubj, msgcontent):
 
 
 def parse_nclusters(line):
-    """
-    Do a regex search against all defined regexes and
-    return the key and match result of the first matching regex
+    """Do a regex search of PyTorch model and return the defined number of
+    clusters in the model's clustering layer.
 
+    Parameters
+    ----------
+    line : str
+        PyTorch model clustering layer label.
+
+    Returns
+    -------
+    int
+        Number of clusters defined in model clustering layer.
     """
     rx_dict = {'n_clusters': re.compile(r'Clusters=(?P<n_clusters>\d+)')}
     for key, rx in rx_dict.items():
@@ -1331,6 +1339,18 @@ def parse_nclusters(line):
 
 
 def query_dbSize(path):
+    """Queries the h5 database and returns data dimensions.
+
+    Parameters
+    ----------
+    path : str
+        Path to h5 database.
+
+    Returns
+    -------
+    m, n, o : int
+        Length, width, and height of data contained in h5 database.
+    """
     with h5py.File(path, 'r') as f:
         #samples, frequency bins, time bins, amplitude
         DataSpec = '/4.0/Spectrogram'
@@ -1361,6 +1381,25 @@ def query_H5size():
 
 
 def save_exp_config(savepath, serial, init_file, parameters, hyperparameters):
+    """Saves experiment configuration to .txt and .pkl.
+
+    Parameters
+    ----------
+    savepath : str
+        Path to experiment folder.
+
+    serial : str
+        Experiment serial number.
+
+    init_file : str
+        Path to initialization configuration file.
+
+    parameters : dict
+        Dictionary containing experiment parameters.
+
+    hyperparameters : dict
+        Dictionary containing experiment hyperparameters.
+    """
     fname = f'{savepath}ExpConfig{serial}'
     if hyperparameters is not None:
         configs = [parameters, hyperparameters]
@@ -1397,6 +1436,20 @@ def save_history(history, path):
 
 
 def save_labels(label_list, savepath, serial=None):
+    """Writes clustering labels to CSV file.
+
+    Parameters
+    ----------
+    label_list : dict
+        Dictionary of keys and values (array) to be saved. First dictionary
+        item is used as the dataframe index.
+
+    savepath : str
+        Path to disk where CSV will be saved.
+
+    serial : str
+        Experiment serial number.
+    """
     if serial is not None:
         fname = os.path.join(savepath, f'Labels{serial}.csv')
     else:
@@ -1450,22 +1503,23 @@ def save_TraVal_index(M, fname_dataset, savepath, reserve=0.0):
     print(savepath)
     return index_tra, index_val, savepath
 
-# This function is now implemented in Configuration class. Remove once testing
-# is complete.
-def set_device(cuda_device=None):
-    if torch.cuda.is_available():
-        if cuda_device is not None:
-            device = torch.device(f'cuda:{cuda_device}')
-        else:
-            device = torch.device('cuda')
-        print(f'CUDA device available, using GPU ({device}).')
-    else:
-        device = torch.device('cpu')
-        print('CUDA device not available, using CPU.')
-    return device
-
 
 def start_tensorboard(logdir, tbport):
+    """Begins a new process for Tensorboard and returns its PID.
+
+    Parameters
+    ----------
+    logdir : str
+        Path to save Tensorbaord logs.
+
+    tbport : int
+        Port to which Tensorboard is attached.
+
+    Returns
+    -------
+    tbpid : int
+        PID of the Tensorboard process.
+    """
     cmd = f"python -m tensorboard.main --logdir=. --port={tbport} --samples_per_plugin images=1000"
     p = subprocess.Popen(cmd, cwd=logdir, shell=True)
     tbpid = p.pid
