@@ -222,6 +222,7 @@ class SeismicDataset(Dataset):
         def __init__(self, transform=None):
             self.transform = transform
 
+
         def __call__(self, X):
             n, o = X.shape
             if self.transform == "sample_normalization":
@@ -275,7 +276,6 @@ class SeismicDataset(Dataset):
             return m
 
 
-
     def __getitem__(self, idx):
         if self.ftype == 'np':
             X = torch.from_numpy(self.data[idx,:])
@@ -284,6 +284,7 @@ class SeismicDataset(Dataset):
         if self.transform:
             X = self.transform(X)
         return idx, X
+
 
     def read_h5(self, fname, idx):
         with h5py.File(fname, 'r') as f:
