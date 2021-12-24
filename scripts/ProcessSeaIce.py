@@ -1,11 +1,9 @@
-import datetime
-import pickle
+#!/usr/bin/env python3
 
 import matplotlib
 import matplotlib.dates as mdates
 from matplotlib import pyplot as plt
 import numpy as np
-import obspy
 import pandas as pd
 from scipy.io import savemat
 
@@ -24,8 +22,7 @@ def get_representatives(image, min_row, max_row, min_col, max_col):
 
 
 def plot_representatives(dates, representatives):
-    # fig, ax = plt.subplots(figsize=(12, 6))
-    fig, ax = plt.subplots(figsize=(16, 6))
+    _, ax = plt.subplots(figsize=(16, 6))
     ax.plot(dates, representatives)
     ax.set_xlabel('Time')
     ax.set_ylabel('Concentration')
@@ -47,13 +44,6 @@ def plot_map(image, min_col, max_col, min_row, max_row):
         for j in range(len(image_color[0])):
             for k in range(3):
                 new_image[i, j, k] = image_color[i, j, k]
-    # for i in range(len(image_color)):
-    #     if not min_row <= i <= max_row:
-    #         continue
-    #     for j in range(len(image_color[0])):
-    #         if not min_col <= j <= max_col:
-    #             continue
-    #         new_image[i, j, 3] = 1
     for i in range(len(image_color)):
         for j in range(len(image_color[0])):
             if image[i, j] == 253:
@@ -69,15 +59,11 @@ def plot_map(image, min_col, max_col, min_row, max_row):
         for i in range(min_row, max_row):
             new_image[i, j, :] = np.array([1, 0, 0, 1])
 
-    fig, ax = plt.subplots(figsize=(4, 4))
+    _, ax = plt.subplots(figsize=(4, 4))
     plt.subplots_adjust(left=0, bottom=0, right=1, top=1)
-    img = ax.imshow(new_image, cmap='Blues_r')
+    _ = ax.imshow(new_image, cmap='Blues_r')
     ax.set_aspect('equal', 'box')
     ax.axis('off')
-    # plt.colorbar(img).ax.set_ylabel('Ice Concentration')
-    # ax.text(0.01, 0.99, '(a) 03/01/2015',
-            # fontsize=18, color='w',
-            # ha='left', va='top', transform=ax.transAxes)
     plt.show()
 
 
@@ -101,19 +87,9 @@ def main():
     end_date = pd.Timestamp(2016, 12, 1)
     n_header = 300  # The leading 300 bytes are headers
     n_row, n_col = 332, 316  # Number of rows and columns of the image
-    # min_col, max_col = 155, 165  # Columns of interest
-    # min_row, max_row = 228, 233  # Rows of interest
-    # min_col, max_col = 120, 170  # Columns of interest
-    # min_row, max_row = 230, 280  # Rows of interest
     min_col, max_col = 120, 180  # Columns of interest
     min_row, max_row = 220, 280  # Rows of interest
     file_dir = ('/Users/williamjenkins/Research/Data/NSIDC-0051')
-
-    # Plot map of the selected region
-    # file = f'{file_dir}/nt_20150301_f17_v1.1_s.bin'
-    # image = read_image(file, n_header, n_row, n_col)
-    # plot_map(image, min_col, max_col, min_row, max_row)
-    # view_colormap('Blues_r')
 
     # Calculate representative ice concentration of the selected region
     dates = pd.date_range(start=start_date, end=end_date).to_pydatetime()
@@ -129,8 +105,6 @@ def main():
     }
     savemat(f"{file_dir}/NSIDC-0051.mat", mdic)
 
-    # Plot representative ice concentration of the selected region
-    # plot_representatives(dates, representatives)
 
 if __name__ == '__main__':
     main()

@@ -1,26 +1,23 @@
 #!/usr/bin/env python3
 
-'''Contains necessary functions, routines, and data recording for DEC model
-initialization, training, validation, and inference.
-
-William Jenkins, wjenkins [at] ucsd [dot] edu
+"""William Jenkins
 Scripps Institution of Oceanography, UC San Diego
+wjenkins [at] ucsd [dot] edu
 May 2021
-'''
+
+Contains functions, routines, and data recording for DEC model
+initialization, training, validation, and inference.
+"""
 
 from datetime import datetime
 import fnmatch
-import multiprocessing as mp
 import os
 import pickle
 import shutil
-import sys
 import threading
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
-import numpy.matlib
 try:
     import cupy
     from cuml import KMeans, TSNE
@@ -35,27 +32,252 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.metrics.pairwise import linear_kernel
 from sklearn.mixture import GaussianMixture
 import torch
-from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
-import torchvision
 from tqdm import tqdm
 
 from RISCluster import plotting, utils
 
 
-def silhouette_samples_X(x, labels, RF=2):
-    x_ = x[:, :, ::int(RF), ::int(RF)].squeeze()
-    _, n, o = x_.shape
-    x_ = np.reshape(x_, (-1, n * o))
-    scores = silhouette_samples(x_, labels, chunksize=20000)
-    if torch.cuda.is_available():
-        scores = cupy.asnumpy(scores)
-    x_ = np.reshape(x_, (-1, n, o))
-    return scores, x_
+def batch_eval(dataloader, model, device, mute=True):
+    '''Run DEC model in batch_inference mode.
+
+    Parameters
+    ----------
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    model : PyTorch model instance
+        Model with trained parameters
+
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    mute : Boolean (default=False)
+        Verbose mode
+
+    Returns
+    -------
+    z_array : array (M,D)
+        Latent space data (m_samples, d_features)
+    '''
+    model.eval()
+    bsz = dataloader.batch_size
+    z_array = np.zeros(
+        (len(dataloader.dataset),
+        model.encoder.encoder[11].out_features),
+        dtype=np.float32
+    )
+
+    # If the model has the "n_clusters" attribute, then the correct
+    # outputs must be collected. In pre-training mode, there is no
+    # clustering layer, hence the model only returns 2 quantities; for
+    # other modes, the model yields 3 quantities.
+    if hasattr(model, 'n_clusters'):
+        q_array = np.zeros(
+            (len(dataloader.dataset),
+            model.n_clusters),
+            dtype=np.float32
+        )
+        for b, batch in enumerate(tqdm(dataloader, disable=mute)):
+            _, batch = batch
+            x = batch.to(device)
+            q, _, z = model(x)
+            q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
+            z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+
+        labels = np.argmax(q_array.data, axis=1)
+
+        return np.round(q_array, 5), labels, z_array
+    else:
+        for b, batch in enumerate(tqdm(dataloader, disable=mute)):
+            _, batch = batch
+            x = batch.to(device)
+            _, z = model(x)
+            z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
+
+        return z_array
 
 
-def cluster_metrics(path, labels, x, z, centroids, save=True):
+def batch_training(model, dataloader, optimizer, metric, device):
+    '''Run DEC model in batch_training mode.
 
+    Parameters
+    ----------
+    model : PyTorch model instance
+        Model with untrained parameters.
+    
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+    
+    optimizer : PyTorch optimizer instance
+
+    metric : PyTorch metric instance
+        Measures the loss function.
+    
+    device : PyTorch device object ('cpu' or 'gpu')
+
+    Returns
+    -------
+    model : Pytorch model instance
+        Model with trained parameters.
+    
+    epoch_loss : float
+        Loss function value for the given epoch.
+    '''
+    model.train()
+
+    running_loss = 0.0
+    running_size = 0
+
+    pbar = tqdm(
+        dataloader,
+        leave=True,
+        desc="  Training",
+        unit="batch",
+        postfix={str(metric)[:-2]: "%.6f" % 0.0},
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    )
+
+    for batch in pbar:
+        _, batch = batch
+        x = batch.to(device)
+        optimizer.zero_grad()
+
+        with torch.set_grad_enabled(True):
+            x_rec, _ = model(x)
+            loss = metric(x_rec, x)
+            loss.backward()
+            optimizer.step()
+
+        running_loss += loss.cpu().detach().numpy() * x.size(0)
+        running_size += x.size(0)
+
+        pbar.set_postfix(
+            {str(metric)[:-2]: f"{(running_loss / running_size):.4e}"}
+        )
+
+    epoch_loss = running_loss / len(dataloader.dataset)
+    return model, epoch_loss
+
+
+def batch_validation(model, dataloader, metrics, config):
+    '''Run DEC model in batch_validation mode.
+
+    Parameters
+    ----------
+    model : PyTorch model instance
+        Model with trained parameters.
+    
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+
+    metrics : list
+        List of PyTorch metric instances
+    
+    config : Configuration object
+        Object containing information about the experiment configuration
+
+    Returns
+    -------
+    epoch_loss : float
+        Loss function value for the given epoch.
+    '''
+    if not isinstance(metrics, list):
+        metrics = [metrics]
+
+    model.eval()
+
+    running_loss = np.zeros((len(metrics),), dtype=float)
+    running_size = np.zeros((len(metrics),), dtype=int)
+
+    pbar = tqdm(
+        dataloader,
+        leave=True,
+        desc="Validation",
+        unit="batch",
+        postfix={str(metric)[:-2]: "%.6f" % 0.0 for metric in metrics},
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    )
+
+    for batch in pbar:
+        _, batch = batch
+        x = batch.to(config.device)
+        loss = torch.zeros((len(metrics),))
+        with torch.no_grad():
+            if config.model == 'AEC':
+                x_rec, _ = model(x)
+            elif config.model == 'DEC':
+                _, x_rec, _ = model(x)
+            for i, metric in enumerate(metrics):
+                loss[i] = metric(x_rec, x)
+
+        running_loss += loss.cpu().detach().numpy() * x.size(0)
+        running_size += x.size(0)
+
+        pbar.set_postfix(
+            {
+                str(metric)[:-2]: f"{(running_loss[i] / running_size[i]):.4e}" \
+                    for i, metric in enumerate(metrics)
+            }
+        )
+
+    epoch_loss = running_loss / len(dataloader.dataset)
+
+    return epoch_loss
+
+
+def cluster_metrics(path, labels, x, z, save=True):
+    '''Calculates various metrics for clustering performance analysis.
+    
+    Parameters
+    ----------
+    path : str
+        Path to which clustering metrics results are saved.
+
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    x : array (M, D_)
+        Data space, i.e., spectrogram data (M samples, D_ features)
+
+    z : array (M,D)
+        Latent space data (M samples, D features)
+
+    save : bool (Default: True)
+        Save results to file or not.
+
+    Returns
+    -------
+    M : array (K,)
+        Number of data samples assigned to each class (K labels)
+
+    X_ip_avg : array (K,)
+        Inner product between the data space points and their mean.
+
+    X_MSE : array (K, D_)
+        Mean squared error between the data space points and their mean.
+        (K labels, D_ features)
+
+    X_MSE_avg : array (K,)
+        Class-averaged mean squared error between the data space points
+        and their mean.
+
+    X_MAE : array (K, D_)
+        Mean absolute error between the data space points and their
+        mean (K labels, D_ features).
+
+    X_MAE_avg : array (K,)
+        Class-averaged mean absolute error between the data space points
+        and their mean.
+
+    silh_scores_Z : array (K,)
+        Class-averaged silhouette scores of the latent space.
+
+    silh_scores_X : array (K,)
+        Class-averaged silhouette scores of the data space.
+
+    df : Pandas DataFrame
+        Dataframe containing all metrics results
+    '''
     label_list = np.unique(labels)
     n_clusters = len(label_list)
 
@@ -81,7 +303,6 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     for j in range(n_clusters):
 
         # Data Space Metrics:
-
         x_j = np.reshape(x[labels==j], (-1, 8700))
         M[j] = len(x_j)
         x_mean = np.mean(x_j, axis=0).reshape((1,-1))
@@ -95,8 +316,6 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
         # MAE
         X_MAE[j] = mean_absolute_error(x_mean, x_j, multioutput='raw_values')
         X_MAE_avg[j] = np.mean(X_MAE)
-
-        # Latent Space Metrics:
 
         # Silhouette Score - Latent Space
         class_silh_scores_Z[j] = np.mean(silh_scores_Z[labels==j])
@@ -132,12 +351,82 @@ def cluster_metrics(path, labels, x, z, centroids, save=True):
     return M, X_ip_avg, X_MSE, X_MSE_avg, X_MAE, X_MAE_avg, silh_scores_Z, silh_scores_X, df
 
 
+def gmm(z_array, n_clusters):
+    '''Initialize clusters using Gaussian mixtures model algorithm.
+
+    Parameters
+    ----------
+    z_array : array (M,D)
+        Latent space data (m_samples, d_features)
+
+    n_clusters : int
+        Number of clusters.
+
+    Returns
+    -------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    centroids : array (n_clusters, n_features)
+        Cluster centroids
+    '''
+    M = z_array.shape[0]
+    # Initialize w/ K-Means
+    km = KMeans(
+        n_clusters=n_clusters,
+        max_iter=1000,
+        n_init=100,
+        random_state=2009
+    )
+    km.fit_predict(z_array)
+    labels = km.labels_
+    centroids = km.cluster_centers_
+
+    labels, counts = np.unique(labels, return_counts=True)
+
+    # Perform EM
+    gmm_weights = np.empty(len(labels))
+    for i in range(len(labels)):
+        gmm_weights[i] = counts[i] / M
+
+    GMM = GaussianMixture(
+        n_components=n_clusters,
+        max_iter=1000,
+        n_init=1,
+        weights_init=gmm_weights,
+        means_init=centroids
+    )
+    np.seterr(under='ignore')
+    labels = GMM.fit_predict(z_array)
+    centroids = GMM.means_
+    return labels, centroids
+
+
 def gmm_fit(config, z_array, n_clusters):
+    '''Perform GMM clustering and save results.
+
+    Parameters
+    ----------
+    config : Configuration object
+        Object containing information about the experiment configuration
+    
+    z_array : array (M,D)
+        Latent space data (m_samples, d_features)
+
+    n_clusters : int
+        Number of clusters.
+
+    Returns
+    -------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    centroids : array (n_clusters, n_features)
+        Cluster centroids
+    '''
     tic = datetime.now()
     print('Performing GMM...', end="", flush=True)
     labels, centroids = gmm(z_array, n_clusters)
-    # labels = np.random.randint(10)
-    # centroids = np.random.rand(2,10)
     print('complete.')
 
 
@@ -151,20 +440,125 @@ def gmm_fit(config, z_array, n_clusters):
 
     print('Performing clustering metrics...', end='', flush=True)
     x = np.load(config.fname_dataset + '.npy')
-    _, _, _, _, _, _, silh_scores_Z, silh_scores_X, _ = cluster_metrics(config.savepath_run, labels, x, z_array, centroids)
-    fig1 = plotting.view_silhscore(silh_scores_Z, labels, n_clusters, config.model, config.show)
-    fig1.savefig(os.path.join(config.savepath_run, 'silh_score_Z.png'), dpi=300, facecolor='w')
-
-    fig2 = plotting.view_silhscore(silh_scores_X, labels, n_clusters, config.model, config.show)
-    fig2.savefig(os.path.join(config.savepath_run, 'silh_score_X.png'), dpi=300, facecolor='w')
+    _, _, _, _, _, _, silh_scores_Z, silh_scores_X, _ = cluster_metrics(
+        config.savepath_run,
+        labels,
+        x,
+        z_array
+    )
+    fig1 = plotting.view_silhscore(
+        silh_scores_Z,
+        labels,
+        n_clusters,
+        config.model,
+        config.show
+    )
+    fig1.savefig(
+        os.path.join(config.savepath_run, 'silh_score_Z.png'),
+        dpi=300,
+        facecolor='w'
+    )
+    fig2 = plotting.view_silhscore(
+        silh_scores_X,
+        labels,
+        n_clusters,
+        config.model,
+        config.show
+    )
+    fig2.savefig(
+        os.path.join(config.savepath_run, 'silh_score_X.png'),
+        dpi=300,
+        facecolor='w'
+    )
 
     tsne_results = tsne(z_array)
     fig3 = plotting.view_TSNE(tsne_results, labels, 'GMM', config.show)
-    fig3.savefig(os.path.join(config.savepath_run, 't-SNE.png'), dpi=300, facecolor='w')
+    fig3.savefig(
+        os.path.join(config.savepath_run, 't-SNE.png'),
+        dpi=300,
+        facecolor='w'
+    )
     print('complete.')
 
     toc = datetime.now()
     print(f'GMM complete at {toc}; time elapsed = {toc-tic}.')
+
+
+def initialize_clusters(model, dataloader, config, n_clusters=None):
+    '''Function selects and performs cluster initialization.
+    
+    Parameters
+    ----------
+    model : PyTorch model instance
+        Model with trained parameters.
+    
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+    
+    config : Configuration object
+        Object containing information about the experiment configuration
+    
+    n_clusters : int
+        Number of clusters.
+
+    Returns
+    -------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    centroids : array (n_clusters, n_features)
+        Cluster centroids
+    '''
+    if config.init == 'load':
+        print('Loading cluster initialization...', end='', flush=True)
+        path = os.path.abspath(os.path.join(config.saved_weights, os.pardir))
+        path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
+        labels = np.load(os.path.join(path, 'labels.npy'))[config.index_tra]
+        centroids = np.load(os.path.join(path, 'centroids.npy'))
+    if config.init == "rand": # Random Initialization (for testing)
+        print('Initiating clusters with random points...', end='', flush=True)
+        labels, centroids = np.random.randint(0, n_clusters, (100)), np.random.uniform(size=(n_clusters,9))
+    else:
+        _, _, z_array = batch_eval(dataloader, model, config.device)
+        if config.init == "kmeans":
+            print('Initiating clusters with k-means...', end="", flush=True)
+            labels, centroids = kmeans(z_array, model.n_clusters)
+        elif config.init == "gmm": # GMM Initialization:
+            print('Initiating clusters with GMM...', end="", flush=True)
+            labels, centroids = gmm(z_array, model.n_clusters)
+
+    return labels, centroids
+
+
+def kmeans(z_array, n_clusters):
+    '''Initiate clusters using k-means algorithm.
+
+    Parameters
+    ----------
+    z_array : array (M,D)
+        Latent space data (m_samples, d_features)
+
+    n_clusters : int
+        Number of clusters.
+
+    Returns
+    -------
+    labels : array (M,)
+        Sample-wise cluster assignment
+
+    centroids : array (n_clusters,)
+        Cluster centroids
+    '''
+    km = KMeans(
+        n_clusters=n_clusters,
+        max_iter=1000,
+        n_init=100,
+        random_state=2009
+    )
+    km.fit_predict(z_array)
+    labels = km.labels_
+    centroids = km.cluster_centers_
+    return labels, centroids
 
 
 def model_prediction(
@@ -173,7 +567,23 @@ def model_prediction(
         dataloader,
         metrics,
     ):
-    tic = datetime.now()
+    '''Primary machinery function for using AEC or DEC model in
+    prediction (evaluation) mode.
+    
+    Parameters
+    ----------
+    config : Configuration object
+        Object containing information about the experiment configuration
+    
+    model : PyTorch model instance
+        Model with trained parameters.
+    
+    dataloader : PyTorch dataloader instance
+        Loads data from disk into memory.
+    
+    metrics : list
+        List of PyTorch metric instances
+    '''
     print(f'Evaluating data using {config.model} model...')
     device = config.device
     n_clusters = config.n_clusters
@@ -224,7 +634,7 @@ def model_prediction(
 
         print('Performing clustering metrics...', end='', flush=True)
         x = np.load(config.fname_dataset + '.npy')
-        _, _, _, _, _, _, silh_scores_Z, silh_scores_X, _ = cluster_metrics(savepath, labels, x, z_array, centroids)
+        _, _, _, _, _, _, silh_scores_Z, silh_scores_X, _ = cluster_metrics(savepath, labels, x, z_array)
         fig = plotting.view_silhscore(silh_scores_Z, labels, n_clusters, config.model, config.show)
         fig.savefig(os.path.join(savepath, 'silh_score_Z.png'), dpi=300, facecolor='w')
         fig = plotting.view_silhscore(silh_scores_X, labels, n_clusters, config.model, config.show)
@@ -310,10 +720,56 @@ def model_prediction(
 
 
 def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
+    '''Primary machinery function for using AEC or DEC model in
+    training mode.
+    
+    Parameters
+    ----------
+    config : Configuration object
+        Object containing information about the experiment configuration
+    
+    model : PyTorch model instance
+        Model with trained parameters.
+    
+    dataloaders : list
+        List of PyTorch dataloader instances that load data from disk
+        into memory.
+    
+    metrics : list
+        List of PyTorch metric instances
+    
+    optimizer : PyTorch optimizer instance
 
+    hpkwargs : dict
+        Dictionary of hyperparameter values.
+    '''
 
     def AEC_training(config, model, dataloaders, metrics, optimizer, tb, **hpkwargs):
+        '''Subroutine for AEC training.
+        
+        Parameters
+        ----------
+        config : Configuration object
+            Object containing information about the experiment configuration
+        
+        model : PyTorch model instance
+            Model with trained parameters.
+        
+        dataloaders : list
+            List of PyTorch dataloader instances that load data from disk
+            into memory.
+        
+        metrics : list
+            List of PyTorch metric instances
+        
+        optimizer : PyTorch optimizer instance
 
+        tb : Tensorboard instance
+            For writing results to Tensorboard.
+
+        hpkwargs : dict
+            Dictionary of hyperparameter values.
+        '''
         batch_size = hpkwargs.get('batch_size')
         lr = hpkwargs.get('lr')
         device = config.device
@@ -346,8 +802,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
             close=True
         )
         del fig
-
-        metric_mse = metrics[0]
 
         for epoch in range(n_epochs):
 
@@ -390,7 +844,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                 if epoch_val_mse < best_val_loss:
                     strikes = 0
                     best_val_loss = epoch_val_mse
-                    # fname = f'{savepath_chkpnt}/AEC_Best_Weights.pt'
                     torch.save(
                         model.state_dict(),
                         os.path.join(savepath_chkpnt, 'AEC_Best_Weights.pt')
@@ -460,6 +913,31 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
 
 
     def DEC_training(config, model, dataloaders, metrics, optimizer, tb, **hpkwargs):
+        '''Subroutine for DEC training.
+        
+        Parameters
+        ----------
+        config : Configuration object
+            Object containing information about the experiment configuration
+        
+        model : PyTorch model instance
+            Model with trained parameters.
+        
+        dataloaders : list
+            List of PyTorch dataloader instances that load data from disk
+            into memory.
+        
+        metrics : list
+            List of PyTorch metric instances
+        
+        optimizer : PyTorch optimizer instance
+
+        tb : Tensorboard instance
+            For writing results to Tensorboard.
+
+        hpkwargs : dict
+            Dictionary of hyperparameter values.
+        '''
         batch_size = hpkwargs.get('batch_size')
         lr = hpkwargs.get('lr')
         n_clusters = hpkwargs.get('n_clusters')
@@ -467,7 +945,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         tol = hpkwargs.get('tol')
         device = config.device
         savepath_run = config.savepath_run
-        savepath_chkpnt = config.savepath_chkpnt
 
         tra_loader = dataloaders[0]
 
@@ -545,7 +1022,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
         plotkwargs = {
             'tb': tb
         }
-        # plotting.plotter_mp(*plotargs)
         plot_process = threading.Thread(
             target=plotting.plotter_mp,
             args=plotargs,
@@ -692,7 +1168,6 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
                         config.show
                 )
                 plotkwargs = {'tb': tb}
-                # plotting.plotter_mp(*plotargs)
                 plot_process = threading.Thread(
                     target=plotting.plotter_mp,
                     args=plotargs,
@@ -777,112 +1252,35 @@ def model_training(config, model, dataloaders, metrics, optimizer, **hpkwargs):
     print(f'Training complete at {toc}; time elapsed = {toc-tic}.')
 
 
-def gmm(z_array, n_clusters):
-    '''Initiate clusters using Gaussian mixtures model algorithm.
+def silhouette_samples_X(x, labels, RF=2):
+    '''Calculates silhouette scores for the data space, i.e.,
+    spectrograms. Because of memory constraints, the silhouette score of
+    the entire dataset of spectrograms cannot be calculated, so the
+    data space is decimated by a reduction factor (RF). A GPU-enabled
+    score is computed if CUDA is available.
 
     Parameters
     ----------
-    model : PyTorch model instance
-
-    dataloader : PyTorch dataloader instance
-        Loads data from disk into memory.
-
-    device : PyTorch device object ('cpu' or 'gpu')
+    x : array (M, D_)
+        Data space, i.e., spectrograms (M samples, D_ features)
 
     Returns
     -------
-    labels : array (M,)
-        Sample-wise cluster assignment
+    scores : array (M / RF,)
+        Array containing sample-wise silhouette scores.
 
-    centroids : array (n_clusters, n_features)
-        Cluster centroids
+    x_ : array (M / RF, D_)
+        Samples data space, i.e., spectrograms (M / RF samples, 
+        D_ features)
     '''
-    M = z_array.shape[0]
-    # Initialize w/ K-Means
-    km = KMeans(
-        n_clusters=n_clusters,
-        max_iter=1000,
-        n_init=100,
-        random_state=2009
-    )
-    km.fit_predict(z_array)
-    labels = km.labels_
-    centroids = km.cluster_centers_
-
-    labels, counts = np.unique(labels, return_counts=True)
-
-    # Perform EM
-    gmm_weights = np.empty(len(labels))
-    for i in range(len(labels)):
-        gmm_weights[i] = counts[i] / M
-
-    GMM = GaussianMixture(
-        n_components=n_clusters,
-        max_iter=1000,
-        n_init=1,
-        weights_init=gmm_weights,
-        means_init=centroids
-    )
-    np.seterr(under='ignore')
-    labels = GMM.fit_predict(z_array)
-    centroids = GMM.means_
-    return labels, centroids
-
-
-def kmeans(z_array, n_clusters):
-    '''Initiate clusters using k-means algorithm.
-
-    Parameters
-    ----------
-    model : PyTorch model instance
-
-    dataloader : PyTorch dataloader instance
-        Loads data from disk into memory.
-
-    device : PyTorch device object ('cpu' or 'gpu')
-
-    Returns
-    -------
-    labels : array (M,)
-        Sample-wise cluster assignment
-
-    centroids : array (n_clusters,)
-        Cluster centroids
-    '''
-
-    km = KMeans(
-        n_clusters=n_clusters,
-        max_iter=1000,
-        n_init=100,
-        random_state=2009
-    )
-    km.fit_predict(z_array)
-    labels = km.labels_
-    centroids = km.cluster_centers_
-    return labels, centroids
-
-
-def initialize_clusters(model, dataloader, config, n_clusters=None):
-
-    if config.init == 'load':
-        print('Loading cluster initialization...', end='', flush=True)
-        path = os.path.abspath(os.path.join(config.saved_weights, os.pardir))
-        path = os.path.join(path, 'GMM', f'n_clusters={n_clusters}')
-        labels = np.load(os.path.join(path, 'labels.npy'))[config.index_tra]
-        centroids = np.load(os.path.join(path, 'centroids.npy'))
-    if config.init == "rand": # Random Initialization (for testing)
-        print('Initiating clusters with random points...', end='', flush=True)
-        labels, centroids = np.random.randint(0, n_clusters, (100)), np.random.uniform(size=(n_clusters,9))
-    else:
-        _, _, z_array = batch_eval(dataloader, model, config.device)
-        if config.init == "kmeans":
-            print('Initiating clusters with k-means...', end="", flush=True)
-            labels, centroids = kmeans(z_array, model.n_clusters)
-        elif config.init == "gmm": # GMM Initialization:
-            print('Initiating clusters with GMM...', end="", flush=True)
-            labels, centroids = gmm(z_array, model.n_clusters)
-
-    return labels, centroids
+    x_ = x[:, :, ::int(RF), ::int(RF)].squeeze()
+    _, n, o = x_.shape
+    x_ = np.reshape(x_, (-1, n * o))
+    scores = silhouette_samples(x_, labels, chunksize=20000)
+    if torch.cuda.is_available():
+        scores = cupy.asnumpy(scores)
+    x_ = np.reshape(x_, (-1, n, o))
+    return scores, x_
 
 
 def target_distribution(q):
@@ -934,134 +1332,3 @@ def tsne(data):
     ).fit_transform(data.astype('float64'))
     print('complete.')
     return results
-
-
-def batch_eval(dataloader, model, device, mute=True, keep_decoded=False):
-    '''Run DEC model in batch_inference mode.
-
-    Parameters
-    ----------
-    dataloader : PyTorch dataloader instance
-        Loads data from disk into memory.
-
-    model : PyTorch model instance
-        Model with trained parameters
-
-    device : PyTorch device object ('cpu' or 'gpu')
-
-    v : Boolean (default=False)
-        Verbose mode
-
-    Returns
-    -------
-    z_array : array (M,D)
-        Latent space data (m_samples, d_features)
-    '''
-
-    model.eval()
-    bsz = dataloader.batch_size
-    z_array = np.zeros((len(dataloader.dataset), model.encoder.encoder[11].out_features), dtype=np.float32)
-
-    if hasattr(model, 'n_clusters'):
-        q_array = np.zeros((len(dataloader.dataset), model.n_clusters),dtype=np.float32)
-        for b, batch in enumerate(tqdm(dataloader, disable=mute)):
-        # for b, batch in enumerate(dataloader):
-            _, batch = batch
-            x = batch.to(device)
-            q, _, z = model(x)
-            q_array[b * bsz:(b*bsz) + x.size(0), :] = q.detach().cpu().numpy()
-            z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
-
-        labels = np.argmax(q_array.data, axis=1)
-
-        return np.round(q_array, 5), labels, z_array
-    else:
-        for b, batch in enumerate(tqdm(dataloader, disable=mute)):
-        # for b, batch in enumerate(dataloader):
-            _, batch = batch
-            x = batch.to(device)
-            xr, z = model(x)
-            z_array[b * bsz:(b*bsz) + x.size(0), :] = z.detach().cpu().numpy()
-
-        return z_array
-
-
-def batch_training(model, dataloader, optimizer, metric, device):
-
-    model.train()
-
-    running_loss = 0.0
-    running_size = 0
-
-    pbar = tqdm(
-        dataloader,
-        leave=True,
-        desc="  Training",
-        unit="batch",
-        postfix={str(metric)[:-2]: "%.6f" % 0.0},
-        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-    )
-
-    for batch in pbar:
-        _, batch = batch
-        x = batch.to(device)
-        optimizer.zero_grad()
-
-        with torch.set_grad_enabled(True):
-            x_rec, _ = model(x)
-            loss = metric(x_rec, x)
-            loss.backward()
-            optimizer.step()
-
-        running_loss += loss.cpu().detach().numpy() * x.size(0)
-        running_size += x.size(0)
-
-        pbar.set_postfix(
-            {str(metric)[:-2]: f"{(running_loss / running_size):.4e}"}
-        )
-
-    epoch_loss = running_loss / len(dataloader.dataset)
-    return model, epoch_loss
-
-
-def batch_validation(model, dataloader, metrics, config):
-
-    if not isinstance(metrics, list):
-        metrics = [metrics]
-
-    model.eval()
-
-    running_loss = np.zeros((len(metrics),), dtype=float)
-    running_size = np.zeros((len(metrics),), dtype=int)
-
-    pbar = tqdm(
-        dataloader,
-        leave=True,
-        desc="Validation",
-        unit="batch",
-        postfix={str(metric)[:-2]: "%.6f" % 0.0 for metric in metrics},
-        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-    )
-
-    for batch in pbar:
-        _, batch = batch
-        x = batch.to(config.device)
-        loss = torch.zeros((len(metrics),))
-        with torch.no_grad():
-            if config.model == 'AEC':
-                x_rec, _ = model(x)
-            elif config.model == 'DEC':
-                _, x_rec, _ = model(x)
-            for i, metric in enumerate(metrics):
-                loss[i] = metric(x_rec, x)
-
-        running_loss += loss.cpu().detach().numpy() * x.size(0)
-        running_size += x.size(0)
-
-        pbar.set_postfix(
-            {str(metric)[:-2]: f"{(running_loss[i] / running_size[i]):.4e}" for i, metric in enumerate(metrics)}
-        )
-
-    epoch_loss = running_loss / len(dataloader.dataset)
-
-    return epoch_loss

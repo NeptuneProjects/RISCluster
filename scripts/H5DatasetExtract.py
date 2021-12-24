@@ -1,24 +1,15 @@
+#!/usr/bin/env python3
+
 import argparse
 from concurrent.futures import as_completed, ProcessPoolExecutor
 import json
 import os
-import sys
-sys.path.insert(0, '../RISCluster/')
 
 import h5py
 import numpy as np
 from tqdm import tqdm
 
-import utils
-
-debug = False
-if debug:
-    source = '../../../Data/Full/Full.h5'
-    include = '[24]'
-    exclude = None
-    after = None
-    before = None
-    dest = '../../../Data/RS09.h5'
+from RISCluster import utils
 
 
 def _copy_attributes(in_object, out_object):
@@ -36,27 +27,15 @@ def _find_indeces(index, source, stations):
         return np.nan
 
 
-if __name__ == "__main__":
-    if not debug:
-        parser = argparse.ArgumentParser(
-            description="Creates new dataset from existing dataset."
-        )
-        parser.add_argument("source", help="Enter path to source dataset.")
-        parser.add_argument("dest", help="Enter path to destination dataset.")
-        parser.add_argument("--include", help="Enter stations to include.")
-        parser.add_argument("--exclude", help="Enter stations to exclude.")
-        parser.add_argument("--after", help="Include after YYYYMMDDTHHMMSS.")
-        parser.add_argument("--before", help="Include before YYYYMMDDTHHMMSS.")
-        args = parser.parse_args()
-
-        if args.include is None and args.exclude is None:
-            raise Exception("Must specify stations to include or exclude.")
-        source = args.source
-        dest = args.dest
-        include = args.include
-        exclude = args.exclude
-        after = args.after
-        before = args.before
+def main(args):
+    if args.include is None and args.exclude is None:
+        raise Exception("Must specify stations to include or exclude.")
+    source = args.source
+    dest = args.dest
+    include = args.include
+    exclude = args.exclude
+    after = args.after
+    before = args.before
 
     if not os.path.exists(source):
         raise ValueError(f"Source file not found: {source}")
@@ -136,3 +115,18 @@ if __name__ == "__main__":
             }
             for i in tqdm(range(len(index_keep)), **kwargs2):
                 dset_id[i] = dset[index_keep[i]]
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Creates new dataset from existing dataset."
+    )
+    parser.add_argument("source", help="Enter path to source dataset.")
+    parser.add_argument("dest", help="Enter path to destination dataset.")
+    parser.add_argument("--include", help="Enter stations to include.")
+    parser.add_argument("--exclude", help="Enter stations to exclude.")
+    parser.add_argument("--after", help="Include after YYYYMMDDTHHMMSS.")
+    parser.add_argument("--before", help="Include before YYYYMMDDTHHMMSS.")
+    args = parser.parse_args()
+
+    main(args)

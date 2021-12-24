@@ -11,3 +11,5 @@ test/
 *.ini
 .ftpconfig
 .ftpignore
+.vscode
+.gitignore

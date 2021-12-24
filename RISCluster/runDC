@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 
+"""William Jenkins
+Scripps Institution of Oceanography, UC San Diego
+wjenkins [at] ucsd [dot] edu
+May 2021
+
+This script provides a command-line interface entry point for the RIS
+clustering workflow, and is the primary script that performs 
+pre-training and training of the deep clustering models.
+"""
+
 import argparse
-import configparser
 from datetime import datetime
 import os
 import sys
@@ -15,7 +24,7 @@ from RISCluster.utils import Configuration, notify
 
 def main(init_path=None, cuda_device=None):
     """This command line function is the primary script that performs
-    pre-training and training of the deep embedded clustering workflows.
+    pre-training and training of the deep embedded clustering models.
 
     Parameters
     ----------
@@ -49,7 +58,6 @@ def main(init_path=None, cuda_device=None):
     else:
         config.set_device()
 
-    # if config.mode != 'predict':
     config.init_exp_env()
 
     if config.tb:
@@ -59,20 +67,20 @@ def main(init_path=None, cuda_device=None):
     config.save_exp_config()
 
     tic = datetime.now()
-    # ==== Checks =============================================================
+    # ==== Checks ======================================================
     if not os.path.exists(config.fname_dataset):
         raise ValueError(f'Dataset file not found: {config.fname_dataset}')
     if not os.path.exists(config.indexpath):
         raise ValueError(f'Index file not found: {config.indexpath}')
     if config.model == 'DEC' and not os.path.exists(config.saved_weights):
         raise ValueError(f'Saved weights file not found: {config.saved_weights}')
-    # ==== ML Production ======================================================
+    # ==== ML Production ===============================================
     print('='*100)
     print(f'Executing {config.verb} mode for {config.model}')
     if config.mode == "train":
-        model = production.train(config)
+        production.train(config)
     elif config.mode == "predict":
-        model = production.predict(config)
+        production.predict(config)
     elif config.mode == "fit":
         production.gmm_fit(config)
     print('-'*100)
@@ -84,8 +92,6 @@ def main(init_path=None, cuda_device=None):
         msgsubj = f'{config.model} {config.verb} completed.'
         notify(msgsubj, msgcontent)
     print('='*100)
-
-    # return config, model
 
 
 if __name__ == '__main__':

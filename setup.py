@@ -13,10 +13,9 @@ def setup_package():
         entry_points = {
             'console_scripts': [
                 'query_H5size=RISCluster.utils:query_H5size',
-                'ExtractH5Dataset=RISCluster.utils:ExtractH5Dataset',
-                'GenerateSampleIndex=RISCluster.utils:GenerateSampleIndex',
-                'ConvertH5toNP=RISCluster.utils:ConvertH5toNP',
-                # 'runDC=RISCluster.runDEC:main'
+                'extract_H5dataset=RISCluster.utils:extractH5dataset',
+                'generate_sample_index=RISCluster.utils:generate_sample_index',
+                'convert_H5_to_NP=RISCluster.utils:convert_H5_to_NP'
             ]
         },
         install_requires=[
@@ -36,7 +35,7 @@ def setup_package():
             'tensorboard',
             'tqdm'
         ],
-        version='0.2b',
+        version='0.3',
         license='MIT',
         description="Package provides Pytorch implementation of deep embedded \
             clustering for data recorded on the Ross Ice Shelf, Antarctica."

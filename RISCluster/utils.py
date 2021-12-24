@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-"""Utility and helper functions for RISCluster.
-
-William Jenkins, wjenkins [at] ucsd [dot] edu
+"""William Jenkins
 Scripps Institution of Oceanography, UC San Diego
+wjenkins [at] ucsd [dot] edu
 January 2021
+
+Utility and helper functions for RISCluster.
 """
 
 import argparse
@@ -12,18 +13,14 @@ from concurrent.futures import as_completed, ProcessPoolExecutor
 import configparser
 import csv
 from datetime import datetime
-from email.message import EmailMessage
 import json
 import os
 import pickle
 import re
 from shutil import copyfile
-import smtplib
-import ssl
 import subprocess
 import time
 
-from dotenv import load_dotenv
 import h5py
 import numpy as np
 import pandas as pd
@@ -34,7 +31,6 @@ from tqdm import tqdm
 
 
 class Configuration():
-
 
     def __init__(self, init_path):
         self.init_path = init_path
@@ -74,9 +70,6 @@ class Configuration():
         elif self.mode == 'fit':
             fname = os.path.abspath(os.path.join(self.saved_weights, os.pardir))
             self.savepath_exp = os.path.join(fname, 'GMM')
-
-        # elif self.model != 'GMM' and self.mode == 'predict':
-            # self.savepath_exp = os.path.join(self.parampath, 'Output', f'Exp{self.serial_exp}')
         else:
             raise ValueError(
                 'Wrong mode selected; choose "pretrain" or "train".'
@@ -286,80 +279,15 @@ class SeismicDataset(Dataset):
         return idx, X
 
 
-    def read_h5(self, fname, idx):
+    @staticmethod
+    def read_h5(fname, idx):
         with h5py.File(fname, 'r') as f:
             DataSpec = '/4.0/Spectrogram'
             return f[DataSpec][idx]
 
 
-# class H5SeismicDataset(Dataset):
-#     """Loads samples from H5 dataset for use in native PyTorch dataloader."""
-#     def __init__(
-#             self,
-#             fname,
-#             transform=transforms.Compose(
-#                 [
-#                     SpecgramCrop(),
-#                     SpecgramNormalizer(transform='vec_norm'),
-#                     SpecgramToTensor()
-#                 ]
-#             )
-#         ):
-#         self.transform = transform
-#         self.fname = fname
-#
-#
-#     def __len__(self):
-#         m, _, _ = query_dbSize(self.fname)
-#         return m
-#
-#
-#     def __getitem__(self, idx):
-#         X = torch.from_numpy(self.read_h5(self.fname, idx))
-#         if self.transform:
-#             X = self.transform(X)
-#         return idx, X
-#
-#
-#     def read_h5(self, fname, idx):
-#         with h5py.File(fname, 'r') as f:
-#             DataSpec = '/4.0/Spectrogram'
-#             return f[DataSpec][idx]
-
-
-def save_data(data, path, overwrite=False, ftype='np'):
-    if os.path.exists(fname) and not overwrite:
-        ow = input(f"You are about to overwrite {fname}; do you want to proceed? [y/n]:  ")
-        if ow == 'n':
-            return
-    if ftype == 'np':
-        np.save(fname1, data)
-    else:
-        pass
-
-
-def dataset_to_RAM(dataset):
-    bsz = 4096
-    dl = DataLoader(dataset, batch_size=bsz, pin_memory=True)
-    pbar = tqdm(
-        dl,
-        leave=True,
-        desc="Loading Data",
-        unit="batch",
-        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-    )
-    m = dataset.__len__()
-    _, n, o, p = next(iter(dl))[1].shape
-    index = torch.zeros(m, dtype=torch.int)
-    data = torch.zeros(m, n, o, p)
-
-    for b, batch in enumerate(pbar):
-        index[b * bsz:(b*bsz) + len(batch[0])], data[b * bsz:(b * bsz) + len(batch[1]),:] = batch
-
-    return TensorDataset(index, data)
-
-
 class LabelCatalogue(object):
+
     def __init__(self, paths, label_list=None, threshold=None):
         self.paths = paths
         self.freq = None
@@ -394,6 +322,25 @@ class LabelCatalogue(object):
             columns=columns
         ).sort_values(by=["Class"], ignore_index=True)
         return amp_stats.set_index("Class")
+
+    
+    def apply_threshold(self, threshold=None):
+        if threshold is not None:
+            self.threshold = threshold
+        if isinstance(self.threshold, float):
+            print(self.threshold)
+            self.df = self.df[self.df['peak'] >= self.threshold]
+        elif isinstance(self.threshold, list):
+            if len(self.threshold) != 2:
+                raise ValueError('Threshold requires 1 or 2 values!')
+
+            lo = min(self.threshold)
+            if lo == 0:
+                lo -= 1 # Catches values ~0 missed due to floating point error
+            hi = max(self.threshold)
+            self.df = self.df[(self.df['peak'] >= lo) & (self.df['peak'] < hi)]
+
+        return self.df
 
 
     def build_df(self, paths):
@@ -453,6 +400,71 @@ class LabelCatalogue(object):
         return df.fillna(0).astype("int").sort_index()
 
 
+    def get_peak_freq(self, fname_dataset, batch_size=2048, workers=12):
+
+        _, _, fvec = load_images(fname_dataset, [[0]])
+
+        dataset = SeismicDataset(fname_dataset, 'h5')
+
+        class_avg_maxfreq = np.zeros(len(self.label_list))
+        for j, label in enumerate(self.label_list):
+            mask = self.df.label == label
+            labels_subset = self.df.loc[mask]
+
+            subset = Subset(dataset, labels_subset.idx)
+            dataloader = DataLoader(
+                subset,
+                batch_size=batch_size,
+                num_workers=workers
+            )
+            batch_avg_maxfreq = np.zeros(len(dataloader))
+            pbar = tqdm(
+                dataloader,
+                bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+                desc=f"Label {j+1}/{len(self.label_list)} (Class {label})",
+                leave=True,
+                position=0
+            )
+            for i, batch in enumerate(pbar):
+                _, X = batch
+                maxfreqind = torch.max(torch.sum(X, 3) / X.size(3), 2).indices
+                maxfreqind = maxfreqind.detach().cpu().numpy()
+                maxfreq = fvec[maxfreqind]
+                batch_avg_maxfreq[i] = maxfreq.mean()
+
+            class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
+            print(
+                f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz",
+                flush=True
+            )
+
+        peak_freqs = pd.DataFrame(
+            {"Class": self.label_list, "Avg_Peak_Freq": class_avg_maxfreq}
+        ).sort_values(by=["Class"], ignore_index=True)
+        return peak_freqs.set_index("Class")
+
+    
+    @staticmethod
+    def load_images(fname_dataset, index):
+        with h5py.File(fname_dataset, 'r') as f:
+            #samples, frequency bins, time bins, amplitude
+            DataSpec = '/4.0/Spectrogram'
+            dset = f[DataSpec]
+            X = np.zeros((len(index), 88, 101))
+            for i, index in enumerate(index):
+                dset_arr = dset[index, :, :]
+                X[i] = dset_arr
+            fvec = dset[0, 0:87, 0]
+            tvec = dset[0, 87, 1:]
+        X = X[:, :-1, 1:]
+
+        X = (X - X.mean(axis=(1,2))[:,None,None]) / \
+            np.abs(X).max(axis=(1,2))[:,None,None]
+
+        X = np.expand_dims(X, axis=1)
+        return X, tvec, fvec
+    
+    
     def seasonal_statistics(self, mode=None):
         if mode is not None:
             count_summer15 = np.empty((len(self.label_list),))
@@ -521,8 +533,6 @@ class LabelCatalogue(object):
                 subset_label = subset_station.loc[mask_label]
                 label_matrix[i, j] = len(subset_label.index)
 
-        label_matrix_dict = []
-
         df = pd.DataFrame(
             {
                 "station": self.station_list,
@@ -534,111 +544,6 @@ class LabelCatalogue(object):
         for col in [1, range(3, 3 + len(self.label_list))]:
             df.iloc[:, col] = df.iloc[:, col].astype("int")
         return df.sort_values(by="station", ignore_index=True)
-
-
-    def get_peak_freq(self, fname_dataset, batch_size=2048, workers=12):
-
-        _, _, fvec = load_images(fname_dataset, [[0]])
-
-        # dataset = H5SeismicDataset(
-        #     fname_dataset,
-        #     transform = transforms.Compose(
-        #         [SpecgramShaper(), SpecgramToTensor()]
-        #     )
-        # )
-
-        dataset = SeismicDataset(fname_dataset, 'h5')
-
-        class_avg_maxfreq = np.zeros(len(self.label_list))
-        for j, label in enumerate(self.label_list):
-            mask = self.df.label == label
-            labels_subset = self.df.loc[mask]
-
-            subset = Subset(dataset, labels_subset.idx)
-            dataloader = DataLoader(
-                subset,
-                batch_size=batch_size,
-                num_workers=workers
-            )
-            batch_avg_maxfreq = np.zeros(len(dataloader))
-            pbar = tqdm(
-                dataloader,
-                bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
-                desc=f"Label {j+1}/{len(self.label_list)} (Class {label})",
-                leave=True,
-                position=0
-            )
-            for i, batch in enumerate(pbar):
-                _, X = batch
-                maxfreqind = torch.max(torch.sum(X, 3) / X.size(3), 2).indices
-                maxfreqind = maxfreqind.detach().cpu().numpy()
-                maxfreq = fvec[maxfreqind]
-                batch_avg_maxfreq[i] = maxfreq.mean()
-
-            class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
-            print(
-                f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz",
-                flush=True
-            )
-
-        peak_freqs = pd.DataFrame(
-            {"Class": self.label_list, "Avg_Peak_Freq": class_avg_maxfreq}
-        ).sort_values(by=["Class"], ignore_index=True)
-        return peak_freqs.set_index("Class")
-
-
-    def apply_threshold(self, threshold=None):
-        if threshold is not None:
-            self.threshold = threshold
-        if isinstance(self.threshold, float):
-            print(self.threshold)
-            self.df = self.df[self.df['peak'] >= self.threshold]
-        elif isinstance(self.threshold, list):
-            if len(self.threshold) != 2:
-                raise ValueError('Threshold requires 1 or 2 values!')
-
-            lo = min(self.threshold)
-            if lo == 0:
-                lo -= 1 # Catches values ~0 missed due to floating point error
-            hi = max(self.threshold)
-            self.df = self.df[(self.df['peak'] >= lo) & (self.df['peak'] < hi)]
-
-        return self.df
-
-
-# class SpecgramNormalizer(object):
-#
-#     def __init__(self, transform='vec_norm'):
-#         self.transform = transform
-#
-#     def __call__(self, X):
-#         print("normalize")
-#         n, o = X.shape
-#         if self.transform == "sample_normalization":
-#             X /= np.abs(X).max(axis=(0,1))
-#         elif self.transform == "sample_norm_cent":
-#             X = (X - X.mean()) / np.abs(X).max()
-#         elif self.transform == "vec_norm":
-#             X = np.reshape(X, (1,-1))
-#             X /= np.linalg.norm(X)
-#             X = np.reshape(X, (n, o))
-#
-#         return X
-#
-#
-# class SpecgramCrop(object):
-#     """Crop & reshape data."""
-#     def __call__(self, X):
-#         print("crop")
-#         return X[:-1, 1:]
-#
-#
-# class SpecgramToTensor(object):
-#     """Convert ndarrays in sample to Tensors."""
-#     def __call__(self, X):
-#         print("to tensor")
-#         X = np.expand_dims(X, axis=0)
-#         return torch.from_numpy(X)
 
 
 def add_to_history(ll, lv):
@@ -661,30 +566,70 @@ def add_to_history(ll, lv):
     return [l for l in ll]
 
 
-def calc_tuning_runs(hyperparameters):
-    tuning_runs = 1
-    for key in hyperparameters:
-        tuning_runs *= len(hyperparameters[key])
-    return(tuning_runs)
-
-
-def calc_tuning_runs_(hyperparameters):
-    tuning_runs = 1
-    for key in hyperparameters.__dict__:
-        tuning_runs *= len(hyperparameters.__dict__[key])
-    return(tuning_runs)
-
-
 def config_training(universal, parameters, hp=None):
+    """Takes parameter dictionaries, formats them into CONFIGPARSER
+    format, and saves to disk.
+
+    Parameters
+    ----------
+    universal : dict
+        Contains workflow parameters common to all model modes.
+    parameters : dict
+        Contains workflow parameter specific to particular model mode.
+    hp : dict
+        Contains hyperparameters.
+    
+    Returns
+    -------
+    fname : str
+        Path to configuration file.
+    """
     config = configparser.ConfigParser()
     config['UNIVERSAL'] = universal
     config['PARAMETERS'] = parameters
     if hp is not None:
         config['HYPERPARAMETERS'] = hp
-    fname = f"{universal['configpath']}/init_{parameters['mode']}.ini"
+    fname = os.path.join(
+        universal['configpath'],
+        f'init_{parameters["mode"]}.ini'
+    )
     with open(fname, 'w') as configfile:
         config.write(configfile)
     return fname
+
+
+def dataset_to_RAM(dataset):
+    """Stores dataset in RAM. For smaller datasets that can fit in CPU 
+    memory, this allows for faster loading and processing times during
+    model training and evaluation.
+
+    Parameters
+    ----------
+    dataset : Dataset Object
+        Pytorch Dataset instance.
+    
+    Returns
+    -------
+        Pytorch TensorDataset object.
+    """
+    bsz = 4096
+    dl = DataLoader(dataset, batch_size=bsz, pin_memory=True)
+    pbar = tqdm(
+        dl,
+        leave=True,
+        desc="Loading Data",
+        unit="batch",
+        bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+    )
+    m = dataset.__len__()
+    _, n, o, p = next(iter(dl))[1].shape
+    index = torch.zeros(m, dtype=torch.int)
+    data = torch.zeros(m, n, o, p)
+
+    for b, batch in enumerate(pbar):
+        index[b * bsz:(b*bsz) + len(batch[0])], data[b * bsz:(b * bsz) + len(batch[1]),:] = batch
+
+    return TensorDataset(index, data)
 
 
 def distance_matrix(x, y, f):
@@ -701,7 +646,7 @@ def distance_matrix(x, y, f):
     return dist
 
 
-def ConvertH5toNP():
+def convert_H5_to_NP():
     parser = argparse.ArgumentParser(
         description="Converts spectrograms in H5 file to Numpy file."
     )
@@ -749,7 +694,7 @@ def ConvertH5toNP():
     return
 
 
-def ExtractH5Dataset():
+def extractH5dataset():
     """Command line function that extracts a subset of an HDF database and
     saves it to a new HDF database.
 
@@ -897,7 +842,6 @@ def ExtractH5Dataset():
     with h5py.File(source, 'r') as fs, h5py.File(dest, 'w') as fd:
         M = len(index_keep)
         dset_names = ['Catalogue', 'Trace', 'Spectrogram', 'Scalogram']
-        # dset_names = ['Catalogue']
         for dset_name in dset_names:
             group_path = '/4.0'
             dset = fs[f"{group_path}/{dset_name}"]
@@ -925,7 +869,7 @@ def fractional_distance(x, y, f):
     return dist
 
 
-def GenerateSampleIndex():
+def generate_sample_index():
     """Command line function that generates a uniformly random sample index.
 
     Parameters
@@ -1003,61 +947,6 @@ def get_network(network_index):
     return network_name
 
 
-def get_peak_frequency(
-        path_to_labels,
-        path_to_catalogue,
-        fname_dataset,
-        batch_size=2048,
-        workers=12
-    ):
-    labels = pd.read_csv(path_to_labels, index_col=0)
-    label_list = pd.unique(labels["label"])
-    _, fvec = get_timefreqvec(fname_dataset)
-
-    class_avg_maxfreq = np.zeros(len(label_list))
-    for j, label in enumerate(label_list):
-        mask = labels.label == label
-        labels_subset = labels.loc[mask]
-        # dataset = H5SeismicDataset(
-        #     fname_dataset,
-        #     transform = transforms.Compose(
-        #         [SpecgramShaper(), SpecgramToTensor()]
-        #     )
-        # )
-        dataset = utils.SeismicDataset(fname_dataset, 'h5')
-        subset = Subset(dataset, labels_subset.index)
-        dataloader = DataLoader(
-            subset,
-            batch_size=batch_size,
-            num_workers=workers
-        )
-        batch_avg_maxfreq = np.zeros(len(dataloader))
-        pbar = tqdm(
-            dataloader,
-            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
-            desc=f"Label {j+1}/{len(label_list)} (Class {label})",
-            leave=True,
-            position=0
-        )
-        for i, batch in enumerate(pbar):
-            _, X = batch
-            maxfreqind = torch.max(torch.sum(X, 3) / X.size(3), 2).indices
-            maxfreqind = maxfreqind.detach().cpu().numpy()
-            maxfreq = fvec[maxfreqind]
-            batch_avg_maxfreq[i] = maxfreq.mean()
-
-        class_avg_maxfreq[j] = batch_avg_maxfreq.sum() / len(dataloader)
-        print(f"Avg. Peak Frequency: {class_avg_maxfreq[j]:.2f} Hz", flush=True)
-
-    peak_freqs = pd.DataFrame(
-        {
-            "Class": label_list,
-            "Avg_Peak_Freq": class_avg_maxfreq
-        }
-    ).sort_values(by=["Class"], ignore_index=True)
-    return peak_freqs.set_index("Class")
-
-
 def get_station(station):
     '''Returns station index or station name, depending on whether input is a
     name (string) or index (integer).
@@ -1092,72 +981,6 @@ def get_timefreqvec(fname_dataset):
     return tvec, fvec
 
 
-# This function has been moved to Configuration class. Delete once testing is
-# complete.
-def init_exp_env(mode, savepath, **kwargs):
-    # if mode == 'batch_predict':
-    #     init_file = kwargs.get("init_file")
-    #     exper = init_file.split("/")[-2][10:]
-    #     serial_exp = exper[3:]
-    #     run = f'Run{init_file.split("/")[-1][9:-4]}'
-    #     savepath_exp = f'{savepath}/Trials/{exper}/{run}/'
-    # else:
-    serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
-    if mode == 'pretrain':
-        savepath_exp = f'{savepath}/Models/AEC/Exp{serial_exp}/'
-    elif mode == 'train':
-        savepath_exp = f'{savepath}/Models/DEC/Exp{serial_exp}/'
-    elif mode == 'predict':
-        savepath_exp = f'{savepath}/Trials/Exp{serial_exp}/'
-    else:
-        raise ValueError(
-            'Wrong mode selected; choose "pretrain", "train", or "predict".'
-        )
-    if not os.path.exists(savepath_exp):
-        os.makedirs(savepath_exp)
-    print('New experiment file structure created at:\n'
-          f'{savepath_exp}')
-
-    return savepath_exp, serial_exp
-
-
-def init_output_env(savepath, mode, **kwargs):
-    serial_run = datetime.now().strftime('%Y%m%dT%H%M%S')
-    if mode == 'pretrain':
-        savepath_run = f'{savepath}Run' + \
-                       f'_BatchSz={kwargs.get("batch_size")}' + \
-                       f'_LR={kwargs.get("lr")}'
-        if not os.path.exists(savepath_run):
-            os.makedirs(savepath_run)
-        savepath_chkpnt = f'{savepath_run}/tmp'
-        if not os.path.exists(savepath_chkpnt):
-            os.makedirs(savepath_chkpnt)
-        return savepath_run, serial_run, savepath_chkpnt
-    elif mode == 'train':
-        savepath_run = f'{savepath}Run' + \
-                       f'_Clusters={kwargs.get("n_clusters")}' + \
-                       f'_BatchSz={kwargs.get("batch_size")}' + \
-                       f'_LR={kwargs.get("lr")}' + \
-                       f'_gamma={kwargs.get("gamma")}' + \
-                       f'_tol={kwargs.get("tol")}'
-        return savepath_run, serial_run
-    elif mode == 'predict':
-        n_clusters = kwargs.get('n_clusters')
-        with open(f'{savepath}{n_clusters}_Clusters', 'w') as f:
-            pass
-        savepath_run = []
-        for label in range(n_clusters):
-            savepath_cluster = f'{savepath}Cluster{label:02d}'
-            if not os.path.exists(savepath_cluster):
-                os.makedirs(savepath_cluster)
-            savepath_run.append(savepath_cluster)
-        return savepath_run, serial_run
-    else:
-        raise ValueError(
-                'Wrong mode selected; choose "pretrain", "train", or "predict".'
-            )
-
-
 def init_project_env(paths):
     for path in paths:
         if not os.path.exists(path):
@@ -1168,6 +991,7 @@ def init_project_env(paths):
     print("Project folders initialized.")
 
 
+# Move this to the LabelCatalogue class
 def load_images(fname_dataset, index):
     with h5py.File(fname_dataset, 'r') as f:
         #samples, frequency bins, time bins, amplitude
@@ -1190,49 +1014,11 @@ def load_images(fname_dataset, index):
     return X, tvec, fvec
 
 
-def load_labels(exppath):
-    csv_file = [f for f in os.listdir(exppath) if f.endswith('.csv')][0]
-    csv_file = f'{exppath}/{csv_file}'
-    data = np.genfromtxt(csv_file, delimiter=',')
-    data = np.delete(data,0,0)
-    data = data.astype('int')
-    label = data[:,0]
-    index = data[:,1]
-    label_list = np.unique(label)
-    return label, index, label_list
-
-# This function is now in Configuration class.
-def load_TraVal_index(fname_dataset, loadpath):
-    with open(loadpath, 'rb') as f:
-        data = pickle.load(f)
-        index_tra = data['index_tra']
-        index_val = data['index_val']
-    return index_tra, index_val
-
-
 def load_weights(model, fname, device):
     model.load_state_dict(torch.load(fname, map_location=device), strict=False)
     model.eval()
     print(f'Weights loaded to {device}')
     return model
-
-
-def make_dir(savepath_new, savepath_run="."):
-    # path = f"{savepath_run}/{savepath_new}"
-    path = os.path.join(savepath_run, savepath_new)
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return path
-
-# It appears this function is unused.
-# def make_exp(exppath, **kwargs):
-#     serial_exp = datetime.now().strftime('%Y%m%dT%H%M%S')
-#     savepath_exp = f"{exppath}/{serial_exp}"
-#     savepath_AEC = f"{savepath_exp}/AEC"
-#     savepath_DEC = f"{savepath_exp}/DEC"
-#     if not os.path.exists(savepath_exp):
-#         os.makedirs(savepath_exp)
-#     return savepath_exp, serial_exp
 
 
 def measure_class_inertia(data, centroids, n_clusters):
@@ -1270,50 +1056,6 @@ def measure_label_change(labels1, labels2):
     df.index.names = ['Orig']
 
     return df
-
-
-def notify(msgsubj, msgcontent):
-    '''Written by William Jenkins, 19 June 2020, wjenkins@ucsd.edu3456789012
-    Scripps Institution of Oceanography, UC San Diego
-    This function uses the SMTP and Twilio APIs to send an email and WhatsApp
-    message to a user defined in environmental variables stored in a .env file
-    within the same directory as this module.  Sender credentials are stored
-    similarly.'''
-    load_dotenv()
-    msg = EmailMessage()
-    msg['Subject'] = msgsubj
-    msg.set_content(msgcontent)
-    username = os.getenv('ORIG_USERNAME')
-    password = os.getenv('ORIG_PWD')
-    try:
-        # Create a secure SSL context
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(
-                'smtp.gmail.com',
-                port=465,
-                context=context
-            ) as s:
-            s.login(username, password)
-            receiver_email = os.getenv('RX_EMAIL')
-            s.sendmail(username, receiver_email, msg.as_string())
-            print('Job completion notification sent by email.')
-    except:
-        print('Unable to send email notification upon job completion.')
-        pass
-    # try:
-    #     client = Client()
-    #     orig_whatsapp_number = 'whatsapp:' + os.getenv('ORIG_PHONE_NUMBER')
-    #     rx_whatsapp_number = 'whatsapp:' + os.getenv('RX_PHONE_NUMBER')
-    #     msgcontent = f'*{msgsubj}*\n{msgcontent}'
-    #     client.messages.create(
-    #         body=msgcontent,
-    #         from_=orig_whatsapp_number,
-    #         to=rx_whatsapp_number
-    #     )
-    #     print('Job completion notification sent by WhatsApp.')
-    # except:
-    #     print('Unable to send WhatsApp notification upon job completion.')
-    #     pass
 
 
 def parse_nclusters(line):

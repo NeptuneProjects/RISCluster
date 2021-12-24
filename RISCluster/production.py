@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
 
-'''Contains high-level functions and routines for implementing the DEC
-workflow.
-
-William Jenkins, wjenkins [at] ucsd [dot] edu
+"""William Jenkins
 Scripps Institution of Oceanography, UC San Diego
+wjenkins [at] ucsd [dot] edu
 May 2021
-'''
 
-import argparse
-import configparser
+Contains high-level functions and routines for implementing the DEC
+workflow.
+"""
+
 from itertools import product
 import os
-import time
 
 import numpy as np
-import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
-from torchvision import transforms
 
 from RISCluster import models, utils
 from RISCluster.networks import AEC, DEC, init_weights
@@ -52,9 +48,6 @@ def load_data(config):
             return tra_dataset, val_dataset
 
         elif config.mode == 'predict':
-            # if config.loadmode == 'ram':
-            #     print("Loading Data to Memory:")
-            #     dataset = utils.dataset_to_RAM(dataset, config)
             return dataset
 
     elif config.model == 'GMM':

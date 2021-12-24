@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-'''Contains necessary functions, routines, and plotting wrappers for analyzing
-DEC workflow and producing paper figures.
-
-William Jenkins, wjenkins [at] ucsd [dot] edu
+"""William Jenkins
 Scripps Institution of Oceanography, UC San Diego
+wjenkins [at] ucsd [dot] edu
 May 2021
-'''
+
+Contains functions, routines, and plotting wrappers for analyzing DEC
+workflow and producing paper figures.
+"""
 
 import os
 
@@ -21,12 +22,9 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset, Subset
-from torch.utils.tensorboard import SummaryWriter
-from torchvision import transforms
+from torch.utils.data import DataLoader, Subset
 
 from RISCluster import utils
-from RISCluster.networks import AEC, DEC
 from RISCluster.environment import EnvironmentCatalogue
 
 
@@ -531,20 +529,13 @@ def compare_images(
         savepath=None
     ):
     tvec, fvec = utils.get_timefreqvec(config.fname_dataset)
-    # dataset = utils.H5SeismicDataset(
-    #     fname_dataset,
-    #     transform = transforms.Compose(
-    #         [utils.SpecgramShaper(), utils.SpecgramToTensor()]
-    #     )
-    #
-    # )
     dataset = utils.SeismicDataset(config.fname_dataset, config.datafiletype)
     subset = Subset(dataset, config.img_index)
     dataloader = DataLoader(subset, batch_size=len(config.img_index))
     model.eval()
 
     for batch in dataloader:
-        idx, X = batch
+        _, X = batch
         Xr, z = model(X.to(config.device))
 
     figtitle = f'{config.model} Training: Epoch {epoch}'
@@ -821,8 +812,8 @@ def view_class_cdf(
     def _roundup(x):
         return int(np.ceil(x / 5.0)) * 5
 
-    label_list, counts_a = np.unique(labels_a, return_counts=True)
-    _, counts_b = np.unique(labels_b, return_counts=True)
+    label_list, _ = np.unique(labels_a, return_counts=True)
+    # _, counts_b = np.unique(labels_b, return_counts=True)
 
     fig = plt.figure(figsize=(7, 2*int(np.ceil(n_clusters/2))), dpi=150)
     fontsize = 16
@@ -906,9 +897,9 @@ def view_class_pdf(
     def _roundup(x):
         return int(np.ceil(x / 10.0)) * 10
 
-    label_list, counts_a = np.unique(labels_a, return_counts=True)
-    _, counts_b = np.unique(labels_b, return_counts=True)
-    dx = 1
+    label_list, _ = np.unique(labels_a, return_counts=True)
+    # _, counts_b = np.unique(labels_b, return_counts=True)
+    # dx = 1
     nbins = 200
     X = np.linspace(0, 201, nbins)
 
@@ -1016,9 +1007,9 @@ def view_class_pdf_paper(
     def _roundup(x):
         return int(np.ceil(x / 10.0)) * 10
 
-    label_list, counts_a = np.unique(labels_a, return_counts=True)
-    _, counts_b = np.unique(labels_b, return_counts=True)
-    dx = 1
+    label_list, _ = np.unique(labels_a, return_counts=True)
+    # _, counts_b = np.unique(labels_b, return_counts=True)
+    # dx = 1
     nbins = 400
     X = np.linspace(0, 40, nbins)
 
@@ -1161,7 +1152,7 @@ def view_class_pdf_paper(
 
     proxies = [Patch(color=colors[i], label=str(i+1), alpha=0.5) for i in range(n_clusters)]
 
-    handles, labels = axb1.get_legend_handles_labels()
+    # handles, labels = axb1.get_legend_handles_labels()
     if len(label_list) % 2 != 0:
         leg = fig.legend(handles=proxies, loc=(0.54, 0.1), ncol=int(np.ceil(n_clusters/2)), fontsize=fontsize-2)
     else:
@@ -1975,30 +1966,6 @@ def view_TSNE(results, labels, title, show=False):
     for lh in leg.legendHandles:
         lh._legmarker.set_alpha(1)
     plt.title(title, fontsize=textsize)
-
-#     ax2 = fig.add_subplot(gs[1])
-#     arr = plt.hist(labels+1, bins=np.arange(1, max(labels)+3, 1), histtype='bar', align='left', rwidth=0.8, color='k')
-#     plt.grid(axis='y', linestyle='--')
-#     plt.xticks(label_list+1, label_list+1)
-# #     plt.ylim([0, 1.25 * max(counts)])
-#     plt.ylim([0, 12000])
-#     ax2.set_xlabel('Class', fontsize=textsize)
-#     ax2.set_ylabel('Detections', fontsize=textsize)
-#     plt.title('Class Assignments, $N_{train}$ = ' + f'{len(labels)}', fontsize=textsize)
-#
-#     N = counts.sum()
-#     def CtP(x):
-#         return 100 * x / N
-#
-#     def PtC(x):
-#         return x * N / 100
-#
-#     ax3 = ax2.secondary_yaxis('right', functions=(CtP, PtC))
-#     ax3.set_ylabel('$\%N_{train}$', fontsize=textsize)
-#     for i in range(len(np.unique(labels))):
-#         plt.text(arr[1][i], 1.05 * arr[0][i], str(int(arr[0][i])), ha='center')
-#
-#     fig.subplots_adjust(left=0.15, right=0.9)
 
     if show:
         plt.show()

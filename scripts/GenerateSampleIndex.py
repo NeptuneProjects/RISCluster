@@ -1,9 +1,15 @@
-import argparse
-import os
-import sys
-sys.path.insert(0, '../RISCluster/')
+#!/usr/bin/env python3
 
-import utils
+import argparse
+
+from RISCluster import utils
+
+def main(args):
+    M = args.M
+    fname_dataset = args.path
+    savepath = args.savepath
+    utils.save_TraVal_index(M, fname_dataset, savepath)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Enter sample number.')
@@ -24,7 +30,5 @@ if __name__ == '__main__':
         help='Enter savepath'
     )
     args = parser.parse_args()
-    M = args.M
-    fname_dataset = args.path
-    savepath = args.savepath
-    utils.save_TraVal_index(M, fname_dataset, savepath)
+
+    main(args)
