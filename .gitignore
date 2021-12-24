@@ -1,5 +1,6 @@
 .env
 .DS_STORE
+scripts/
 test/
 **/__pycache__
 *.ipynb
