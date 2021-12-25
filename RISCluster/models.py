@@ -281,9 +281,11 @@ def cluster_metrics(path, labels, x, z, save=True):
     label_list = np.unique(labels)
     n_clusters = len(label_list)
 
-    silh_scores_Z = silhouette_samples(z, labels, chunksize=20000)
     if torch.cuda.is_available():
+        silh_scores_Z = silhouette_samples(z, labels, chunksize=20000)
         silh_scores_Z = cupy.asnumpy(silh_scores_Z)
+    else:
+        silh_scores_Z = silhouette_samples(z, labels)
 
     silh_scores_X, _ = silhouette_samples_X(x, labels, RF=3)
 
